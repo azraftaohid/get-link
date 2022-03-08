@@ -1,0 +1,78 @@
+@import "restart";
+
+@mixin def-padding {
+	@extend .px-4, .px-md-5;
+}
+
+#nav-container {
+	@include def-padding();
+	max-width: map-get($grid-breakpoints, xl);
+}
+
+#footer-container {
+	@include def-padding();
+	max-width: map-get($grid-breakpoints, xl);
+}
+
+.page-content {
+	@include def-padding();
+	max-width: map-get($grid-breakpoints, xl);
+}
+
+.toast-container {
+	z-index: $zindex-tooltip;
+}
+
+html {
+	&[data-theme="dark"] {
+		#nav {
+			@extend .navbar-dark, .bg-dark;
+		}
+
+		#root {
+			@extend .text-white;
+			background-color: $black;
+		}
+
+		.toast {
+			@extend .text-white;
+			background-color: $gray-900;
+
+			.toast-header {
+				@extend .navbar-dark;
+				background-color: $gray-800;
+			}
+		}
+
+		.file-preview {
+			@extend .bg-dark;
+		}
+
+		.btn-outline-vivid {
+			@extend .btn-outline-light;
+		}
+
+		.btn-close {
+			@extend .btn-close-white;
+		}
+
+		.page-link {
+			@extend .border, .border-secondary;
+			background-color: $gray-900 !important;
+		}
+	}
+	
+	&[data-theme="light"] {
+		#nav {
+			@extend .navbar-light, .bg-light;
+		}
+
+		.file-preview {
+			@extend .bg-light;
+		}
+
+		.btn-outline-vivid {
+			@extend .btn-outline-dark;
+		}
+	}
+}
