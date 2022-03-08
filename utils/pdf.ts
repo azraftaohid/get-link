@@ -15,8 +15,8 @@ export function initPdfWorker<T extends PdfJs | undefined>(pdfjs?: T): undefined
 		}) as any;
 	}
 
-	pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+	initPdfWorker0(pdfjs);
 	return pdfjs as any;
 }
 
-export type PdfJs = typeof import("C:/Users/azraf/codes/get-link/node_modules/@types/react-pdf/node_modules/pdfjs-dist/types/src/pdf");
+export type PdfJs = typeof import("react-pdf/node_modules/pdfjs-dist/types/src/pdf");
