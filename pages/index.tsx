@@ -153,8 +153,8 @@ const Home: NextPage = () => {
       <Conditional in={statuses.some(s => s === "files:unknown-error" || s === "files:capture-error" || s === "files:upload-error" || s === "auth:sign-in-error")}>
         <Alert variant="danger">
           There was an error. Please try again!<br /> 
-          Code: {statuses.map(s => <Link key={s} className="alert-link" href={`/technical#${encodeURIComponent(s)}`} newTab>
-            {s}
+          Code: {statuses.map((s, i, arr) => <Link key={s} className="alert-link" href={`/technical#${encodeURIComponent(s)}`} newTab>
+            {s}{i < arr.length - 1 && ", "}
           </Link>)}.
         </Alert>
       </Conditional>
