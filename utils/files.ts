@@ -5,6 +5,28 @@ import { initPdfWorker } from "./pdf";
 import { extractExtension } from "./strings";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "./urls";
 
+export const acceptedFileFormats = [
+	"audio/*", "video/*", "image/*", "text/*", 
+	"application/pdf",
+	"application/zip", 
+	"application/gzip", 
+	"application/json", 
+	"application/xml", 
+	"application/vnd.ms-excel", // legacy excel
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // current excel
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.template", // excel template
+	"application/msword", // legacy word
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document", // current word
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.template", // word template
+	"application/vnd.ms-powerpoint", // powerpoint
+	"application/vnd.openxmlformats-officedocument.presentationml.presentation", 
+	"application/vnd.openxmlformats-officedocument.presentationml.slideshow", 
+	"application/vnd.openxmlformats-officedocument.presentationml.template", 
+	"application/rtf" // rich text format
+];
+
+export const strAcceptedFileFormats = acceptedFileFormats.join(",");
+
 export function createFileLink(id: string, absolute = false) {
 	return !absolute ? createUrl("v", id) : createAbsoluteUrl(DOMAIN, "v", id);
 }

@@ -21,7 +21,7 @@ import { PageContent } from "../components/PageContent";
 import { captureFile, createFID, getFileContentRef } from "../models/files";
 import styles from "../styles/home.module.scss";
 import { StatusCode } from "../utils/common";
-import { createFileLink, FileCustomMetadata, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
+import { createFileLink, FileCustomMetadata, getFileType, getImageDimension, getPdfDimension, getVideoDimension, strAcceptedFileFormats } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
 
 const Home: NextPage = () => {
@@ -174,7 +174,7 @@ const Home: NextPage = () => {
           id="handler-upload-file"
           className="d-none"
           type="file"
-          accept="audio/*,video/*,image/*,text/*,application/pdf,application/zip,application/gzip,application/json,application/xml"
+          accept={strAcceptedFileFormats}
           onChange={(evt => {
             const picks = evt.currentTarget.files;
             if (!picks?.length) return;

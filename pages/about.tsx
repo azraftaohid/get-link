@@ -8,6 +8,7 @@ import { Link } from "../components/Link";
 import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
+import { Standout } from "../components/Standout";
 
 const Section: React.FunctionComponent<{ noSep?: boolean }> = ({ noSep, children }) => {
 	return <>
@@ -23,15 +24,15 @@ const Lead: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({ c
 };
 
 const Proposition: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({ children, ...rest }) => {
-	return <p className="fs-5" {...rest}>
+	return <div className="fs-5" {...rest}>
 		{children}
-	</p>;
+	</div>;
 };
 
 const QAndA: React.FunctionComponent<{ question: React.ReactNode, answer: React.ReactNode }> = ({ question, answer }) => {
 	return <>
 		<h4 className="mt-5 mb-3">{question}</h4>
-		<p className="fs-5">{answer}</p>
+		<div className="fs-5">{answer}</div>
 	</>;
 };
 
@@ -99,11 +100,12 @@ const About: NextPage = () => {
 				<QAndA 
 					question="What type of files are supported?"
 					answer={<>
-						Currently, Get-Link supports a limited range of file formats. But we are planning on expanding this 
-						list soon.<br />
-						The list of file formats that are supported but not limited to are: image, video, audio, 
-						text, pdf, xml, and json.<br />
-						Note that executable file formats such as apk and exe are not supported yet.
+						The list of file formats that are supported include:
+						<Standout>
+							image, video, audio, text, pdf, xml, json, ms-excel, ms-word, ms-powerpoint and its template files, and rtf.
+						</Standout>
+						Note that executable file formats, including macro-enabled Office files are not supported yet but we are planning on 
+						expanding this list soon.
 					</>}
 				/>
 			</Section>
