@@ -1,3 +1,6 @@
+const sizeThreshold = 950;
+const sizeUnits = ["bytes", "KB", "MB", "GB", "TB"];
+
 /**
  * `abc.xyz' -> '.xyz'
  */
@@ -13,5 +16,9 @@ export function extractDisplayName(fileName: string) {
 }
 
 export function formatSize(bytes: number) {
-	return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+	let unit = 0;
+	let quantity = bytes;
+	for (let limit = sizeUnits.length - 1; unit < limit && quantity >= sizeThreshold; unit++, quantity /= 1024);
+
+	return `${quantity.toFixed(2)} ${sizeUnits[unit]}`;
 }
