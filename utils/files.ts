@@ -1,5 +1,8 @@
+import { fromBlob } from "file-type/browser";
+import core from "file-type/core";
 import { UploadMetadata } from "firebase/storage";
 import { initPdfWorker } from "./pdf";
+import { extractExtension } from "./strings";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "./urls";
 
 export function createFileLink(id: string, absolute = false) {
@@ -45,6 +48,22 @@ export async function getPdfDimension(src: string): Promise<Dimension> {
 	return [viewport.width, viewport.height];
 }
 
+export async function getFileType(file: File): Promise<[string | undefined, string]> {
+	const type = await fromBlob(file);
+	
+	let mime: MimeType | undefined = type?.mime;
+	const ext = extractExtension(file.name);
+
+	if (!mime) {
+		switch(ext) {
+			case ".svg": mime = "image/svg+xml"; break;
+			case ".csv": mime = "text/csv"; break;
+		}
+	}
+
+	return [mime, ext];
+}
+
 export type FilesStatus = "files:unknown-error" | 
 	"files:upload-cancelled" | 
 	"files:upload-error" | 
@@ -57,3 +76,5 @@ export type FileCustomMetadata = UploadMetadata["customMetadata"] & {
 }
 
 export type Dimension = [number | undefined /* width */, number | undefined /* height */];
+
+export type MimeType = core.MimeType | "image/svg+xml" | "text/csv";

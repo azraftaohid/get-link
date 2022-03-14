@@ -1,5 +1,4 @@
 import { useAuthUser } from "@react-query-firebase/auth";
-import { fromBlob } from "file-type/browser";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { uploadBytesResumable, UploadMetadata } from "firebase/storage";
 import { nanoid } from "nanoid";
@@ -22,9 +21,8 @@ import { PageContent } from "../components/PageContent";
 import { captureFile, createFID, getFileContentRef } from "../models/files";
 import styles from "../styles/home.module.scss";
 import { StatusCode } from "../utils/common";
-import { createFileLink, FileCustomMetadata, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
+import { createFileLink, FileCustomMetadata, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
-import { extractExtension } from "../utils/strings";
 
 const Home: NextPage = () => {
   const handlerRef: LegacyRef<HTMLInputElement> = useRef(null);
@@ -58,24 +56,24 @@ const Home: NextPage = () => {
     }
 
     const task = (async () => {
-      const type = await fromBlob(file);
-      const ext = extractExtension(file.name); // respect user specified extension
+      const [mime, ext] = await getFileType(file); // respect user specified extension
+      console.debug(`mime: ${mime}; ext: ${ext}`);
 
       const fid = createFID(nanoid(12) + ext, uid);
       const ref = getFileContentRef(fid);
-      const metadata: UploadMetadata = { contentType: type?.mime };
+      const metadata: UploadMetadata = { contentType: mime };
 
       try {
         let localUrl: string | undefined;
         let dimension: [number | undefined, number | undefined] | undefined;
 
-        if (type?.mime.startsWith("image")) {
+        if (mime?.startsWith("image")) {
           localUrl = URL.createObjectURL(file);
           dimension = await getImageDimension(localUrl);
-        } else if (type?.mime.startsWith("video")) {
+        } else if (mime?.startsWith("video")) {
           localUrl = URL.createObjectURL(file);
           dimension = await getVideoDimension(localUrl);
-        } else if (type?.mime === "application/pdf") {
+        } else if (mime === "application/pdf") {
           localUrl = URL.createObjectURL(file);
           dimension = await getPdfDimension(localUrl);
         }
