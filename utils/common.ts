@@ -8,4 +8,4 @@ export const notFound: GetStaticPropsResult<any> = {
 	notFound: true,
 };
 
-export type StatusCode = AuthStatus | FilesStatus;
+export type StatusCode = AuthStatus | FilesStatus | "page:redirecting";

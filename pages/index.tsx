@@ -108,7 +108,7 @@ const Home: NextPage = () => {
           console.debug(`file captured at ${doc.path}`);
 
           setUrl(createFileLink(doc.id));
-          setStatuses([]);
+          setStatuses(["page:redirecting"]);
         } catch (error) {
           console.debug(`capture failed [cause; ${error}]`);
           appendStatus.current("files:capture-error");
@@ -165,7 +165,7 @@ const Home: NextPage = () => {
         <FilePreview className="mb-3" file={file} onClose={() => setFile(null)} closable={progress < 100} />
         <ProgressBar id="file-upload-progress" animated now={progress}/>
         <small className="text-muted">
-          {statuses.includes("files:creating-link") ? <>Creating link.</> : <>{progress}% completed.</>}
+          {statuses.includes("page:redirecting") ? "Redirecting..." : statuses.includes("files:creating-link") ? <>Creating link.</> : <>{progress}% completed.</>}
         </small>
       </Conditional>
       <Conditional in={!file}>

@@ -27,6 +27,12 @@
 	@extend .px-3, .py-4, .my-3, .rounded;
 }
 
+.stall {
+	.progress {
+		height: .4rem;
+	}
+}
+
 blockquote {
 	@extend .blockquote;
 }
