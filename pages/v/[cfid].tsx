@@ -20,6 +20,16 @@ import { createFileLink, FileCustomMetadata } from "../../utils/files";
 import { formatSize } from "../../utils/strings";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
 
+function suppressError(error: any, cfid: string, subject: string) {
+	if (error.code === "storage/object-not-found") {
+		console.warn(`${subject} not found [cfid: ${cfid}]`);
+	} else {
+		console.error(`error getting ${subject} [cfid: ${cfid}]`);
+	}
+
+	return undefined;
+}
+
 const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({ 
 	snapshot, 
 	name, 
@@ -133,10 +143,10 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ params }) => {
-	const id = params?.id;
-	if (typeof id !== "string") return notFound;
+	const cfid = params?.cfid;
+	if (typeof cfid !== "string") return notFound;
 
-	const doc = getFileRef(id);
+	const doc = getFileRef(cfid);
 	const snapshot = await getDoc(doc);
 	if (!snapshot.exists()) return notFound;
 
@@ -145,13 +155,13 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	if (!fid) return notFound;
 
 	const ref = getFileContentRef(fid);
-	const thumbailRef = getThumbnailContentRef(fid, "1024x1024");
+	const thumbnailRef = getThumbnailContentRef(fid, "1024x1024");
 	const smThumbnailRef = getThumbnailContentRef(fid, "56x56");
 
 	const getUrl = getDownloadURL(ref);
-	const getThumbnailUrl = getDownloadURL(thumbailRef);
-	const getSmThumbnailUrl = getDownloadURL(smThumbnailRef);
 	const getMetas = getMetadata(ref);
+	const getThumbnailUrl = getDownloadURL(thumbnailRef).catch(err => suppressError(err, cfid, "thumbnail"));
+	const getSmThumbnailUrl = getDownloadURL(smThumbnailRef).catch(err => suppressError(err, cfid, "small thumbnail"));
 
 	let downloadUrl: string;
 	let name: string;
@@ -160,8 +170,9 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	let width: number | undefined;
 	let height: number | undefined;
 	try {
-		const metas = await getMetas;
 		downloadUrl = await getUrl;
+		const metas = await getMetas;
+
 		name = metas.name;
 		type = metas.contentType || "application/octet-stream";
 		size = metas.size;
@@ -172,27 +183,8 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 		throw error;
 	}
 
-	let smThumbnailUrl: string | undefined;
-	try {
-		smThumbnailUrl = await getSmThumbnailUrl;
-	} catch (error: any) {
-		if (error.code === "storage/object-not-found") {
-			console.warn(`small thumbnail not generated [id: ${id}]`);
-		} else {
-			console.error(`error getting small thumbnail [id: ${id}]`);
-		}
-	}
-
-	let thumbailUrl: string | undefined;
-	try {
-		thumbailUrl = await getThumbnailUrl;
-	} catch (error: any) {
-		if (error.code === "storage/object-not-found") {
-			console.warn(`thumbnail not generated [id: ${id}]`);
-		} else {
-			console.error(`error getting thumbnail [id: ${id}]`);
-		}
-	}
+	const smThumbnailUrl = await getSmThumbnailUrl;
+	const thumbailUrl = await getThumbnailUrl;
 
 	return {
 		notFound: false,
@@ -227,5 +219,5 @@ interface StaticProps {
 }
 
 interface Segments extends ParsedUrlQuery {
-	id: string,
+	cfid: string,
 }
