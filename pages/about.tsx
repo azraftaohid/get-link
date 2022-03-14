@@ -102,7 +102,8 @@ const About: NextPage = () => {
 						Currently, Get-Link supports a limited range of file formats. But we are planning on expanding this 
 						list soon.<br />
 						The list of file formats that are supported but not limited to are: image, video, audio, 
-						text, pdf, xml, json, exe, and apk.
+						text, pdf, xml, and json.<br />
+						Note that executable file formats such as apk and exe are not supported yet.
 					</>}
 				/>
 			</Section>

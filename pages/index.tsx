@@ -174,7 +174,7 @@ const Home: NextPage = () => {
           id="handler-upload-file"
           className="d-none"
           type="file"
-          accept="audio/*,video/*,image/*,text/*,application/pdf,application/zip,application/gzip,application/json,application/xml,.exe,.apk"
+          accept="audio/*,video/*,image/*,text/*,application/pdf,application/zip,application/gzip,application/json,application/xml"
           onChange={(evt => {
             const picks = evt.currentTarget.files;
             if (!picks?.length) return;
