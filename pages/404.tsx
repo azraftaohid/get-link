@@ -1,18 +1,18 @@
 import { NextPage } from "next";
-import Head from "next/head";
 import React from "react";
 import Alert from "react-bootstrap/Alert";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
+import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
 
 const NotFound: NextPage = () => {
 	return <PageContainer>
-		<Head>
-			<title>Not found - Get Link</title>
-			<meta name="description" content="Darn! We couldn't find the page you are looking for."/>
-		</Head>
+		<Metadata 
+			title="Not found - Get Link"
+			description="Darn! We couldn't find the page you are looking for."
+		/>
 		<Header />
 		<PageContent>
 			<Alert variant="warning">
