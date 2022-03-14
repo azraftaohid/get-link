@@ -11,30 +11,31 @@ import { Footer } from "../../components/Footer";
 import { Header } from "../../components/Header";
 import { Icon } from "../../components/Icon";
 import { Loading } from "../../components/Loading";
+import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
 import { PageContent } from "../../components/PageContent";
 import { FileField, FileMetadata, getFileContentRef, getFileRef, getThumbnailContentRef } from "../../models/files";
 import { notFound } from "../../utils/common";
 import { createFileLink, FileCustomMetadata } from "../../utils/files";
-import { useToast } from "../../utils/useToast";
+import { formatSize } from "../../utils/strings";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
 
 const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({ 
 	snapshot, 
 	name, 
 	directLink, 
-	thumbnail, 
+	thumbnail,
+	thumbnailSmall, 
 	type, 
 	size, 
 	width, 
 	height,
 	thumbnailDataUrl: tDataUrl,
 }) => {
-	const { makeToast } = useToast();
 	const [thumbnailDataUrl, setThumbnailDataUrl] = useState<string | undefined>(tDataUrl || undefined);
 	
 	useEffect(() => {
-		if (!thumbnail) return;
+		if (!thumbnailSmall) return;
 		
 		console.debug("loading thumbnail");
 		const xhr = new XMLHttpRequest();
@@ -62,9 +63,9 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 		};
 
 		xhr.responseType = "blob";
-		xhr.open("GET", thumbnail);
+		xhr.open("GET", thumbnailSmall);
 		xhr.send();
-	}, [thumbnail]);
+	}, [thumbnailSmall]);
 	
 	if (!directLink) {
 		return <PageContainer>
@@ -77,8 +78,12 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 	}
 
 	const createSeconds = snapshot.data?.[FileField.CREATE_TIME]?.seconds;
+	const strCreateTime = createSeconds && formatDate(new Date(createSeconds * 1000), "short", "year", "month", "day");
 
 	return <PageContainer>
+		<Metadata 
+			title="Get Link" 
+			image={thumbnail || thumbnailSmall} />
 		<Header />
 		<PageContent>
 			<FileView 
@@ -109,17 +114,11 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 					>
 						<span className="d-none d-md-inline">Share</span>
 					</CopyButton>
-					<Button
-						className="me-2"
-						variant="outline-vivid"
-						left={<Icon name="report" size="sm" />}
-						onClick={() => makeToast("Feature not implemented yet!", "warning")}
-					>
-						<span className="d-none d-md-inline">Report</span>
-					</Button>
 				</div>
-				{createSeconds && <p className="text-wrap"><span className="text-muted">Created</span>{" "}
-					{formatDate(new Date(createSeconds * 1000), "short", "year", "month", "day")}</p>}
+				<p className="text-wrap">
+					<small className="d-block text-muted">{formatSize(size)}</small>
+					{strCreateTime}
+				</p>
 			</div>
 		</PageContent>
 		<Footer />
@@ -146,10 +145,12 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	if (!fid) return notFound;
 
 	const ref = getFileContentRef(fid);
-	const thumbnailRef = getThumbnailContentRef(fid, "56x56");
+	const thumbailRef = getThumbnailContentRef(fid, "1024x1024");
+	const smThumbnailRef = getThumbnailContentRef(fid, "56x56");
 
 	const getUrl = getDownloadURL(ref);
-	const getThumbnailUrl = getDownloadURL(thumbnailRef);
+	const getThumbnailUrl = getDownloadURL(thumbailRef);
+	const getSmThumbnailUrl = getDownloadURL(smThumbnailRef);
 	const getMetas = getMetadata(ref);
 
 	let downloadUrl: string;
@@ -171,9 +172,20 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 		throw error;
 	}
 
-	let thumbnailUrl: string | undefined;
+	let smThumbnailUrl: string | undefined;
 	try {
-		thumbnailUrl = await getThumbnailUrl;
+		smThumbnailUrl = await getSmThumbnailUrl;
+	} catch (error: any) {
+		if (error.code === "storage/object-not-found") {
+			console.warn(`small thumbnail not generated [id: ${id}]`);
+		} else {
+			console.error(`error getting small thumbnail [id: ${id}]`);
+		}
+	}
+
+	let thumbailUrl: string | undefined;
+	try {
+		thumbailUrl = await getThumbnailUrl;
 	} catch (error: any) {
 		if (error.code === "storage/object-not-found") {
 			console.warn(`thumbnail not generated [id: ${id}]`);
@@ -192,7 +204,8 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 			width: width || null,
 			height: height || null,
 			directLink: downloadUrl,
-			thumbnail: thumbnailUrl || null,
+			thumbnail: thumbailUrl || null,
+			thumbnailSmall: smThumbnailUrl || null,
 			snapshot: staticSnapshot,
 		},
 	};
@@ -204,6 +217,7 @@ interface StaticProps {
 	name: string,
 	directLink: string,
 	thumbnail?: string | null,
+	thumbnailSmall?: string | null,
 	type: string,
 	size: number,
 	width?: number | null,

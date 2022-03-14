@@ -4,14 +4,14 @@ import { Header } from "../components/Header";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
 
-const Tos: NextPage = () => {
+const ContactForm: NextPage = () => {
 	return <PageContainer>
 		<Header />
 		<PageContent>
-
+			
 		</PageContent>
 		<Footer />
 	</PageContainer>;
 };
 
-export default Tos;
+export default ContactForm;

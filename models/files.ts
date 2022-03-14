@@ -8,13 +8,13 @@ import { UserSnapshot, UserSnapshotField } from "./users";
  * # Database structure
  * 
  * ## Definitions
- * 	- ID: entry ID; refers to the document that stores file metadata
  * 	- FID: unique file ID; often implies to the file path
+ * 	- CFID: canonical file id; refers to the document that stores file metadata
  * 	- UID: shorten from User ID
- * 	- Name: name of the file, that includes the display name + extension
+ * 	- Name: name of the file, that comprises the display name + extension
  * 
  * ## Firestore
- * files/id { fid: FID }
+ * files/cfid { fid: FID }
  * 
  * ## Storage
  * user/uid/name
@@ -81,7 +81,7 @@ export enum FileField {
 	CREATE_TIME = "create_time",
 }
 
-export type ThumbnailSize = "56x56" | "128x128" | "384x384";
+export type ThumbnailSize = "56x56" | "128x128" | "384x384" | "1024x1024";
 
 export interface FileMetadata {
 	[FileField.FID]?: string,

@@ -19,10 +19,6 @@ const navs: { title: string, pathname: string }[] = [
 		pathname: "/",
 	},
 	{
-		title: "Policies",
-		pathname: "/tos",
-	},
-	{
 		title: "About",
 		pathname: "/about"
 	}

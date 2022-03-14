@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import React from "react";
 import { mergeNames } from "../utils/mergeNames";
+import { formatSize } from "../utils/strings";
 import { getSolidStallImage } from "../visuals/stallData";
 import { Audio } from "./Audio";
 import { Icon } from "./Icon";
@@ -38,7 +39,7 @@ export const FileView: React.FunctionComponent<FileViewProps> = ({ className, sr
 				name={type?.startsWith("audio") ? "audio_file" : type?.startsWith("video") ? "video_file" : "description"} 
 				size="lg"
 			/>
-			<p className="mb-0">Preview not available. <Link href={src} newTab download>Download</Link> ({(size / (1024 * 1024)).toFixed(2)} MB).</p>
+			<p className="mb-0">Preview not available. <Link href={src} newTab download>Download</Link> ({formatSize(size)}).</p>
 		</>}
 	</div>;
 };

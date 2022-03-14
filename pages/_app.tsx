@@ -1,5 +1,6 @@
 import { getAnalytics, logEvent } from "firebase/analytics";
 import type { AppProps, NextWebVitalsMetric } from "next/app";
+import Head from "next/head";
 import Image from "next/image";
 import React, { useState } from "react";
 import Alert from "react-bootstrap/Alert";
@@ -37,9 +38,11 @@ function MyApp({ Component, pageProps }: AppProps) {
 	};
 
 	return <>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<QueryClientProvider client={queryClient}>
 			<ToastContext.Provider value={{ makeToast }}>
+				<Head>
+					<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+				</Head>
 				<ToastContainer className="toast-container position-fixed p-3" position="bottom-end">
 					<Toast 
 						className={toastBgMapping[toastType] && `border border-${toastBgMapping[toastType]}`}

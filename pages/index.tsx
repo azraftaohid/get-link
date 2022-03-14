@@ -124,6 +124,7 @@ const Home: NextPage = () => {
       task.then(({ upload, unsubscribe }) => {
         if (upload.snapshot.state === "running" || upload.snapshot.state === "paused") {
           upload.snapshot.task.cancel();
+          // eslint-disable-next-line react-hooks/exhaustive-deps
           appendStatus.current("files:upload-cancelled");
           console.log(`upload cancelled [from_state: ${upload.snapshot.state}]`);
         }
