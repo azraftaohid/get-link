@@ -98,6 +98,10 @@ const About: NextPage = () => {
 							Google <Link href="https://tinyurl.com/353c3j97" newTab>search</Link>.</>}
 				/>
 				<QAndA 
+					question="Is there any file size limits?"
+					answer="Yes, as of now you can only upload files smaller than 100 MB in size."
+				/>
+				<QAndA 
 					question="What type of files are supported?"
 					answer={<>
 						The list of file formats that are supported include:

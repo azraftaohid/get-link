@@ -161,7 +161,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	const smThumbnailRef = getThumbnailContentRef(fid, "56x56");
 
 	const getUrl = getDownloadURL(ref);
-	const getMetas = getMetadata(ref);
+	const getMetas = getMetadata(ref).catch(err => suppressError(err, cfid, "metadata"));
 	const getThumbnailUrl = getDownloadURL(thumbnailRef).catch(err => suppressError(err, cfid, "thumbnail"));
 	const getSmThumbnailUrl = getDownloadURL(smThumbnailRef).catch(err => suppressError(err, cfid, "small thumbnail"));
 
@@ -174,7 +174,8 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	try {
 		downloadUrl = await getUrl;
 		const metas = await getMetas;
-
+		if (!metas) throw new Error(`object metadata get failed [cfid: ${cfid}]`);
+		
 		name = metas.name;
 		type = metas.contentType || "application/octet-stream";
 		size = metas.size;

@@ -90,7 +90,8 @@ export type FilesStatus = "files:unknown-error" |
 	"files:upload-cancelled" | 
 	"files:upload-error" | 
 	"files:capture-error" |
-	"files:creating-link";
+	"files:creating-link" |
+	"files:too-large";
 
 export type FileCustomMetadata = UploadMetadata["customMetadata"] & {
 	width?: number,

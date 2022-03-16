@@ -27,7 +27,6 @@ export const RouteIndicator: React.FunctionComponent = () => {
 		};
 
 		const delay = 3000 * (iteration.current / (10 + (6 * (iteration.current - 1))));
-		console.debug(`stall delay: ${delay}`);
 		const id = setTimeout(setter, delay);
 		return () => clearTimeout(id);
 	});

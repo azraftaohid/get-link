@@ -23,6 +23,7 @@ import styles from "../styles/home.module.scss";
 import { StatusCode } from "../utils/common";
 import { createFileLink, FileCustomMetadata, getFileType, getImageDimension, getPdfDimension, getVideoDimension, strAcceptedFileFormats } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
+import { formatSize } from "../utils/strings";
 
 const Home: NextPage = () => {
   const handlerRef: LegacyRef<HTMLInputElement> = useRef(null);
@@ -34,6 +35,11 @@ const Home: NextPage = () => {
   const [progress, setProgress] = useState(0);
   const [url, setUrl] = useState<string>();
   const [statuses, setStatuses] = useState<StatusCode[]>([]);
+
+  const resetState = useRef(() => {
+    setFile(null);
+    setProgress(0);
+  });
 
   const appendStatus = useRef((status: StatusCode) => {
     setStatuses(c => {
@@ -51,6 +57,14 @@ const Home: NextPage = () => {
         console.error(`error signing in user [cause: ${err}]`);
         appendStatus.current("auth:sign-in-error");
       });
+
+      return;
+    }
+
+    if (file.size >= 100 * 1024 * 1024) {
+      console.warn(`file too large [accepted: 100 MB, actual: ${formatSize(file.size)}]`);
+      appendStatus.current("files:too-large");
+      resetState.current();
 
       return;
     }
@@ -98,8 +112,7 @@ const Home: NextPage = () => {
           appendStatus.current("files:upload-error");
         }
 
-        setProgress(0);
-        setFile(null);
+        resetState.current();
       }, async () => {
         appendStatus.current("files:creating-link");
 
@@ -150,7 +163,7 @@ const Home: NextPage = () => {
           Upload cancelled.
         </Alert>
       </Conditional>
-      <Conditional in={statuses.some(s => s === "files:unknown-error" || s === "files:capture-error" || s === "files:upload-error" || s === "auth:sign-in-error")}>
+      <Conditional in={statuses.some(s => (["files:unknown-error", "files:capture-error", "files:upload-error", "auth:sign-in-error", "files:too-large"] as StatusCode[]).includes(s))}>
         <Alert variant="danger">
           There was an error. Please try again!<br /> 
           Code: {statuses.map((s, i, arr) => <Link key={s} className="alert-link" href={`/technical#${encodeURIComponent(s)}`} newTab>
