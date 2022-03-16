@@ -1,4 +1,4 @@
-import { collection, CollectionReference, doc, FieldPath, getFirestore, orderBy, Query, query, serverTimestamp, setDoc, Timestamp, where } from "firebase/firestore";
+import { collection, CollectionReference, doc, FieldPath, getFirestore, orderBy, Query, query, serverTimestamp, setDoc, Timestamp, where } from "firebase/firestore/lite";
 import { getStorage, ref as fileRef, StorageReference } from "firebase/storage";
 import { v5 } from "uuid";
 import { extractDisplayName } from "../utils/strings";

@@ -1,7 +1,7 @@
 import { initializeAnalytics, isSupported as isAnalyticsSupported, setAnalyticsCollectionEnabled } from "firebase/analytics";
 import { getApps, initializeApp } from "firebase/app";
 import { browserLocalPersistence, browserSessionPersistence, connectAuthEmulator, indexedDBLocalPersistence, initializeAuth } from "firebase/auth";
-import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore/lite";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
 import { firebaseConfig } from "./configs";
 import { FIREBASE_APP_NAME } from "./firebase";

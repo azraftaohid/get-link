@@ -2,6 +2,10 @@
 const CopyPlugin = require("copy-webpack-plugin");
 const path = require("path");
 
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+	enabled: process.env.ANALYZE === "true",
+});
+
 /**
  * @type {import('next/dist/lib/load-custom-routes').Header["headers"]}
  */
@@ -62,4 +66,4 @@ const nextConfig = {
 	}
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

@@ -1,5 +1,5 @@
 import { Days, formatDate } from "@thegoodcompany/common-utils-js";
-import { getDoc } from "firebase/firestore";
+import { getDoc } from "firebase/firestore/lite";
 import { getDownloadURL, getMetadata } from "firebase/storage";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";

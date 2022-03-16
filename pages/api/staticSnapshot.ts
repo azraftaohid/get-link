@@ -1,11 +1,11 @@
-import { DocumentData, DocumentReference, DocumentSnapshot, GeoPoint, Timestamp } from "firebase/firestore";
+import { DocumentData, DocumentReference, DocumentSnapshot, GeoPoint, Timestamp } from "firebase/firestore/lite";
 
 /**
  * @param snapshot document snapshot received from firestore query result
  * @returns a static version of snapshot
  */
 export function toStatic<T extends DocumentData>(snapshot: DocumentSnapshot<T>): StaticSnapshot<T> {
-	const serialized = JSON.stringify(snapshot.data({ serverTimestamps: "estimate" }), (_k, value) => {
+	const serialized = JSON.stringify(snapshot.data(), (_k, value) => {
 		if (value === undefined) return null;
 		if (value instanceof DocumentReference) return value.path;
 		return value;
