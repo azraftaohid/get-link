@@ -189,7 +189,8 @@ const Home: NextPage = () => {
           onClick={() => { handlerRef.current?.click(); }} 
         >
           <Icon name="file_upload" size="lg" />
-          <p className="fs-5">Upload file</p>
+          <p className="fs-5 mb-0">Upload file</p>
+          <small className="text-mute">(Expires after 14 days)</small>
         </Button>
       </Conditional>
     </PageContent>

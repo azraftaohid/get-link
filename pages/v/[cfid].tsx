@@ -15,8 +15,10 @@ import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
 import { PageContent } from "../../components/PageContent";
 import { FileField, FileMetadata, getFileContentRef, getFileRef, getThumbnailContentRef } from "../../models/files";
+import styles from "../../styles/cfid.module.scss";
 import { notFound } from "../../utils/common";
 import { createFileLink, FileCustomMetadata } from "../../utils/files";
+import { mergeNames } from "../../utils/mergeNames";
 import { formatSize } from "../../utils/strings";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
 
@@ -97,7 +99,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 		<Header />
 		<PageContent>
 			<FileView 
-				className="mb-3" 
+				className={mergeNames(styles.fView, "mb-3")} 
 				src={directLink} 
 				placeholderDataUrl={thumbnailDataUrl} 
 				size={size} 
