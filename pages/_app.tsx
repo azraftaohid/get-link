@@ -1,8 +1,10 @@
 import { getAnalytics, logEvent } from "firebase/analytics";
+import { nanoid } from "nanoid";
 import type { AppProps, NextWebVitalsMetric } from "next/app";
 import Head from "next/head";
 import Image from "next/image";
-import React, { useState } from "react";
+import Script from "next/script";
+import React, { useEffect, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import Toast from "react-bootstrap/Toast";
 import ToastBody from "react-bootstrap/ToastBody";
@@ -10,6 +12,7 @@ import ToastContainer from "react-bootstrap/ToastContainer";
 import ToastHeader from "react-bootstrap/ToastHeader";
 import { QueryClient, QueryClientProvider } from "react-query";
 import "../styles/global.scss";
+import { KEY_EID, KEY_SID } from "../utils/analytics";
 import { init } from "../utils/init";
 
 init();
@@ -37,12 +40,35 @@ function MyApp({ Component, pageProps }: AppProps) {
 		setShowToast(true);
 	};
 
+	useEffect(() => {
+		let eid = localStorage.getItem(KEY_EID);
+		if (!eid) {
+			eid = nanoid(10);
+			localStorage.setItem(KEY_EID, eid);
+		}
+
+		let sid = sessionStorage.getItem(KEY_SID);
+		if (!sid) {
+			sid = nanoid();
+			sessionStorage.setItem(KEY_SID, sid);
+		}
+		
+		window.clarity("identify", eid, sid);
+	}, []);
+
 	return <>
 		<QueryClientProvider client={queryClient}>
 			<ToastContext.Provider value={{ makeToast }}>
 				<Head>
 					<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				</Head>
+				<Script id="init-clarity" type="text/javascript" strategy="afterInteractive">{`
+					(function(c,l,a,r,i,t,y){
+					c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+					t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+					y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+					})(window, document, "clarity", "script", "b215twzvnz");
+				`}</Script>
 				<ToastContainer className="toast-container position-fixed p-3" position="bottom-end">
 					<Toast 
 						className={toastBgMapping[toastType] && `border border-${toastBgMapping[toastType]}`}

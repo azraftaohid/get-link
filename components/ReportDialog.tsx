@@ -16,6 +16,7 @@ import Spinner from "react-bootstrap/Spinner";
 import * as yup from "yup";
 import { NameField } from "../models/name";
 import { captureReport, ReportData, ReportField } from "../models/report";
+import { KEY_SID } from "../utils/analytics";
 import { Button } from "./Button";
 import { Conditional } from "./Conditional";
 import { Required } from "./Required";
@@ -69,6 +70,7 @@ const ReportDialog: React.FunctionComponent<ReportDialogProps> = (props) => {
 					[ReportField.EMAIL]: values.email,
 					[ReportField.MESSAGE]: values.message,
 					[ReportField.PATH]: asPath,
+					[ReportField.SESSION]: sessionStorage.getItem(KEY_SID) || "",
 				};
 
 				try {
