@@ -1,4 +1,4 @@
-import { collection, CollectionReference, doc, FieldPath, getFirestore, orderBy, Query, query, serverTimestamp, setDoc, Timestamp, where } from "firebase/firestore/lite";
+import { collection, CollectionReference, deleteDoc, doc, FieldPath, getFirestore, orderBy, Query, query, serverTimestamp, setDoc, Timestamp, where } from "firebase/firestore/lite";
 import { getStorage, ref as fileRef, StorageReference } from "firebase/storage";
 import { v5 } from "uuid";
 import { extractDisplayName } from "../utils/strings";
@@ -51,8 +51,8 @@ export function getFiles(uid?: string) {
 		orderBy(FileField.CREATE_TIME, "desc"));
 }
 
-export function getFileRef(id?: string) {
-	return doc(getFiles(), id);
+export function getFileRef(cfid?: string) {
+	return doc(getFiles(), cfid);
 }
 
 export function getFileRefByFID(fid: string) {
@@ -73,6 +73,12 @@ export async function captureFile(fid: string, uid: string) {
 	});
 
 	return ref;
+}
+
+export async function releaseFile(cfid: string) {
+	const ref = getFileRef(cfid);
+	await deleteDoc(ref);
+	return;
 }
 
 export enum FileField {

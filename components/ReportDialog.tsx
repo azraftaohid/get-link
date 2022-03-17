@@ -12,7 +12,6 @@ import ModalBody from "react-bootstrap/ModalBody";
 import ModalFooter from "react-bootstrap/ModalFooter";
 import ModalHeader from "react-bootstrap/ModalHeader";
 import ModalTitle from "react-bootstrap/ModalTitle";
-import Spinner from "react-bootstrap/Spinner";
 import * as yup from "yup";
 import { NameField } from "../models/name";
 import { captureReport, ReportData, ReportField } from "../models/report";
@@ -167,13 +166,7 @@ const ReportDialog: React.FunctionComponent<ReportDialogProps> = (props) => {
 						<Button 
 							variant="outline-primary" 
 							type="submit" 
-							left={status === "processing" ? <Spinner 
-								as="span" 
-								role="status" 
-								animation="border" 
-								size="sm" 
-								aria-hidden 
-							/> : undefined}
+							state={status === "processing" ? "loading" : "none"}
 							disabled={Object.values(errors).some(err => !!err)}
 						>
 							Submit

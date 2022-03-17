@@ -1,9 +1,13 @@
+import { useAuthUser } from "@react-query-firebase/auth";
 import { Days, formatDate } from "@thegoodcompany/common-utils-js";
+import { getAuth } from "firebase/auth";
 import { getDoc } from "firebase/firestore/lite";
 import { getDownloadURL, getMetadata } from "firebase/storage";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType, NextPage } from "next";
+import { useRouter } from "next/router";
 import { ParsedUrlQuery } from "querystring";
 import React, { useEffect, useState } from "react";
+import { AssurePrompt } from "../../components/AssurePrompt";
 import { Button } from "../../components/Button";
 import { CopyButton } from "../../components/CopyButton";
 import { FileView } from "../../components/FileView";
@@ -14,12 +18,14 @@ import { Loading } from "../../components/Loading";
 import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
 import { PageContent } from "../../components/PageContent";
-import { FileField, FileMetadata, getFileContentRef, getFileRef, getThumbnailContentRef } from "../../models/files";
+import { FileField, FileMetadata, getFileContentRef, getFileRef, getThumbnailContentRef, releaseFile } from "../../models/files";
+import { UserSnapshotField } from "../../models/users";
 import styles from "../../styles/cfid.module.scss";
 import { notFound } from "../../utils/common";
 import { createFileLink, FileCustomMetadata } from "../../utils/files";
 import { mergeNames } from "../../utils/mergeNames";
 import { formatSize } from "../../utils/strings";
+import { useToast } from "../../utils/useToast";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
 
 function suppressError(error: any, cfid: string, subject: string) {
@@ -44,7 +50,15 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 	height,
 	thumbnailDataUrl: tDataUrl,
 }) => {
+	const router = useRouter();
+	const { makeToast } = useToast();
+
+	const { data: user } = useAuthUser(["user"], getAuth());
+
+	const [showDeletePromt, setShowDeletePrompt] = useState(false);
 	const [thumbnailDataUrl, setThumbnailDataUrl] = useState<string | undefined>(tDataUrl || undefined);
+
+	const [isDeleting, setDeleting] = useState(false);
 	
 	useEffect(() => {
 		if (!thumbnailSmall) return;
@@ -119,19 +133,51 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 						<span className="d-none d-md-inline">Download</span>
 					</Button>
 					<CopyButton
-						className="me-2"
 						variant="outline-vivid"
 						content={createFileLink(snapshot.id, true)}
 						left={<Icon name="link" size="sm" />}
 					>
 						<span className="d-none d-md-inline">Share</span>
 					</CopyButton>
+					{user && snapshot.data?.[FileField.USER]?.[UserSnapshotField.UID] === user.uid && <Button
+						className="ms-2"
+						variant="outline-danger"
+						left={<Icon name="delete" size="sm" />}
+						onClick={() => setShowDeletePrompt(true)}
+					>
+						<span className="d-none d-md-inline">Delete</span>
+					</Button>}
 				</div>
 				<p className="text-wrap">
 					<small className="d-block text-muted">{formatSize(size)}</small>
 					{strCreateTime}
 				</p>
 			</div>
+			<AssurePrompt 
+				title="File will be deleted permanently"
+				message="Are you sure you want to delete this file. Once deleted, it can not be recovered."
+				show={showDeletePromt} 
+				confirmProps={{ state: isDeleting ? "loading" : "none" }}
+				onConfirm={async () => {
+					setDeleting(true);
+					try {
+						await releaseFile(snapshot.id);
+						
+						router.push("/");
+						setShowDeletePrompt(false);
+						makeToast("File deleted successfully", "info");
+					} catch (error) {
+						console.error(`error deleting file [cause: ${error}]`);
+						makeToast("Darn, we couldn't delete the file. Please try again later or file a report below.", "error");
+					}
+
+					setDeleting(false);
+				}}
+				onCancel={() => {
+					setShowDeletePrompt(false);
+					setDeleting(false);
+				}}
+			/>
 		</PageContent>
 		<Footer />
 	</PageContainer>;

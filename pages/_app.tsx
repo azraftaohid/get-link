@@ -75,7 +75,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 						show={showToast} 
 						onClose={() => setShowToast(!showToast)} 
 						autohide 
-						delay={3000}
+						delay={5000}
 					>
 						<ToastHeader>
 							<Image 
