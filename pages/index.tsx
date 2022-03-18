@@ -4,11 +4,11 @@ import { uploadBytesResumable, UploadMetadata } from "firebase/storage";
 import { nanoid } from "nanoid";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
-import React, { LegacyRef, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Alert from "react-bootstrap/Alert";
-import Button from "react-bootstrap/Button";
 import FormLabel from "react-bootstrap/FormLabel";
 import ProgressBar from "react-bootstrap/ProgressBar";
+import { DropzoneOptions, useDropzone } from "react-dropzone";
 import { Conditional } from "../components/Conditional";
 import { FilePreview } from "../components/FilePreview";
 import { Footer } from "../components/Footer";
@@ -21,14 +21,14 @@ import { PageContent } from "../components/PageContent";
 import { captureFile, createFID, getFileContentRef } from "../models/files";
 import styles from "../styles/home.module.scss";
 import { StatusCode } from "../utils/common";
-import { createFileLink, FileCustomMetadata, getFileType, getImageDimension, getPdfDimension, getVideoDimension, strAcceptedFileFormats } from "../utils/files";
+import { acceptedFileFormats, createFileLink, FileCustomMetadata, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
 import { formatSize } from "../utils/strings";
+import { useToast } from "../utils/useToast";
 
 const Home: NextPage = () => {
-  const handlerRef: LegacyRef<HTMLInputElement> = useRef(null);
-
   const router = useRouter();
+  const { makeToast } = useToast();
   const { data: user } = useAuthUser(["user"], getAuth());
 
   const [file, setFile] = useState<File | null>(null);
@@ -46,6 +46,37 @@ const Home: NextPage = () => {
       if (c.includes(status)) return [...c];
       return [...c, status];
     });
+  });
+
+  const handleDrop = useCallback<NonNullable<DropzoneOptions["onDrop"]>>((dropped, rejects) => {
+    if (!dropped.length) {
+      if (!rejects.length) return;
+
+      let errMssg: string;
+      if (rejects.length === 1 && rejects[0].errors.length === 1) {
+        const err = rejects[0].errors[0];
+        errMssg = `Upload cancelled: ${err.code}`;
+        console.debug(`actual type: ${rejects[0].file.type}`);
+      } else {
+        errMssg = `Upload cancelled for the following files\n${rejects.map(reject => {
+          return `${reject.file.name}: ${reject.errors.map(err => err.code).join(", ")}`;
+        }).join("\n")}`;
+      }
+
+      makeToast(errMssg, "error");
+
+      return;
+    }
+
+    setFile(dropped[0]);
+  }, [makeToast]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+    accept: acceptedFileFormats,
+    onDrop: handleDrop,
+    maxFiles: 1,
+    maxSize: (100 * 1024 * 1024) - 1,
+    multiple: false,
   });
 
   const uid = user?.uid;
@@ -190,29 +221,16 @@ const Home: NextPage = () => {
         </small>
       </Conditional>
       <Conditional in={!file}>
-        <input 
-          ref={handlerRef}
-          id="handler-upload-file"
-          className="d-none"
-          type="file"
-          accept={strAcceptedFileFormats}
-          onChange={(evt => {
-            const picks = evt.currentTarget.files;
-            if (!picks?.length) return;
-
-            setFile(picks.item(0));
-          })}
-        />
-        <Button 
-          id="upload-area" 
-          className={mergeNames(styles.uploadArea)} 
-          variant="outline-secondary" 
-          onClick={() => { handlerRef.current?.click(); }} 
-        >
+        <button {...getRootProps({
+          id: "upload-area", 
+          type: "button", 
+          className: mergeNames(styles.uploadArea, "btn btn-outline-secondary", isDragActive && "active"),
+        })}>
+          <input {...getInputProps()}/>
           <Icon name="file_upload" size="lg" />
-          <p className="fs-5 mb-0">Upload file</p>
+          <p className="fs-5 mb-0">{!isDragActive ? "Upload file" : "Drop to upload"}</p>
           <small className="text-mute">(Expires after 14 days)</small>
-        </Button>
+        </button>
       </Conditional>
     </PageContent>
     <Footer />

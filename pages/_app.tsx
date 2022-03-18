@@ -84,7 +84,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 								alt="Get-Link logo" />
 							<strong className="ms-2 me-auto">Get-Link</strong>
 						</ToastHeader>
-						<ToastBody>
+						<ToastBody className="pre-break">
 							{toast}
 						</ToastBody>
 					</Toast>

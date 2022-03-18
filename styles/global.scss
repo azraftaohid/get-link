@@ -33,6 +33,10 @@
 	}
 }
 
+.pre-break {
+	white-space: pre-line;
+}
+
 blockquote {
 	@extend .blockquote;
 }

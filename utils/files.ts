@@ -9,6 +9,7 @@ export const acceptedFileFormats = [
 	"audio/*", "video/*", "image/*", "text/*", 
 	"application/pdf",
 	"application/zip", 
+	"application/x-zip-compressed",
 	"application/gzip", 
 	"application/json", 
 	"application/xml", 

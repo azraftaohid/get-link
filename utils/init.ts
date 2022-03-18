@@ -32,6 +32,10 @@ function initFirebase() {
 		connectFirestoreEmulator(firestore, "localhost", 8080);
 		connectStorageEmulator(storage, "localhost", 9199);
 		connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
+	} else if (process.env.NODE_ENV === "production") {
+		const noOp = () => { /* no-op */ };
+		console.debug = noOp;
+		console.log = noOp;
 	}
 	
 	isAnalyticsSupported().then((bool) => {
