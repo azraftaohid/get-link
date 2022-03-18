@@ -5,7 +5,6 @@ import Head from "next/head";
 import Image from "next/image";
 import Script from "next/script";
 import React, { useEffect, useState } from "react";
-import Alert from "react-bootstrap/Alert";
 import Toast from "react-bootstrap/Toast";
 import ToastBody from "react-bootstrap/ToastBody";
 import ToastContainer from "react-bootstrap/ToastContainer";
@@ -90,9 +89,6 @@ function MyApp({ Component, pageProps }: AppProps) {
 						</ToastBody>
 					</Toast>
 				</ToastContainer>
-				{process.env.NODE_ENV === "production" && <Alert className="mb-0" variant="warning">
-					This is a state of the art build. Features may be incomplete and you&apos;re likely to face bugs.
-				</Alert>}
 				<Component {...pageProps} />
 			</ToastContext.Provider>
 		</QueryClientProvider>

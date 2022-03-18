@@ -150,7 +150,11 @@ const Home: NextPage = () => {
   }, [router, url]);
 
   return <PageContainer>
-    <Metadata title="Get Link" description="Create and instantly share link of files and images." />
+    <Metadata 
+      title="Get Link" 
+      description="Create and instantly share link of files and images."
+      image="https://firebasestorage.googleapis.com/v0/b/project-hubble.appspot.com/o/system%2Fcover.png?alt=media&token=69155660-7770-4749-8525-df707b46f4c8" 
+    />
     <Header />
     <PageContent>
       <Conditional in={statuses.includes("files:upload-cancelled")}>
@@ -178,7 +182,11 @@ const Home: NextPage = () => {
         <FilePreview className="mb-3" file={file} onClose={() => setFile(null)} closable={progress < 100} />
         <ProgressBar id="file-upload-progress" animated now={progress}/>
         <small className="text-muted">
-          {statuses.includes("page:redirecting") ? "Redirecting..." : statuses.includes("files:creating-link") ? <>Creating link.</> : <>{progress}% completed.</>}
+          {(statuses.includes("page:redirecting")) 
+            ? <><Link variant="reset" href={url || "#"}>Redirecting</Link>&hellip;</>
+            : statuses.includes("files:creating-link") 
+            ? <>Creating link.</> 
+            : <>{progress}% completed.</>}
         </small>
       </Conditional>
       <Conditional in={!file}>

@@ -20,6 +20,10 @@ const navs: { title: string, pathname: string }[] = [
 		pathname: "/",
 	},
 	{
+		title: "Dashboard",
+		pathname: "/dashboard",
+	},
+	{
 		title: "About",
 		pathname: "/about"
 	}
