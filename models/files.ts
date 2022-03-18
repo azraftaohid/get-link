@@ -78,7 +78,6 @@ export async function captureFile(fid: string, uid: string) {
 export async function releaseFile(cfid: string) {
 	const ref = getFileRef(cfid);
 	await deleteDoc(ref);
-	return;
 }
 
 export enum FileField {

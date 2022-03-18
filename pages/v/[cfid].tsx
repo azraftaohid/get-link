@@ -2,7 +2,7 @@ import { useAuthUser } from "@react-query-firebase/auth";
 import { Days, formatDate } from "@thegoodcompany/common-utils-js";
 import { getAuth } from "firebase/auth";
 import { getDoc } from "firebase/firestore/lite";
-import { getDownloadURL, getMetadata } from "firebase/storage";
+import { deleteObject, getDownloadURL, getMetadata } from "firebase/storage";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType, NextPage } from "next";
 import { useRouter } from "next/router";
 import { ParsedUrlQuery } from "querystring";
@@ -160,12 +160,18 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 				confirmProps={{ state: isDeleting ? "loading" : "none" }}
 				onConfirm={async () => {
 					setDeleting(true);
+
+					const fid = snapshot.data?.[FileField.FID];
 					try {
+						if (!fid) throw new Error(`fid is undefined [cfid: ${snapshot.id}]`);
+
+						const contentRef = getFileContentRef(fid);
+						await deleteObject(contentRef);
 						await releaseFile(snapshot.id);
 						
 						router.push("/");
 						setShowDeletePrompt(false);
-						makeToast("File deleted successfully", "info");
+						makeToast("File deleted successfully.", "info");
 					} catch (error) {
 						console.error(`error deleting file [cause: ${error}]`);
 						makeToast("Darn, we couldn't delete the file. Please try again later or file a report below.", "error");
@@ -237,7 +243,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 
 	return {
 		notFound: false,
-		revalidate: new Days(30).toSeconds().value,
+		revalidate: new Days(1).toSeconds().value,
 		props: {
 			name: name,
 			type: type || "application/octet-stream",

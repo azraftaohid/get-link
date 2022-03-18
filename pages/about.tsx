@@ -40,7 +40,7 @@ const About: NextPage = () => {
 	return <PageContainer>
 		<Metadata 
 			title="About - Get Link"
-			image="/dark_flow.svg"
+			image="https://getlink.vercel.app/dark_flow.svg"
 		/>
 		<Header />
 		<PageContent>
