@@ -185,11 +185,7 @@ const Home: NextPage = () => {
   }, [router, url]);
 
   return <PageContainer>
-    <Metadata 
-      title="Get Link" 
-      description="Create and instantly share link of files and images."
-      image="https://firebasestorage.googleapis.com/v0/b/project-hubble.appspot.com/o/system%2Fcover.png?alt=media&token=69155660-7770-4749-8525-df707b46f4c8" 
-    />
+    <Metadata title="Get Link" />
     <Header />
     <PageContent>
       <Conditional in={statuses.includes("files:upload-cancelled")}>
