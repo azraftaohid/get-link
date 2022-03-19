@@ -18,6 +18,7 @@ import { captureReport, ReportData, ReportField } from "../models/report";
 import { KEY_SID } from "../utils/analytics";
 import { Button } from "./Button";
 import { Conditional } from "./Conditional";
+import { Link } from "./Link";
 import { Required } from "./Required";
 
 const schema = yup.object().shape({
@@ -93,6 +94,12 @@ const ReportDialog: React.FunctionComponent<ReportDialogProps> = (props) => {
 			{({ handleSubmit, handleChange, handleBlur, initialValues, touched, errors }) => (<Form noValidate onSubmit={handleSubmit}>
 				<fieldset disabled={status !== "none"}>
 					<ModalBody>
+						<p>
+							Prefer direct messaging? Our twitter handle is <Link href="https://twitter.com/getlinksoft" newTab>
+							@getlinksoft</Link>. Or you can also <Link href="https://m.me/getlinksoft" newTab>message us</Link> on <cite
+								title="Facebook is an American online social media and social networking service owned by Meta Platforms."
+							>Facebook</cite>.
+						</p>
 						<small className="d-block mb-3"><Required /> Required</small>
 						<FormGroup className="mb-3">
 							<FormLabel>Name</FormLabel>
