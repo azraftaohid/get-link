@@ -18,6 +18,7 @@ import { Link } from "../components/Link";
 import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
+import { Dimension, DimensionField } from "../models/dimension";
 import { captureFile, createFID, getFileContentRef } from "../models/files";
 import styles from "../styles/home.module.scss";
 import { StatusCode } from "../utils/common";
@@ -110,7 +111,7 @@ const Home: NextPage = () => {
 
       try {
         let localUrl: string | undefined;
-        let dimension: [number | undefined, number | undefined] | undefined;
+        let dimension: Dimension | undefined;
 
         if (mime?.startsWith("image")) {
           localUrl = URL.createObjectURL(file);
@@ -125,7 +126,10 @@ const Home: NextPage = () => {
 
         if (localUrl) URL.revokeObjectURL(localUrl);
         if (dimension) {
-          metadata.customMetadata = { width: dimension[0], height: dimension[1] } as FileCustomMetadata;
+          metadata.customMetadata = { 
+            width: dimension[DimensionField.WIDTH], 
+            height: dimension[DimensionField.HEIGHT] 
+          } as FileCustomMetadata;
         }
       } catch (error) {
           console.error(`error getting dimension from selected file [cause: ${error}]`);

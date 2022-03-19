@@ -6,10 +6,11 @@ import { Falsy } from "../utils/falsy";
 export const Metadata: React.FunctionComponent<MetadataProps> = ({ 
     title, 
     description, 
-    image="https://firebasestorage.googleapis.com/v0/b/project-hubble.appspot.com/o/system%2Fcover.png?alt=media&token=69155660-7770-4749-8525-df707b46f4c8", 
+    image: _image, 
     children 
 }) => {
     const router = useRouter();
+    const image = _image || "https://firebasestorage.googleapis.com/v0/b/project-hubble.appspot.com/o/system%2Fcover.png?alt=media&token=69155660-7770-4749-8525-df707b46f4c8";
 
 	return <Head>
 		<meta charSet="utf-8" />

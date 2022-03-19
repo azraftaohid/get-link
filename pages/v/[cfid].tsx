@@ -18,6 +18,7 @@ import { Loading } from "../../components/Loading";
 import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
 import { PageContent } from "../../components/PageContent";
+import { DimensionField } from "../../models/dimension";
 import { FileField, FileMetadata, getFileContentRef, getFileRef, getThumbnailContentRef, releaseFile } from "../../models/files";
 import { UserSnapshotField } from "../../models/users";
 import styles from "../../styles/cfid.module.scss";
@@ -109,7 +110,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 	return <PageContainer>
 		<Metadata 
 			title="Get Link" 
-			image={thumbnail || thumbnailSmall} />
+			image={thumbnail || thumbnailSmall || (type.startsWith("image/") && directLink)} />
 		<Header />
 		<PageContent>
 			<FileView 
@@ -248,8 +249,8 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 			name: name,
 			type: type || "application/octet-stream",
 			size: size,
-			width: width || null,
-			height: height || null,
+			width: staticSnapshot.data?.[FileField.DIMENSION]?.[DimensionField.WIDTH] || width || null,
+			height: staticSnapshot.data?.[FileField.DIMENSION]?.[DimensionField.HEIGHT] || height || null,
 			directLink: downloadUrl,
 			thumbnail: thumbailUrl || null,
 			thumbnailSmall: smThumbnailUrl || null,

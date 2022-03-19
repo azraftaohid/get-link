@@ -2,6 +2,8 @@ import { collection, CollectionReference, deleteDoc, doc, FieldPath, getFirestor
 import { getStorage, ref as fileRef, StorageReference } from "firebase/storage";
 import { v5 } from "uuid";
 import { extractDisplayName } from "../utils/strings";
+import { Dimension } from "./dimension";
+import { FileName } from "./fileName";
 import { UserSnapshot, UserSnapshotField } from "./users";
 
 /**
@@ -81,15 +83,19 @@ export async function releaseFile(cfid: string) {
 }
 
 export enum FileField {
+	NAME = "name",
 	FID = "fid",
 	USER = "user",
 	CREATE_TIME = "create_time",
+	DIMENSION = "dimension",
 }
 
 export type ThumbnailSize = "56x56" | "128x128" | "384x384" | "1024x1024";
 
 export interface FileMetadata {
+	[FileField.NAME]?: FileName,
 	[FileField.FID]?: string,
 	[FileField.USER]?: UserSnapshot,
 	[FileField.CREATE_TIME]?: Timestamp,
+	[FileField.DIMENSION]?: Dimension,
 }

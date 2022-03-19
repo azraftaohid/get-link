@@ -4,7 +4,7 @@ export const RawText: React.FunctionComponent<RawTextProps> = ({ className, src,
 	const [data, setData] = useState(initData || "Loading text...");
 
 	useEffect(() => {
-		fetch(src).then(async res => {
+		fetch(src, { mode: "cors" }).then(async res => {
 			const text = await res.text();
 			setData(text);
 		}).catch(err => {
