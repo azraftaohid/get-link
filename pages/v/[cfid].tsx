@@ -109,8 +109,10 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 
 	return <PageContainer>
 		<Metadata 
-			title="Get Link" 
-			image={thumbnail || thumbnailSmall || (type.startsWith("image/") && directLink)} />
+			title={snapshot.data?.[FileField.NAME] || "Get Link"} 
+			description="Create and instantly share link of files and images."
+			image={thumbnail || thumbnailSmall || (type.startsWith("image/") && directLink)} 
+		/>
 		<Header />
 		<PageContent>
 			<FileView 

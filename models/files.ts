@@ -3,7 +3,6 @@ import { getStorage, ref as fileRef, StorageReference } from "firebase/storage";
 import { v5 } from "uuid";
 import { extractDisplayName } from "../utils/strings";
 import { Dimension } from "./dimension";
-import { FileName } from "./fileName";
 import { UserSnapshot, UserSnapshotField } from "./users";
 
 /**
@@ -65,10 +64,11 @@ export function getFileRefOf(ref: StorageReference) {
 	return getFileRefByFID(ref.fullPath);
 }
 
-export async function captureFile(fid: string, uid: string) {
+export async function captureFile(fid: string, uid: string, data?: Omit<FileMetadata, FileField.FID | FileField.USER | FileField.CREATE_TIME>) {
 	const ref = getFileRefByFID(fid);
 
 	await setDoc(ref, {
+		...data,
 		[FileField.FID]: fid,
 		[FileField.USER]: { [UserSnapshotField.UID]: uid },
 		[FileField.CREATE_TIME]: serverTimestamp(),
@@ -93,7 +93,7 @@ export enum FileField {
 export type ThumbnailSize = "56x56" | "128x128" | "384x384" | "1024x1024";
 
 export interface FileMetadata {
-	[FileField.NAME]?: FileName,
+	[FileField.NAME]?: string,
 	[FileField.FID]?: string,
 	[FileField.USER]?: UserSnapshot,
 	[FileField.CREATE_TIME]?: Timestamp,

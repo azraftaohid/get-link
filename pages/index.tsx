@@ -19,7 +19,7 @@ import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
 import { Dimension, DimensionField } from "../models/dimension";
-import { captureFile, createFID, getFileContentRef } from "../models/files";
+import { captureFile, createFID, FileField, getFileContentRef } from "../models/files";
 import styles from "../styles/home.module.scss";
 import { StatusCode } from "../utils/common";
 import { acceptedFileFormats, createFileLink, FileCustomMetadata, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
@@ -152,7 +152,7 @@ const Home: NextPage = () => {
         appendStatus.current("files:creating-link");
 
         try {
-          const doc = await captureFile(fid, uid);
+          const doc = await captureFile(fid, uid, { [FileField.NAME]: file.name });
           console.debug(`file captured at ${doc.path}`);
 
           setUrl(createFileLink(doc.id));
