@@ -11,7 +11,7 @@ export const Metadata: React.FunctionComponent<MetadataProps> = ({
 }) => {
     const router = useRouter();
 
-    const image = _image || "https://firebasestorage.googleapis.com/v0/b/project-hubble.appspot.com/o/system%2Fcover.png?alt=media&token=69155660-7770-4749-8525-df707b46f4c8";
+    const image = _image || "https://firebasestorage.googleapis.com/v0/b/project-hubble.appspot.com/o/system%2Fpreview.png?alt=media&token=54b0059f-1545-41f9-8679-776bf7b58abd";
     const description = _description || "The easiest way to create and share links of files and images.";
 
 	return <Head>
