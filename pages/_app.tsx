@@ -68,6 +68,12 @@ function MyApp({ Component, pageProps }: AppProps) {
 					y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
 					})(window, document, "clarity", "script", "b215twzvnz");
 				`}</Script>
+				<Script 
+					id="google-adsense" 
+					src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3456388318199506"
+					crossOrigin="anonymous"
+					strategy="afterInteractive"
+					async />
 				<ToastContainer className="toast-container position-fixed p-3" position="bottom-end">
 					<Toast 
 						className={toastBgMapping[toastType] && `border border-${toastBgMapping[toastType]}`}
