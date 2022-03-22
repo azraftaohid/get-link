@@ -24,7 +24,7 @@ const Lead: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({ c
 };
 
 const Proposition: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({ children, ...rest }) => {
-	return <div className="fs-5" {...rest}>
+	return <div {...rest}>
 		{children}
 	</div>;
 };
@@ -32,7 +32,7 @@ const Proposition: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>>
 const QAndA: React.FunctionComponent<{ question: React.ReactNode, answer: React.ReactNode }> = ({ question, answer }) => {
 	return <>
 		<h4 className="mt-5 mb-3">{question}</h4>
-		<div className="fs-5">{answer}</div>
+		<div>{answer}</div>
 	</>;
 };
 
@@ -43,7 +43,7 @@ const About: NextPage = () => {
 			image="https://getlink.vercel.app/dark_flow.svg"
 		/>
 		<Header />
-		<PageContent>
+		<PageContent size="lg">
 			<Figure className="text-center w-100">
 				<blockquote className="fs-3">Just get me a <span className="text-muted">link</span>!</blockquote>
 				<Figure.Caption className="blockquote-footer fs-6">
