@@ -1,22 +1,11 @@
 @import "restart";
 
-@mixin def-padding {
+#nav-container, #footer-container, .page-content {
 	@extend .px-4, .px-md-5;
 }
 
-#nav-container {
-	@include def-padding();
-	max-width: map-get($grid-breakpoints, xl);
-}
-
-#footer-container {
-	@include def-padding();
-	max-width: map-get($grid-breakpoints, xl);
-}
-
-.page-content {
-	@include def-padding();
-	max-width: map-get($grid-breakpoints, xl);
+#nav-container, #footer-container {
+	@extend .mw-xl;
 }
 
 .toast-container {
@@ -37,8 +26,38 @@
 	white-space: pre-line;
 }
 
+.alive {
+	@include border-radius();
+	padding: $btn-close-padding-y $btn-close-padding-x;
+	opacity: $btn-close-opacity;
+
+	&:hover {
+		opacity: $btn-close-hover-opacity;
+	}
+	
+	&:focus {
+		box-shadow: $btn-close-focus-shadow;
+		opacity: $btn-close-focus-opacity;
+	}
+
+	&:disabled,
+	&.disabled {
+		pointer-events: none;
+		user-select: none;
+		opacity: $btn-close-disabled-opacity;
+	}
+}
+
+.ic-alive {
+	@extend .alive;
+}
+
 blockquote {
 	@extend .blockquote;
+}
+
+ul, ol {
+	@extend .my-3;
 }
 
 html {

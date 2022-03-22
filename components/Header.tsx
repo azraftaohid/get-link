@@ -61,7 +61,7 @@ export const Header: React.FunctionComponent = () => {
 						</NavLink>)}
 					</Nav>
 				</NavbarCollapse>
-				<Icon role="button" className={"btn btn-outline-secondary order-0 order-md-2 ms-auto me-3 me-md-0"} name="dark_mode" onClick={toggleTheme} />
+				<Icon role="button" className={"btn btn-outline-secondary order-0 order-md-2 ms-auto me-3 me-md-0"} name="dark_mode" tabIndex={1} onClick={toggleTheme} />
 			</Container>
 		</Navbar>
 		<RouteIndicator />

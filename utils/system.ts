@@ -3,22 +3,21 @@
  * @param text the content to copy
  * @returns a promise fulfilled when {@code text} is copied successfully or rejects otherwise
  */
- export async function copyToClipboard(text: string): Promise<boolean> {
+ export async function copyToClipboard(text: string): Promise<void> {
     if (navigator.clipboard) {
         try {
             await navigator.clipboard.writeText(text);
             console.debug("Text copied to clipboard");
-            return true;
         } catch (error) {
             console.error("Failed to copy text to clipboard via navigator", error);
-            return copyToClipboardFallback(text);
+            copyToClipboardFallback(text);
         }
     } else {
-        return copyToClipboardFallback(text);
+        copyToClipboardFallback(text);
     }
 }
 
-function copyToClipboardFallback(text: string): boolean {
+function copyToClipboardFallback(text: string) {
     const textElement = document.createElement("textarea");
     textElement.value = text;
 
@@ -30,19 +29,12 @@ function copyToClipboardFallback(text: string): boolean {
     textElement.focus();
     textElement.select();
     
-    let success = false;
-    try {
-        const successful = document.execCommand("copy");
-        if (successful) {
-            console.debug("Text copied to clipboard");
-            success = true;
-        } else {
-            console.error("Failed to copy text to clipboard");
-        }
-    } catch (error) {
-        console.error(`Failed to copy text to clipboard [cause: ${error}]`);
-    }
-
+    const successful = document.execCommand("copy");
     document.body.removeChild(textElement);
-    return success;
+
+    if (!successful) {
+        throw new Error("failed to copy text using fallback method");
+    } else {
+        console.debug("Text copied with fallback method");
+    }
 }

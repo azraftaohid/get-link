@@ -7,8 +7,12 @@ export const CopyButton: React.FunctionComponent<CopyButtonProps> = ({ content, 
 	const { makeToast } = useToast();
 	return <Button variant="outline-secondary" onClick={async evt => {
 		onClick?.(evt);
-		if (await copyToClipboard(content)) makeToast("Copied");
-		else makeToast("Couldn't copy text!", "error");
+		try {
+			await copyToClipboard(content);
+			makeToast("Copied");
+		} catch (error) {
+			makeToast("Couldn't copy text!", "error");
+		}
 	}} {...rest}>
 		{children}
 	</Button>;
