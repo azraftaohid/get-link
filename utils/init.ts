@@ -1,8 +1,9 @@
-import { initializeAnalytics, isSupported as isAnalyticsSupported, setAnalyticsCollectionEnabled } from "firebase/analytics";
+import { initializeAnalytics, isSupported as isAnalyticsSupported, setAnalyticsCollectionEnabled, setUserId } from "firebase/analytics";
 import { getApps, initializeApp } from "firebase/app";
 import { browserLocalPersistence, browserSessionPersistence, connectAuthEmulator, indexedDBLocalPersistence, initializeAuth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore/lite";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
+import { acquireExperienceOptions } from "./analytics";
 import { firebaseConfig } from "./configs";
 import { FIREBASE_APP_NAME } from "./firebase";
 
@@ -43,6 +44,9 @@ function initFirebase() {
 
 		const instance = initializeAnalytics(app);
 		setAnalyticsCollectionEnabled(instance, process.env.NODE_ENV === "production");
+
+		const { eid } = acquireExperienceOptions();
+		setUserId(instance, eid, { global: true });
 	});
 	
 	return app;

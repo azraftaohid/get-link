@@ -1,5 +1,4 @@
 import { getAnalytics, logEvent } from "firebase/analytics";
-import { nanoid } from "nanoid";
 import type { AppProps, NextWebVitalsMetric } from "next/app";
 import Head from "next/head";
 import Image from "next/image";
@@ -11,7 +10,7 @@ import ToastContainer from "react-bootstrap/ToastContainer";
 import ToastHeader from "react-bootstrap/ToastHeader";
 import { QueryClient, QueryClientProvider } from "react-query";
 import "../styles/global.scss";
-import { KEY_EID, KEY_SID } from "../utils/analytics";
+import { acquireExperienceOptions } from "../utils/analytics";
 import { init } from "../utils/init";
 
 init();
@@ -40,18 +39,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 	};
 
 	useEffect(() => {
-		let eid = localStorage.getItem(KEY_EID);
-		if (!eid) {
-			eid = nanoid(10);
-			localStorage.setItem(KEY_EID, eid);
-		}
+		if (!window.clarity) return;
 
-		let sid = sessionStorage.getItem(KEY_SID);
-		if (!sid) {
-			sid = nanoid();
-			sessionStorage.setItem(KEY_SID, sid);
-		}
-		
+		const { eid, sid } = acquireExperienceOptions();
 		window.clarity("identify", eid, sid);
 	}, []);
 
@@ -61,7 +51,11 @@ function MyApp({ Component, pageProps }: AppProps) {
 				<Head>
 					<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				</Head>
-				<Script id="init-clarity" type="text/javascript" strategy="afterInteractive">{`
+				<Script 
+					id="init-clarity" 
+					type="text/javascript" 
+					strategy="afterInteractive"
+				>{`
 					(function(c,l,a,r,i,t,y){
 					c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
 					t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
