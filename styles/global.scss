@@ -1,5 +1,10 @@
 @import "restart";
 
+@mixin apply-fs-size($level) {
+	width: map-get($map: $font-sizes, $key: $level);
+	height: map-get($map: $font-sizes, $key: $level);
+}
+
 #nav-container, #footer-container, .page-content {
 	@extend .px-4, .px-md-5;
 }
@@ -50,6 +55,20 @@
 
 .ic-alive {
 	@extend .alive;
+}
+
+.material-icons-outlined {
+	@extend .text-truncate;
+	width: 24px;
+	height: 24px;
+
+	&.fs-1 {
+		@include apply-fs-size(1);
+	}
+
+	&.fs-5 {
+		@include apply-fs-size(5);
+	}
 }
 
 blockquote {
