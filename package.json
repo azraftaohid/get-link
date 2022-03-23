@@ -6,6 +6,7 @@
     "analyze": "cross-env ANALYZE=true yarn build",
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "next-sitemap --config next-sitemap.config.js",
     "start": "next start",
     "lint": "next lint",
     "test": "jest --watch",
@@ -51,6 +52,7 @@
     "eslint-plugin-react": "^7.28.0",
     "eslint-plugin-react-hooks": "^4.3.0",
     "jest": "^27.5.1",
+    "next-sitemap": "^2.5.13",
     "prettier": "2.5.1",
     "sass": "^1.49.7",
     "typescript": "4.5.5"

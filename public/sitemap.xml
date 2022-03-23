@@ -1,24 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" 
-	xmlns:xhtml="http://www.w3.org/1999/xhtml">
-	<url>
-		<loc>https://getlink.vercel.app</loc>
-		<lastmod>2022-03-23</lastmod>
-		<changefreq>weekly</changefreq>
-	</url>
-	<url>
-		<loc>https://getlink.vercel.app/about</loc>
-		<lastmod>2022-03-23</lastmod>
-		<changefreq>monthly</changefreq>
-	</url>
-	<url>
-		<loc>https://getlink.vercel.app/policies</loc>
-		<lastmod>2022-03-23</lastmod>
-		<changefreq>monthly</changefreq>
-	</url>
-	<url>
-		<loc>https://getlink.vercel.app/dashboard</loc>
-		<lastmod>2022-03-23</lastmod>
-		<changefreq>monthly</changefreq>
-	</url>
-</urlset>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemap><loc>https://getlink.vercel.app/sitemap-0.xml</loc></sitemap>
+</sitemapindex>
