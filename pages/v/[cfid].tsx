@@ -23,6 +23,7 @@ import { FileField, FileMetadata, getFileContentRef, getFileRef, getThumbnailCon
 import { UserSnapshotField } from "../../models/users";
 import styles from "../../styles/cfid.module.scss";
 import { notFound } from "../../utils/common";
+import { hasExpired } from "../../utils/dates";
 import { createFileLink, FileCustomMetadata } from "../../utils/files";
 import { mergeNames } from "../../utils/mergeNames";
 import { formatSize } from "../../utils/strings";
@@ -209,7 +210,9 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 
 	const staticSnapshot = toStatic(snapshot);
 	const fid = staticSnapshot.data?.[FileField.FID];
-	if (!fid) return notFound;
+	const createTime = staticSnapshot.data?.[FileField.CREATE_TIME];
+	const expireTime = staticSnapshot.data?.[FileField.EXPIRE_TIME];
+	if (!fid || hasExpired(expireTime, createTime)) return notFound;
 
 	const ref = getFileContentRef(fid);
 	const thumbnailRef = getThumbnailContentRef(fid, "1024x1024");

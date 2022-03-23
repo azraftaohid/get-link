@@ -87,6 +87,7 @@ export enum FileField {
 	FID = "fid",
 	USER = "user",
 	CREATE_TIME = "create_time",
+	EXPIRE_TIME = "expire_time",
 	DIMENSION = "dimension",
 }
 
@@ -97,5 +98,6 @@ export interface FileMetadata {
 	[FileField.FID]?: string,
 	[FileField.USER]?: UserSnapshot,
 	[FileField.CREATE_TIME]?: Timestamp,
+	[FileField.EXPIRE_TIME]?: Timestamp,
 	[FileField.DIMENSION]?: Dimension,
 }
