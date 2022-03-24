@@ -29,7 +29,7 @@ import { initFirestore } from "../utils/firestore";
 import { mergeNames } from "../utils/mergeNames";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
 
-const FETCH_LIMIT = 6;
+const FETCH_LIMIT = 12;
 
 const NoPreview: React.FunctionComponent<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> = ({ 
 	className,
@@ -71,10 +71,10 @@ const FileCard: React.FunctionComponent<{ file: QueryDocumentSnapshot<FileMetada
 		});
 	}, [fid]);
 
-	return <Card className={styles.fileCard}>
+	return <Card className={mergeNames(styles.fileCard)}>
 		<div className={mergeNames(styles.linkPreview)}>
 			{thumbnail 
-				? <CardImg src={thumbnail} alt="link preview" /> 
+				? <CardImg className="fit-cover" src={thumbnail} alt="link preview" /> 
 				: thumbnail === null 
 				? <NoPreview />
 				: <LoadingPreview />}
@@ -144,7 +144,7 @@ const UserDashboard: React.FunctionComponent<{ uid: string }> = ({ uid }) => {
 	}
 
 	return <div>
-		<Row className="g-4" xs={1} sm={2} lg={3}>
+		<Row className="g-4" xs={1} sm={2} md={3} lg={4}>
 			{links.data.pages.map((page, i) => <FileConcat key={`page-${i}`} snapshot={page.docs}/>)}
 		</Row>
 		<Row className="mt-4">
@@ -156,7 +156,7 @@ const UserDashboard: React.FunctionComponent<{ uid: string }> = ({ uid }) => {
 					onClick={() => links.fetchNextPage()} 
 					disabled={!links.hasNextPage || !links.isSuccess}
 				>
-					Load more
+					{links.hasNextPage ? "Load more" : "End"}
 				</Button>
 			</Col>
 		</Row>
@@ -174,6 +174,7 @@ const Dashboard: NextPage = () => {
 		/>
 		<Header />
 		<PageContent>
+			<h1 className="mb-4">Recent files</h1>
 			{user?.uid ? <UserDashboard uid={user.uid} /> : isLoading ? <Loading /> : <Empty />}
 		</PageContent>
 		<Footer />
