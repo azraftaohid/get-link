@@ -79,84 +79,91 @@ ul, ol {
 	@extend .my-3;
 }
 
-html {
-	&[data-theme="dark"] {
-		#nav {
-			@extend .navbar-dark, .bg-dark;
-		}
+@include app-theme(dark) {
+	#nav {
+		@extend .navbar-dark, .bg-dark;
+	}
 
-		#root {
-			@extend .text-white;
-			background-color: $black;
-		}
+	#root {
+		@extend .text-white;
+		background-color: $black;
+	}
 
-		.toast {
-			@extend .text-white;
-			background-color: $gray-900;
+	.toast {
+		@extend .text-white;
+		background-color: $gray-900;
 
-			.toast-header {
-				@extend .navbar-dark;
-				background-color: $gray-800;
-			}
-		}
-
-		.file-preview {
-			@extend .bg-dark;
-		}
-
-		.btn-outline-vivid {
-			@extend .btn-outline-light;
-		}
-
-		.btn-close {
-			@extend .btn-close-white;
-		}
-
-		.page-link {
-			@extend .border, .border-secondary;
-			background-color: $gray-900 !important;
-		}
-
-		.modal-content {
-			@extend .bg-dark, .text-white;
-		}
-
-		.modal-header, .modal-body, .modal-footer {
-			@extend .border-secondary;
-		}
-
-		.form-control {
-			@extend .bg-dark, .text-white;
-		}
-
-		.form-control:not(.is-invalid) {
-			@extend .border-secondary;
-		}
-
-		.form-control:disabled, .form-control[readonly] {
-			background-color: $gray-900 !important;
-		}
-
-		.standout {
-			background-color: $gray-900;
+		.toast-header {
+			@extend .navbar-dark;
+			background-color: $gray-800;
 		}
 	}
-	
-	&[data-theme="light"] {
-		#nav {
-			@extend .navbar-light, .bg-light;
-		}
 
-		.file-preview {
-			@extend .bg-light;
-		}
+	.card {
+		background-color: $black;
+		border-color: rgba($white, .125);
+	}
 
-		.btn-outline-vivid {
-			@extend .btn-outline-dark;
-		}
+	.card-footer {
+		@extend .bg-dark;
+	}
 
-		.standout {
-			background-color: $gray-100;
-		}
+	.file-preview {
+		@extend .bg-dark;
+	}
+
+	.btn-outline-vivid {
+		@extend .btn-outline-light;
+	}
+
+	.btn-close {
+		@extend .btn-close-white;
+	}
+
+	.page-link {
+		@extend .border, .border-secondary;
+		background-color: $gray-900 !important;
+	}
+
+	.modal-content {
+		@extend .bg-dark, .text-white;
+	}
+
+	.modal-header, .modal-body, .modal-footer {
+		@extend .border-secondary;
+	}
+
+	.form-control {
+		@extend .bg-dark, .text-white;
+	}
+
+	.form-control:not(.is-invalid) {
+		@extend .border-secondary;
+	}
+
+	.form-control:disabled, .form-control[readonly] {
+		background-color: $gray-900 !important;
+	}
+
+	.standout {
+		background-color: $gray-900;
+	}
+}
+
+@include app-theme(light) {
+	#nav {
+		@extend .navbar-light, .bg-light;
+	}
+
+	.file-preview {
+		@extend .bg-light;
+	}
+
+	.btn-outline-vivid {
+		@extend .btn-outline-dark;
+	}
+
+	.standout {
+		background-color: $gray-100;
 	}
 }

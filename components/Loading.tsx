@@ -2,8 +2,8 @@ import React from "react";
 import Spinner, { SpinnerProps } from "react-bootstrap/Spinner";
 import Stack, { StackProps } from "react-bootstrap/Stack";
 
-export const Loading: React.FunctionComponent = () => {
-	return <Stack>
+export const Loading: React.FunctionComponent<LoadingProps> = (props) => {
+	return <Stack {...props}>
 		<Spinner className="mx-auto" animation="border" />
 		<p className="text-center mt-2">Please wait...</p>
 	</Stack>;

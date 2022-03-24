@@ -31,3 +31,11 @@ $utilities: map-merge($utilities, (
 
 // Utilities
 @import "~bootstrap/scss/utilities/api";
+
+@mixin app-theme($theme) {
+	html {
+		&[data-theme=#{$theme}] {
+			@content;
+		}
+	}
+}

@@ -1,0 +1,21 @@
+@import "variables";
+
+.linkPreview {
+	@extend .ratio, .ratio-4x3;
+}
+
+.btnShare {
+	z-index: 100;
+}
+
+@include app-theme(dark) {
+	.noPreview {
+		background-color: $gray-800;
+	}
+}
+
+@include app-theme(light) {
+	.noPreview {
+		background-color: $gray-300;
+	}
+}

@@ -21,6 +21,8 @@ import { UserSnapshot, UserSnapshotField } from "./users";
  * user/uid/name
  */
 
+export const COLLECTION_FILES = "files";
+
 const NAMESPACE_FILES = "d4f3fc99-23a2-447d-96d7-9b43861c19cc";
 
 export function createEntryId(fid: string) {
@@ -45,7 +47,7 @@ export function getThumbnailContentRef(fid: string, size: ThumbnailSize) {
 export function getFiles(): CollectionReference<FileMetadata>;
 export function getFiles(uid: string): Query<FileMetadata>;
 export function getFiles(uid?: string) {
-	const fs: CollectionReference<FileMetadata> = collection(getFirestore(), "files");
+	const fs: CollectionReference<FileMetadata> = collection(getFirestore(), COLLECTION_FILES);
 	if (!uid) return fs;
 
 	return query(fs, where(new FieldPath(FileField.USER, UserSnapshotField.UID), "==", uid), 
