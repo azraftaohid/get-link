@@ -17,9 +17,11 @@ import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { Icon } from "../components/Icon";
 import { Link } from "../components/Link";
+import { Loading } from "../components/Loading";
 import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
+import { ShortLoading } from "../components/ShortLoading";
 import { COLLECTION_FILES, FileField, FileMetadata, getThumbnailContentRef } from "../models/files";
 import { UserSnapshotField } from "../models/users";
 import styles from "../styles/dashboard.module.scss";
@@ -29,22 +31,22 @@ import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
 
 const FETCH_LIMIT = 6;
 
-const NoPreview: React.FunctionComponent<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> & { data: FileMetadata }> = ({ 
+const NoPreview: React.FunctionComponent<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> = ({ 
 	className,
-	data,
 	...rest
 }) => {
-	return <div className={mergeNames(styles.noPreview, "text-center", className)} {...rest}>
-		<p className="fs-5">Preview not available</p>
+	return <div className={mergeNames(styles.noPreview, "d-flex flex-column align-items-center justify-content-center text-muted", className)} {...rest}>
+		<Icon name="description" size="lg" />
+		<p className="fs-5">Preview unavailable!</p>
 	</div>;
 };
 
-const Loading: React.FunctionComponent<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> = ({
+const LoadingPreview: React.FunctionComponent<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> = ({
 	className,
 	...rest
 }) => {
-	return <div className={mergeNames("text-center", className)} {...rest}>
-		<p className="fs-5">Loading...</p>
+	return <div className={mergeNames(styles.loadingPreview, className)} {...rest}>
+		<ShortLoading />
 	</div>;
 };
 
@@ -69,20 +71,20 @@ const FileCard: React.FunctionComponent<{ file: QueryDocumentSnapshot<FileMetada
 		});
 	}, [fid]);
 
-	return <Card key={file.id}>
+	return <Card className={styles.fileCard}>
 		<div className={mergeNames(styles.linkPreview)}>
 			{thumbnail 
 				? <CardImg src={thumbnail} alt="link preview" /> 
 				: thumbnail === null 
-				? <NoPreview className="pt-5" data={data} />
-				: <Loading className="pt-5" />}
+				? <NoPreview />
+				: <LoadingPreview />}
 		</div>
 		<Card.Footer className="d-flex flex-row">
 			<div className="w-75 me-auto">
 				<Link className="stretched-link text-decoration-none link-secondary" href={createUrl("v", file.id)}>
 					<strong className="d-block text-truncate">{data[FileField.NAME] || file.id}</strong>
 				</Link>
-				{createTime && formatDate(createTime, "short", "year", "month", "day")}
+				<small>{createTime && formatDate(createTime, "short", "year", "month", "day")}</small>
 			</div>
 			<CopyButton 
 				className={styles.btnShare}
@@ -96,7 +98,7 @@ const FileCard: React.FunctionComponent<{ file: QueryDocumentSnapshot<FileMetada
 
 const FileConcat: React.FunctionComponent<{ snapshot: QueryDocumentSnapshot<FileMetadata>[] }> = ({ snapshot }) => {
 	return <>
-		{snapshot.map(file => <Col key={`key-${file.id}`}><FileCard file={file} /></Col>)}
+		{snapshot.map(file => <Col key={`col-${file.id}`}><FileCard file={file} /></Col>)}
 	</>;
 };
 
@@ -142,7 +144,7 @@ const UserDashboard: React.FunctionComponent<{ uid: string }> = ({ uid }) => {
 	}
 
 	return <div>
-		<Row className="g-4" xs={1} md={2} lg={3}>
+		<Row className="g-4" xs={1} sm={2} lg={3}>
 			{links.data.pages.map((page, i) => <FileConcat key={`page-${i}`} snapshot={page.docs}/>)}
 		</Row>
 		<Row className="mt-4">
@@ -163,7 +165,7 @@ const UserDashboard: React.FunctionComponent<{ uid: string }> = ({ uid }) => {
 
 const Dashboard: NextPage = () => {
 	initFirestore();
-	const { data: user } = useAuthUser(["user"], getAuth());
+	const { data: user, isLoading } = useAuthUser(["user"], getAuth());
 
 	return <PageContainer>
 		<Metadata 
@@ -172,7 +174,7 @@ const Dashboard: NextPage = () => {
 		/>
 		<Header />
 		<PageContent>
-			{user?.uid ? <UserDashboard uid={user.uid} /> : <Empty />}
+			{user?.uid ? <UserDashboard uid={user.uid} /> : isLoading ? <Loading /> : <Empty />}
 		</PageContent>
 		<Footer />
 	</PageContainer>;

@@ -20,6 +20,12 @@ $utilities: map-merge($utilities, (
 		md: map-get($grid-breakpoints, md),
 		lg: map-get($grid-breakpoints, lg),
 		xl: map-get($grid-breakpoints, xl)
+	)))),
+	"background-color": map-merge(map-get($utilities, background-color), ( values: map-merge(map-get(map-get($utilities, background-color), values), (
+		gray-100: $gray-100,
+		gray-200: $gray-200,
+		gray-800: $gray-800,
+		gray-900: $gray-900
 	))))
 ));
 

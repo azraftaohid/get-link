@@ -90,17 +90,15 @@ ul, ol {
 	}
 
 	.toast {
-		@extend .text-white;
-		background-color: $gray-900;
+		@extend .text-white, .bg-gray-900;
 
 		.toast-header {
-			@extend .navbar-dark;
-			background-color: $gray-800;
+			@extend .navbar-dark, .bg-gray-800;
 		}
 	}
 
 	.card {
-		background-color: $black;
+		@extend .bg-black;
 		border-color: rgba($white, .125);
 	}
 
@@ -116,13 +114,16 @@ ul, ol {
 		@extend .btn-outline-light;
 	}
 
+	.border-vivid {
+		@extend .border-light;
+	}
+
 	.btn-close {
 		@extend .btn-close-white;
 	}
 
 	.page-link {
-		@extend .border, .border-secondary;
-		background-color: $gray-900 !important;
+		@extend .border, .border-secondary, .bg-gray-900;
 	}
 
 	.modal-content {
@@ -142,11 +143,11 @@ ul, ol {
 	}
 
 	.form-control:disabled, .form-control[readonly] {
-		background-color: $gray-900 !important;
+		@extend .bg-gray-900;
 	}
 
 	.standout {
-		background-color: $gray-900;
+		@extend .bg-gray-900;
 	}
 }
 
@@ -163,7 +164,11 @@ ul, ol {
 		@extend .btn-outline-dark;
 	}
 
+	.border-vivid {
+		@extend .border-dark;
+	}
+
 	.standout {
-		background-color: $gray-100;
+		@extend .bg-gray-100;
 	}
 }

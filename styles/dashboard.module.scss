@@ -8,14 +8,26 @@
 	z-index: 100;
 }
 
+.fileCard {
+	&:hover {
+		@include app-theme(dark) {
+			@extend .border-light;
+		}
+
+		@include app-theme(dark) {
+			@extend .border-light;
+		}
+	}
+}
+
 @include app-theme(dark) {
-	.noPreview {
-		background-color: $gray-800;
+	.noPreview, .loadingPreview {
+		background-color: $gray-900;
 	}
 }
 
 @include app-theme(light) {
-	.noPreview {
-		background-color: $gray-300;
+	.noPreview, .loadingPreview {
+		background-color: $gray-200;
 	}
 }
