@@ -149,6 +149,10 @@ ul, ol {
 	.standout {
 		@extend .bg-gray-900;
 	}
+
+	.progress {
+		background-color: $gray-800;
+	}
 }
 
 @include app-theme(light) {
