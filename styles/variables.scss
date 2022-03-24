@@ -1,10 +1,6 @@
 @import "~bootstrap/scss/functions";
 
-// override variables
-$light: #f5f6f7;
-$dark: #141516;
-$primary: #0078d4;
-$secondary: rgba(101, 110, 119, 80%);
+@import "overrides";
 
 @import "~bootstrap/scss/variables";
 @import "~bootstrap/scss/utilities";
@@ -38,10 +34,4 @@ $utilities: map-merge($utilities, (
 // Utilities
 @import "~bootstrap/scss/utilities/api";
 
-@mixin app-theme($theme) {
-	html {
-		&[data-theme=#{$theme}] {
-			@content;
-		}
-	}
-}
+@import "utils/app-theme";

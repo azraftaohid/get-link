@@ -1,0 +1,7 @@
+@mixin app-theme($theme) {
+	html {
+		&[data-theme=#{$theme}] {
+			@content;
+		}
+	}
+}

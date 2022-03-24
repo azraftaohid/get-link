@@ -1,4 +1,11 @@
-@import "variables";
+@import "~bootstrap/scss/functions";
+
+@import "overrides";
+
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/helpers/ratio";
+
+@import "utils/app-theme";
 
 .linkPreview {
 	@extend .ratio, .ratio-4x3;
@@ -6,18 +13,6 @@
 
 .btnShare {
 	z-index: 100;
-}
-
-.fileCard {
-	&:hover {
-		@include app-theme(dark) {
-			@extend .border-light;
-		}
-
-		@include app-theme(dark) {
-			@extend .border-light;
-		}
-	}
 }
 
 @include app-theme(dark) {
