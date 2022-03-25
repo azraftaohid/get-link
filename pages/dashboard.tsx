@@ -25,6 +25,7 @@ import { ShortLoading } from "../components/ShortLoading";
 import { COLLECTION_FILES, FileField, FileMetadata, getFileContentRef, getThumbnailContentRef } from "../models/files";
 import { UserSnapshotField } from "../models/users";
 import styles from "../styles/dashboard.module.scss";
+import { hasExpired } from "../utils/dates";
 import { initFirestore } from "../utils/firestore";
 import { mergeNames } from "../utils/mergeNames";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
@@ -64,7 +65,8 @@ const FileCard: React.FunctionComponent<{ file: QueryDocumentSnapshot<FileMetada
 
 	const data = file.data({ serverTimestamps: "estimate" });
 	const fid = data[FileField.FID];
-	const createTime = data[FileField.CREATE_TIME]?.toDate();
+	const createTime = data[FileField.CREATE_TIME];
+	const expireTime = data[FileField.EXPIRE_TIME];
 
 	useEffect(() => {
 		if (!fid) {
@@ -118,7 +120,10 @@ const FileCard: React.FunctionComponent<{ file: QueryDocumentSnapshot<FileMetada
 				<Link className="stretched-link text-decoration-none link-secondary" href={createUrl("v", file.id)}>
 					<strong className="d-block text-truncate">{data[FileField.NAME] || file.id}</strong>
 				</Link>
-				<small>{createTime && formatDate(createTime, "short", "year", "month", "day")}</small>
+				<small className="d-block text-truncate">
+					{createTime && formatDate(createTime.toDate(), "short", "year", "month", "day")}
+					{hasExpired(expireTime, createTime) && <> (<em>expired</em>)</>}
+				</small>
 			</div>
 			<CopyButton 
 				className={styles.btnShare}
