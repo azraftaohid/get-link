@@ -3,12 +3,12 @@ import { useFirestoreInfiniteQuery } from "@react-query-firebase/firestore";
 import { formatDate } from "@thegoodcompany/common-utils-js";
 import { getAuth } from "firebase/auth";
 import { collection, FieldPath, getFirestore, limit, orderBy, Query, query, QueryDocumentSnapshot, startAfter, where } from "firebase/firestore";
-import { getDownloadURL } from "firebase/storage";
+import { getDownloadURL, getMetadata } from "firebase/storage";
 import { NextPage } from "next";
+import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import Card from "react-bootstrap/Card";
-import CardImg from "react-bootstrap/CardImg";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import { Button } from "../components/Button";
@@ -22,21 +22,29 @@ import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
 import { ShortLoading } from "../components/ShortLoading";
-import { COLLECTION_FILES, FileField, FileMetadata, getThumbnailContentRef } from "../models/files";
+import { COLLECTION_FILES, FileField, FileMetadata, getFileContentRef, getThumbnailContentRef } from "../models/files";
 import { UserSnapshotField } from "../models/users";
 import styles from "../styles/dashboard.module.scss";
 import { initFirestore } from "../utils/firestore";
 import { mergeNames } from "../utils/mergeNames";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
+import { getSolidStallImage } from "../visuals/stallData";
 
 const FETCH_LIMIT = 12;
 
-const NoPreview: React.FunctionComponent<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> = ({ 
+const icMapping: Record<string, string> = {
+	"text": "text_snippet",
+	"video": "video_file",
+	"audio": "audio_file",
+};
+
+const NoPreview: React.FunctionComponent<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> & { icon?: string }> = ({ 
 	className,
+	icon = "description",
 	...rest
 }) => {
 	return <div className={mergeNames(styles.noPreview, "d-flex flex-column align-items-center justify-content-center text-muted", className)} {...rest}>
-		<Icon name="description" size="lg" />
+		<Icon name={icon} size="lg" />
 		<p className="fs-5">Preview unavailable!</p>
 	</div>;
 };
@@ -52,6 +60,7 @@ const LoadingPreview: React.FunctionComponent<React.DetailedHTMLProps<React.HTML
 
 const FileCard: React.FunctionComponent<{ file: QueryDocumentSnapshot<FileMetadata> }> = ({ file }) => {
 	const [thumbnail, setThumbnail] = useState<string | null>();
+	const [ic, setIc] = useState<string>();
 
 	const data = file.data({ serverTimestamps: "estimate" });
 	const fid = data[FileField.FID];
@@ -64,19 +73,44 @@ const FileCard: React.FunctionComponent<{ file: QueryDocumentSnapshot<FileMetada
 		}
 		setThumbnail(undefined);
 
-		const ref = getThumbnailContentRef(fid, "384x384");
-		getDownloadURL(ref).then(url => setThumbnail(url)).catch(err => {
+		const thumbRef = getThumbnailContentRef(fid, "384x384");
+		getDownloadURL(thumbRef).then(url => setThumbnail(url)).catch(async err => {
 			console.warn(`thumbnail not available: ${err}`);
-			setThumbnail(null);
+
+			const fileRef = getFileContentRef(fid);
+			try {
+				const metadata = await getMetadata(fileRef);
+				const prefix = metadata.contentType?.split("/")?.[0];
+
+				if (prefix !== "image") {
+					if (prefix) setIc(icMapping[prefix]);
+					throw new Error("content is not of type image");
+				}
+
+				const directLink = await getDownloadURL(fileRef);
+				setThumbnail(directLink);
+			} catch (error) {
+				console.debug(`direct download file failed: ${error}`);
+				setThumbnail(null);	
+			}
 		});
 	}, [fid]);
 
 	return <Card className={mergeNames(styles.fileCard)}>
 		<div className={mergeNames(styles.linkPreview)}>
 			{thumbnail 
-				? <CardImg className="fit-cover" src={thumbnail} alt="link preview" /> 
+				? <Image 
+					className="card-img-top" 
+					placeholder="blur"
+					src={thumbnail} 
+					alt="link preview" 
+					objectFit="cover"
+					layout="fill"
+					sizes="50vw"
+					quality={50}
+					blurDataURL={getSolidStallImage()} /> 
 				: thumbnail === null 
-				? <NoPreview />
+				? <NoPreview icon={ic} />
 				: <LoadingPreview />}
 		</div>
 		<Card.Footer className="d-flex flex-row">
@@ -102,14 +136,14 @@ const FileConcat: React.FunctionComponent<{ snapshot: QueryDocumentSnapshot<File
 	</>;
 };
 
-const Empty: React.FunctionComponent = () => {
+const EmptyView: React.FunctionComponent = () => {
 	return <Alert>
 		<Alert.Heading>No upload history!</Alert.Heading>
 		Upload your first file <Link variant="alert" href="/">here</Link> then comeback.
 	</Alert>;
 };
 
-const Error: React.FunctionComponent = () => {
+const ErrorView: React.FunctionComponent = () => {
 	return <Alert variant="danger">
 		<Alert.Heading>Something went wrong!</Alert.Heading>
 		We couldn&apos;t fetch display you the data you&apos;re looking for. Please try again later, or if this issue 
@@ -137,10 +171,10 @@ const UserDashboard: React.FunctionComponent<{ uid: string }> = ({ uid }) => {
 		if (links.isLoading || links.isFetching) return <Loading />;
 		if (links.isError) {
 			console.error(`fetch error: ${links.error}`);
-			return <Error />;
+			return <ErrorView />;
 		}
 
-		return <Empty />;
+		return <EmptyView />;
 	}
 
 	return <div>
@@ -175,7 +209,7 @@ const Dashboard: NextPage = () => {
 		<Header />
 		<PageContent>
 			<h1 className="mb-4">Recent files</h1>
-			{user?.uid ? <UserDashboard uid={user.uid} /> : isLoading ? <Loading /> : <Empty />}
+			{user?.uid ? <UserDashboard uid={user.uid} /> : isLoading ? <Loading /> : <EmptyView />}
 		</PageContent>
 		<Footer />
 	</PageContainer>;
