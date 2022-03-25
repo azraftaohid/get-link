@@ -53,8 +53,8 @@ const About: NextPage = () => {
 			</Figure>
 			<Section>
 				<Proposition>
-					Get-Link is a truely one-tap solution that let&apos;s you create links for files on the internet. It&apos;s 
-					fast, light-weight, easy to use &mdash; just gets the thing done; nothing else.
+					Get-Link is a truly one-tap solution that lets you create sharable links for files on the internet. It&apos;s 
+					fast, light-weight, easy to use&nbsp;&mdash;&nbsp;just gets the thing done; nothing else.
 				</Proposition>
 				<div className="d-flex justify-content-center w-100 my-4">
 					<Image 
@@ -70,14 +70,14 @@ const About: NextPage = () => {
 				<Lead>Original quality</Lead>
 				<Proposition>
 					Photos along with any other types of files are shared without any level of compressions. Meaning, when 
-					shared, viewers will be able to see the exact copy of the file you orginally uploaded. This is one of the 
+					shared, viewers will be able to see the exact copy of the file you originally uploaded. This is one of the 
 					main motives behind this project.
 				</Proposition>
 			</Section>
 			<Section>
 				<Lead>Security</Lead>
 				<Proposition>
-					By default, links are generated with random, and ungussable characters &mdash; making it extremly hard for 
+					By default, links are generated with random, and unguessable characters &mdash; making it extremely hard for 
 					unintended users to find your files.
 				</Proposition>
 			</Section>
@@ -94,12 +94,12 @@ const About: NextPage = () => {
 					question="Will the links ever expire?"
 					answer={<>Get-Link is meant to be a share &amp; forget type of solution. It automatically deletes any file 
 						not less than 14 days old. For longer and persistable storage, consider <Link href="https://onedrive.live.com/" newTab>
-							OneDrive</Link>, <Link href="https://drive.google.com" newTab>Google Drive</Link> or find one from a quick 
+							OneDrive</Link>, <Link href="https://drive.google.com" newTab>Google Drive</Link>, or find one from a quick 
 							Google <Link href="https://tinyurl.com/353c3j97" newTab>search</Link>.</>}
 				/>
 				<QAndA 
-					question="Is there any file size limits?"
-					answer="Yes, as of now you can only upload files smaller than 100 MB in size."
+					question="Are there any file size limits?"
+					answer="Yes, currently you can only upload files smaller than 100 MB in size."
 				/>
 				<QAndA 
 					question="What type of files are supported?"
@@ -108,7 +108,7 @@ const About: NextPage = () => {
 						<Standout>
 							image, video, audio, text, pdf, xml, json, ms-excel, ms-word, ms-powerpoint and its template files, and rtf.
 						</Standout>
-						Note that executable file formats, including macro-enabled Office files are not supported yet but we are planning on 
+						Note that executable file formats, including macro-enabled Office files, are not supported yet but we are planning on 
 						expanding this list soon.
 					</>}
 				/>
