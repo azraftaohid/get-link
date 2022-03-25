@@ -7,6 +7,7 @@ export const Metadata: React.FunctionComponent<MetadataProps> = ({
     title, 
     description: _description, 
     image: _image, 
+    tags,
     children 
 }) => {
     const router = useRouter();
@@ -33,6 +34,7 @@ export const Metadata: React.FunctionComponent<MetadataProps> = ({
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         {image && <meta name="twitter:image" content={image}/>}
+        {tags?.map((tag) => <meta key={tag} property="tag" content={tag} />)}
 		{children}
 	</Head>;
 };
@@ -41,4 +43,5 @@ export interface MetadataProps {
 	title: string,
 	description?: string | Falsy,
 	image?: string | Falsy,
+    tags?: string[],
 }

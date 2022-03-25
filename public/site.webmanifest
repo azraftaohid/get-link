@@ -1,31 +1,99 @@
 {
-    "name": "Get-Link",
+    "name": "Get-Link: Create sharable links.",
     "short_name": "Get-Link",
-    "description": "Create and instantly share link of files and images.",
+    "description": "The easiest way to create sharable links of files and images.",
     "icons": [
         {
             "src": "/vector.svg",
             "type": "image/svg+xml",
-            "sizes": "512x512"
+            "sizes": "any"
         },
         {
-            "src": "/favicon-32x32.png",
+            "src": "/favicon-48x48.png",
             "type": "image/png",
-            "sizes": "32x32"
+            "sizes": "48x48"
         },
         {
-            "src": "/android-chrome-192x192.png",
+            "src": "/favicon-72x72.png",
+            "type": "image/png",
+            "sizes": "72x72"
+        },
+        {
+            "src": "/favicon-96x96.png",
+            "type": "image/png",
+            "sizes": "96x96"
+        },
+        {
+            "src": "/favicon-144x144.png",
+            "type": "image/png",
+            "sizes": "144x144"
+        },
+        {
+            "src": "/favicon-192x192.png",
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-            "src": "/android-chrome-512x512.png",
+            "src": "/favicon-512x512.png",
             "sizes": "512x512",
             "type": "image/png"
+        },
+        {
+            "src": "/vector-maskable.svg",
+            "type": "image/svg+xml",
+            "sizes": "any",
+            "purpose":"maskable"
+        },
+        {
+            "src": "/favicon-mask-96x96.png",
+            "type": "image/png",
+            "sizes": "96x96",
+            "purpose": "maskable"
         }
     ],
+    "scope": "/",
     "start_url": "/",
     "theme_color": "#0078d4",
-    "background_color": "#ffffff",
-    "display": "standalone"
+    "background_color": "#000000",
+    "display": "minimal-ui",
+    "shortcuts": [
+        {
+            "name": "Open Home Page",
+            "short_name": "Home",
+            "description": "Upload files",
+            "url": "/",
+            "icons": [
+                {
+                    "src": "/favicon-96x96.png",
+                    "type": "image/png",
+                    "sizes": "96x96"
+                },
+                {
+                    "src": "/favicon-mask-96x96.png",
+                    "type": "image/png",
+                    "sizes": "96x96",
+                    "purpose": "maskable"
+                }
+            ]
+        },
+        {
+            "name": "Open Dashboard",
+            "short_name": "Dashboard",
+            "description": "See your recent uploads",
+            "url": "/dashboard",
+            "icons": [
+                {
+                    "src": "/favicon-96x96.png",
+                    "type": "image/png",
+                    "sizes": "96x96"
+                },
+                {
+                    "src": "/favicon-mask-96x96.png",
+                    "type": "image/png",
+                    "sizes": "96x96",
+                    "purpose": "maskable"
+                }
+            ]
+        }
+    ]
 }
