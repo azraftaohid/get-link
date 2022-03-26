@@ -66,7 +66,7 @@ const Proposition: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>>
 
 const Policy: NextPage = () => {
 	return <PageContainer>
-		<Metadata title="Policy - Get Link" description="Learn how we handle the data you provide to us and we collect." />
+		<Metadata title="Policies - Get Link" description="Learn how we handle the data you provide us with and we collect." />
 		<Header />
 		<PageContent size="lg">
 			<Heading>Policies</Heading>

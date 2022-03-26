@@ -49,7 +49,7 @@ export const Header: React.FunctionComponent = () => {
 				<NavbarToggle className="order-1" aria-controls="navbar-nav"/>
 				<NavbarCollapse id="navbar-nav">
 					<Nav className={mergeNames(styles.navItems, "position-md-absolute top-md-50 start-md-50 translate-middle-md")} activeKey={router.pathname}>
-						{navs.map(nav => <Link key={nav.pathname} href={nav.pathname} passHref>
+						{navs.map(nav => <Link key={nav.pathname} href={nav.pathname} prefetch={false} passHref>
 							<NavLink eventKey={nav.pathname}>
 								{nav.title}
 							</NavLink>

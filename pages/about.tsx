@@ -40,7 +40,7 @@ const About: NextPage = () => {
 	return <PageContainer>
 		<Metadata 
 			title="About - Get Link"
-			image="https://getlink.vercel.app/dark_flow.svg"
+			image="https://getlink.vercel.app/image/dark_flow.svg"
 		/>
 		<Header />
 		<PageContent size="lg">
@@ -53,13 +53,13 @@ const About: NextPage = () => {
 			</Figure>
 			<Section>
 				<Proposition>
-					Get-Link is a truly one-tap solution that lets you create sharable links for files on the internet. It&apos;s 
+					Get-Link is a truly one-tap solution that lets you create shareable links for files on the internet. It&apos;s 
 					fast, light-weight, easy to use&nbsp;&mdash;&nbsp;just gets the thing done; nothing else.
 				</Proposition>
 				<div className="d-flex justify-content-center w-100 my-4">
 					<Image 
 						className="border border-secondary"
-						src="/dark_flow.svg"
+						src="/image/dark_flow.svg"
 						alt="A flow chart explaining how Get-Link works"
 						width={640}
 						height={480}

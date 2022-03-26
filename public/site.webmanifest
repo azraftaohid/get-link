@@ -1,7 +1,7 @@
 {
-    "name": "Get-Link: Create sharable links.",
+    "name": "Get-Link: Create shareable links",
     "short_name": "Get-Link",
-    "description": "The easiest way to create sharable links of files and images.",
+    "description": "The easiest way to create shareable links of files and images.",
     "icons": [
         {
             "src": "/vector.svg",
@@ -94,6 +94,28 @@
                     "purpose": "maskable"
                 }
             ]
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/image/screen_home.jpg",
+            "type": "image/jpg",
+            "sizes": "540x1099"
+        },
+        {
+            "src": "/image/screen_dashboard.jpg",
+            "type": "image/jpg",
+            "sizes": "540x1099"
+        },
+        {
+            "src": "/image/screen_uploading.jpg",
+            "type": "image/jpg",
+            "sizes": "540x1099"
+        },
+        {
+            "src": "/image/screen_view.jpg",
+            "type": "image/jpg",
+            "sizes": "540x1099"
         }
     ]
 }
