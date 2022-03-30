@@ -12,7 +12,7 @@ export const Metadata: React.FunctionComponent<MetadataProps> = ({
 }) => {
     const router = useRouter();
 
-    const image = _image || "https://firebasestorage.googleapis.com/v0/b/project-hubble.appspot.com/o/system%2Fpreview.png?alt=media&token=54b0059f-1545-41f9-8679-776bf7b58abd";
+    const image = _image || "https://firebasestorage.googleapis.com/v0/b/project-hubble.appspot.com/o/system%2Fpreview.png?alt=media&token=064244c4-25ca-4cd0-b6b8-7980c6d9acbd";
     const description = _description || "The easiest way to create shareable links of files and images.";
 
 	return <Head>
