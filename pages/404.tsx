@@ -12,7 +12,7 @@ const NotFound: NextPage = () => {
 		<Metadata 
 			title="Not found - Get Link"
 			description="Darn! We couldn't find the page you are looking for."
-			image="https://firebasestorage.googleapis.com/v0/b/project-hubble.appspot.com/o/system%2Fnot_found.png?alt=media&token=91bb6bf6-a70a-4d0e-89cd-c4dbe8c13c12"
+			image="https://getlink.vercel.app/image/not_found.png"
 		/>
 		<Header />
 		<PageContent>
