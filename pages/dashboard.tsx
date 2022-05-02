@@ -98,7 +98,12 @@ const FileCard: React.FunctionComponent<{ file: QueryDocumentSnapshot<FileMetada
 		});
 	}, [fid]);
 
-	return <Card className={mergeNames(styles.fileCard)}>
+	return <Card className={mergeNames(styles.fileCard, "border-feedback")}>
+		<Card.Header>
+			<Link className="stretched-link text-decoration-none text-reset" href={createUrl("v", file.id)}>
+				<span className="d-block text-truncate">{data[FileField.NAME] || file.id}</span>
+			</Link>
+		</Card.Header>
 		<div className={mergeNames(styles.linkPreview)}>
 			{thumbnail 
 				? <Image 
@@ -115,18 +120,13 @@ const FileCard: React.FunctionComponent<{ file: QueryDocumentSnapshot<FileMetada
 				? <NoPreview icon={ic} />
 				: <LoadingPreview />}
 		</div>
-		<Card.Footer className="d-flex flex-row">
-			<div className="w-75 me-auto">
-				<Link className="stretched-link text-decoration-none link-secondary" href={createUrl("v", file.id)}>
-					<strong className="d-block text-truncate">{data[FileField.NAME] || file.id}</strong>
-				</Link>
-				<small className="d-block text-truncate">
-					{createTime && formatDate(createTime.toDate(), "short", "year", "month", "day")}
-					{hasExpired(expireTime, createTime) && <> (<em>expired</em>)</>}
-				</small>
-			</div>
+		<Card.Footer className="d-flex flex-row align-items-center">
+			<span className="d-block text-muted text-truncate">
+				{createTime && formatDate(createTime.toDate(), "short", "year", "month", "day")}
+				{hasExpired(expireTime, createTime) && <> (<em>expired</em>)</>}
+			</span>
 			<CopyButton 
-				className={styles.btnShare}
+				className={mergeNames(styles.btnShare, "ms-auto")}
 				variant="outline-secondary"
 				content={createAbsoluteUrl(DOMAIN, "v", file.id)} 
 				left={<Icon name="link" size="sm" />} 

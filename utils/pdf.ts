@@ -19,4 +19,4 @@ export function initPdfWorker<T extends PdfJs | undefined>(pdfjs?: T): undefined
 	return pdfjs as any;
 }
 
-export type PdfJs = typeof import("react-pdf/node_modules/pdfjs-dist/types/src/pdf");
+export type PdfJs = typeof import("pdfjs-dist/types/src/pdf");

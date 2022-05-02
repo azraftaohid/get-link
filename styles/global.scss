@@ -71,6 +71,12 @@
 	}
 }
 
+.border-feedback {
+	&:hover {
+		@extend .border, .border-secondary;
+	}
+}
+
 blockquote {
 	@extend .blockquote;
 }
@@ -159,6 +165,12 @@ ul, ol {
 			filter: unset;
 		}
 	}
+
+	.border-feedback {
+		&:active {
+			@extend .border, .border-light;
+		}
+	}
 }
 
 @include app-theme(light) {
@@ -180,5 +192,11 @@ ul, ol {
 
 	.standout {
 		@extend .bg-gray-100;
+	}
+
+	.border-feedback {
+		&:active {
+			@extend .border, .border-dark;
+		}
 	}
 }
