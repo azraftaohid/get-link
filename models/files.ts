@@ -91,9 +91,11 @@ export enum FileField {
 	CREATE_TIME = "create_time",
 	EXPIRE_TIME = "expire_time",
 	DIMENSION = "dimension",
+	WARNS = "warnings",
 }
 
 export type ThumbnailSize = "56x56" | "128x128" | "384x384" | "1024x1024";
+export type Warning = "executable";
 
 export interface FileMetadata {
 	[FileField.NAME]?: string,
@@ -102,4 +104,5 @@ export interface FileMetadata {
 	[FileField.CREATE_TIME]?: Timestamp,
 	[FileField.EXPIRE_TIME]?: Timestamp,
 	[FileField.DIMENSION]?: Dimension,
+	[FileField.WARNS]?: Warning[],
 }

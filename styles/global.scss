@@ -153,6 +153,12 @@ ul, ol {
 	.progress {
 		background-color: $gray-800;
 	}
+
+	.alert {
+		.btn-close {
+			filter: unset;
+		}
+	}
 }
 
 @include app-theme(light) {

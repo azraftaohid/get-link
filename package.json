@@ -11,7 +11,7 @@
     "lint": "next lint",
     "test": "jest --watch",
     "cypress": "cypress open",
-    "emulator": "cd ../project-hubble & firebase emulators:start --only \"firestore\",\"auth\",\"storage\""
+    "emulator": "cd ../project-hubble && firebase emulators:start --only \"firestore\",\"auth\",\"storage\""
   },
   "dependencies": {
     "@next/bundle-analyzer": "^12.1.0",

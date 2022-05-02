@@ -1,13 +1,13 @@
 import { fromBlob } from "file-type/browser";
-import core from "file-type/core";
 import { UploadMetadata } from "firebase/storage";
 import { Dimension } from "../models/dimension";
+import { MimeType } from "./mimeTypes";
 import { initPdfWorker } from "./pdf";
 import { extractExtension } from "./strings";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "./urls";
 
 export const acceptedFileFormats = [
-	"audio/*", "video/*", "image/*", "text/*", 
+	"audio/*", "video/*", "image/*", "text/*",
 	"application/pdf",
 	"application/zip", 
 	"application/x-zip-compressed",
@@ -24,10 +24,19 @@ export const acceptedFileFormats = [
 	"application/vnd.openxmlformats-officedocument.presentationml.presentation", 
 	"application/vnd.openxmlformats-officedocument.presentationml.slideshow", 
 	"application/vnd.openxmlformats-officedocument.presentationml.template", 
-	"application/rtf" // rich text format
+	"application/rtf", // rich text format
+	"application/vnd.microsoft.portable-executable", // .exe files
+	"application/x-msdownload", // experimental .exe files,
+	"application/vnd.android.package-archive", // .apk files
 ];
 
 export const strAcceptedFileFormats = acceptedFileFormats.join(",");
+
+export const executableTypes = [
+	"application/vnd.microsoft.portable-executable",
+	"application/x-msdownload",
+	"application/vnd.android.package-archive",
+];
 
 export function createFileLink(id: string, absolute = false) {
 	return !absolute ? createUrl("v", id) : createAbsoluteUrl(DOMAIN, "v", id);
@@ -82,9 +91,15 @@ export async function getFileType(file: File): Promise<[string | undefined, stri
 			case ".svg": mime = "image/svg+xml"; break;
 			case ".csv": mime = "text/csv"; break;
 		}
+	} else if (mime === "application/zip" && ext === ".apk") {
+		mime = "application/vnd.android.package-archive";
 	}
 
 	return [mime, ext];
+}
+
+export function isExecutable(mimeType: string) {
+	return executableTypes.includes(mimeType);
 }
 
 export type FilesStatus = "files:unknown-error" | 
@@ -99,4 +114,3 @@ export type FileCustomMetadata = UploadMetadata["customMetadata"] & {
 	height?: number,
 }
 
-export type MimeType = core.MimeType | "image/svg+xml" | "text/csv";

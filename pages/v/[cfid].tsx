@@ -7,8 +7,10 @@ import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType, NextPage } fro
 import { useRouter } from "next/router";
 import { ParsedUrlQuery } from "querystring";
 import React, { useEffect, useState } from "react";
+import Alert from "react-bootstrap/Alert";
 import { AssurePrompt } from "../../components/AssurePrompt";
 import { Button } from "../../components/Button";
+import { Conditional } from "../../components/Conditional";
 import { CopyButton } from "../../components/CopyButton";
 import { FileView } from "../../components/FileView";
 import { Footer } from "../../components/Footer";
@@ -19,12 +21,12 @@ import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
 import { PageContent } from "../../components/PageContent";
 import { DimensionField } from "../../models/dimension";
-import { FileField, FileMetadata, getFileContentRef, getFileRef, getThumbnailContentRef, releaseFile } from "../../models/files";
+import { FileField, FileMetadata, getFileContentRef, getFileRef, getThumbnailContentRef, releaseFile, Warning } from "../../models/files";
 import { UserSnapshotField } from "../../models/users";
 import styles from "../../styles/cfid.module.scss";
 import { notFound } from "../../utils/common";
 import { hasExpired } from "../../utils/dates";
-import { createFileLink, FileCustomMetadata } from "../../utils/files";
+import { createFileLink, FileCustomMetadata, isExecutable } from "../../utils/files";
 import { mergeNames } from "../../utils/mergeNames";
 import { formatSize } from "../../utils/strings";
 import { useToast } from "../../utils/useToast";
@@ -51,6 +53,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 	width, 
 	height,
 	thumbnailDataUrl: tDataUrl,
+	warnings: _warns = [],
 }) => {
 	const router = useRouter();
 	const { makeToast } = useToast();
@@ -61,6 +64,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 	const [thumbnailDataUrl, setThumbnailDataUrl] = useState<string | undefined>(tDataUrl || undefined);
 
 	const [isDeleting, setDeleting] = useState(false);
+	const [warns, setWarns] = useState(_warns);
 	
 	useEffect(() => {
 		if (!thumbnailSmall) return;
@@ -116,6 +120,11 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 		/>
 		<Header />
 		<PageContent>
+			<Conditional in={warns?.includes("executable")}>
+				<Alert variant="warning" onClose={() => setWarns((c => [...c.filter(v => v !== "executable")]))} dismissible>
+					This may be an executable file. Open it only if you trust the owner.
+				</Alert>
+			</Conditional>
 			<FileView 
 				className={mergeNames(styles.fView, "mb-3")} 
 				src={directLink} 
@@ -204,6 +213,8 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	const cfid = params?.cfid;
 	if (typeof cfid !== "string") return notFound;
 
+	console.log(`generating static props [cfid: ${cfid}]`);
+
 	const doc = getFileRef(cfid);
 	const snapshot = await getDoc(doc);
 	if (!snapshot.exists()) return notFound;
@@ -225,7 +236,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 
 	let downloadUrl: string;
 	let name: string;
-	let type: string | undefined;
+	let type: string;
 	let size: number;
 	let width: number | undefined;
 	let height: number | undefined;
@@ -252,7 +263,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 		revalidate: new Days(1).toSeconds().value,
 		props: {
 			name: name,
-			type: type || "application/octet-stream",
+			type: type,
 			size: size,
 			width: staticSnapshot.data?.[FileField.DIMENSION]?.[DimensionField.WIDTH] || width || null,
 			height: staticSnapshot.data?.[FileField.DIMENSION]?.[DimensionField.HEIGHT] || height || null,
@@ -260,6 +271,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 			thumbnail: thumbailUrl || null,
 			thumbnailSmall: smThumbnailUrl || null,
 			snapshot: staticSnapshot,
+			warnings: staticSnapshot.data?.[FileField.WARNS] || (isExecutable(type) ? ["executable"] : []),
 		},
 	};
 };
@@ -277,6 +289,7 @@ interface StaticProps {
 	height?: number | null,
 	snapshot: StaticSnapshot<FileMetadata>,
 	thumbnailDataUrl?: string | null,
+	warnings?: Warning[]
 }
 
 interface Segments extends ParsedUrlQuery {
