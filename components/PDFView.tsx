@@ -9,7 +9,7 @@ import { useNumber } from "../utils/useNumber";
 
 initPdfWorker(pdfjs);
 
-export const PDFView: React.FunctionComponent<PDFProps> = ({ file, onLoadSuccess, ...rest }) => {
+export const PDFView: React.FunctionComponent<React.PropsWithChildren<PDFProps>> = ({ file, onLoadSuccess, ...rest }) => {
 	const [pageCount, setPageCount] = useState(0);
 	const [activePage, page] = useNumber(0);
 	

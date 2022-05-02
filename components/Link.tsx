@@ -7,7 +7,7 @@ const variantMapping: Partial<Record<LinkVariant, string>> = {
 	alert: "alert-link",
 };
 
-export const Link: React.FunctionComponent<LinkProps> = ({ className, href, newTab, variant, children, ...rest }) => {
+export const Link: React.FunctionComponent<React.PropsWithChildren<LinkProps>> = ({ className, href, newTab, variant, children, ...rest }) => {
 	return <NextLink href={href}>
 		<a className={mergeNames(variant && (variantMapping[variant] || `link-${variant}`), className)} 
 			target={newTab ? "_blank" : undefined} 

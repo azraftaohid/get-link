@@ -8,11 +8,11 @@ const ReportDialog = dynamic(() => import("./ReportDialog"), {
 	loading: () => <Loading /> 
 });
 
-const FooterAction: React.FunctionComponent<ButtonProps> = (props) => {
+const FooterAction: React.FunctionComponent<React.PropsWithChildren<ButtonProps>> = (props) => {
 	return <Button className="text-muted" variant="link" size="sm" {...props}/>;
 };
 
-export const Footer: React.FunctionComponent = () => {
+export const Footer: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
 	const [showReport, setShowReport] = useState(false);
 
 	return <footer id="footer" className="mt-auto py-4">

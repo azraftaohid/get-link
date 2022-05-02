@@ -29,7 +29,7 @@ const navs: { title: string, pathname: string }[] = [
 	}
 ];
 
-export const Header: React.FunctionComponent = () => {
+export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
 	const router = useRouter();
 	const { current: theme, setTheme } = useTheme();
 

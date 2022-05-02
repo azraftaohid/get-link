@@ -6,7 +6,7 @@ function calcNext(from: number, iteration: number /* a non zero positive integer
 	return from + ((100 - from) / (3 * iteration));
 }
 
-export const ShortLoading: React.FunctionComponent<ShortLoadingProps> = ({ 
+export const ShortLoading: React.FunctionComponent<React.PropsWithChildren<ShortLoadingProps>> = ({ 
 	className, 
 	striped = true, 
 	animated, 

@@ -6,7 +6,7 @@ const sizes: Partial<Record<NonNullable<IconProps["size"]>, string>> = {
 	lg: "fs-1",
 };
 
-export const Icon: React.FunctionComponent<IconProps> = ({ name, className, size = "md", ...rest }) => {
+export const Icon: React.FunctionComponent<React.PropsWithChildren<IconProps>> = ({ name, className, size = "md", ...rest }) => {
 	return <div className={mergeNames("d-inline-flex align-items-center", className)} {...rest}>
 		<span className={mergeNames("material-icons-outlined", sizes[size])}>{name}</span>
 	</div>;

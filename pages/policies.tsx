@@ -13,7 +13,7 @@ import { copyToClipboard } from "../utils/system";
 import { createAbsoluteUrl, DOMAIN } from "../utils/urls";
 import { useToast } from "../utils/useToast";
 
-const HashTag: React.FunctionComponent<{ tag: string }> = ({ tag }) => {
+const HashTag: React.FunctionComponent<React.PropsWithChildren<{ tag: string }>> = ({ tag }) => {
 	const { makeToast } = useToast();
 
 	return <Icon 
@@ -32,11 +32,11 @@ const HashTag: React.FunctionComponent<{ tag: string }> = ({ tag }) => {
 		}} />;
 };
 
-const Heading: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({ children }) => {
+const Heading: React.FunctionComponent<React.PropsWithChildren<React.AllHTMLAttributes<HTMLElement>>> = ({ children }) => {
 	return <h1 className="text-uppercase">{children}</h1>;
 };
 
-const Topic: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({ id, children, ...rest }) => {
+const Topic: React.FunctionComponent<React.PropsWithChildren<React.AllHTMLAttributes<HTMLElement>>> = ({ id, children, ...rest }) => {
 	return <div id={id} className="d-flex flex-row align-items-center mt-5">
 		<h2 className="text-uppercase my-0" {...rest}>
 			{children}
@@ -45,7 +45,7 @@ const Topic: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({ 
 	</div>;
 };
 
-const Lead: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({ 
+const Lead: React.FunctionComponent<React.PropsWithChildren<React.AllHTMLAttributes<HTMLElement>>> = ({ 
 	id, 
 	children, 
 	...rest 
@@ -58,7 +58,7 @@ const Lead: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({
 	</div>;
 };
 
-const Proposition: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({ className, children, ...rest }) => {
+const Proposition: React.FunctionComponent<React.PropsWithChildren<React.AllHTMLAttributes<HTMLElement>>> = ({ className, children, ...rest }) => {
 	return <div className={mergeNames("mt-3", className)} {...rest}>
 		{children}
 	</div>;

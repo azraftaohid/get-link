@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import React from "react";
 import { Falsy } from "../utils/falsy";
 
-export const Metadata: React.FunctionComponent<MetadataProps> = ({ 
+export const Metadata: React.FunctionComponent<React.PropsWithChildren<MetadataProps>> = ({ 
     title, 
     description: _description, 
     image: _image, 

@@ -7,7 +7,7 @@ import ModalTitle from "react-bootstrap/ModalTitle";
 import { combineCallbacks } from "../utils/func";
 import { Button, ButtonProps } from "./Button";
 
-export const AssurePrompt: React.FunctionComponent<AssurePromptProps> = ({ 
+export const AssurePrompt: React.FunctionComponent<React.PropsWithChildren<AssurePromptProps>> = ({ 
 	title, 
 	message,  
 	onConfirm,

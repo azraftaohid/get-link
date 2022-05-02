@@ -39,7 +39,7 @@ const icMapping: Record<string, string> = {
 	"audio": "audio_file",
 };
 
-const NoPreview: React.FunctionComponent<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> & { icon?: string }> = ({ 
+const NoPreview: React.FunctionComponent<React.PropsWithChildren<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> & { icon?: string }>> = ({ 
 	className,
 	icon = "description",
 	...rest
@@ -50,7 +50,7 @@ const NoPreview: React.FunctionComponent<React.DetailedHTMLProps<React.HTMLAttri
 	</div>;
 };
 
-const LoadingPreview: React.FunctionComponent<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> = ({
+const LoadingPreview: React.FunctionComponent<React.PropsWithChildren<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>>> = ({
 	className,
 	...rest
 }) => {
@@ -59,7 +59,7 @@ const LoadingPreview: React.FunctionComponent<React.DetailedHTMLProps<React.HTML
 	</div>;
 };
 
-const FileCard: React.FunctionComponent<{ file: QueryDocumentSnapshot<FileMetadata> }> = ({ file }) => {
+const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDocumentSnapshot<FileMetadata> }>> = ({ file }) => {
 	const [thumbnail, setThumbnail] = useState<string | null>();
 	const [ic, setIc] = useState<string>();
 
@@ -135,20 +135,20 @@ const FileCard: React.FunctionComponent<{ file: QueryDocumentSnapshot<FileMetada
 	</Card>;
 };
 
-const FileConcat: React.FunctionComponent<{ snapshot: QueryDocumentSnapshot<FileMetadata>[] }> = ({ snapshot }) => {
+const FileConcat: React.FunctionComponent<React.PropsWithChildren<{ snapshot: QueryDocumentSnapshot<FileMetadata>[] }>> = ({ snapshot }) => {
 	return <>
 		{snapshot.map(file => <Col key={`col-${file.id}`}><FileCard file={file} /></Col>)}
 	</>;
 };
 
-const EmptyView: React.FunctionComponent = () => {
+const EmptyView: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
 	return <Alert>
 		<Alert.Heading>No upload history!</Alert.Heading>
 		Upload your first file <Link variant="alert" href="/">here</Link> then comeback.
 	</Alert>;
 };
 
-const ErrorView: React.FunctionComponent = () => {
+const ErrorView: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
 	return <Alert variant="danger">
 		<Alert.Heading>Something went wrong!</Alert.Heading>
 		We couldn&apos;t fetch display you the data you&apos;re looking for. Please try again later, or if this issue 
@@ -156,7 +156,7 @@ const ErrorView: React.FunctionComponent = () => {
 	</Alert>;
 };
 
-const UserDashboard: React.FunctionComponent<{ uid: string }> = ({ uid }) => {
+const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: string }>> = ({ uid }) => {
 	const baseQuery: Query<FileMetadata> = useMemo(() => {
 		const db = getFirestore();
 		return query(collection(db, COLLECTION_FILES), 

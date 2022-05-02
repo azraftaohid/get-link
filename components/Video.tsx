@@ -1,7 +1,7 @@
 import React from "react";
 import { mergeNames } from "../utils/mergeNames";
 
-export const Video: React.FunctionComponent<VideoProps> = ({ className, src, type, children, ...rest }) => {
+export const Video: React.FunctionComponent<React.PropsWithChildren<VideoProps>> = ({ className, src, type, children, ...rest }) => {
 	return <video className={mergeNames("mw-100", className)} controls muted={false} autoPlay={false} {...rest}>
 		<source src={src} type={type} />
 		{children}

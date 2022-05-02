@@ -33,7 +33,7 @@ const schema = yup.object().shape({
 		.max(1000, "Please complete your statement in less than a thousand letters."),
 });
 
-const ReportDialog: React.FunctionComponent<ReportDialogProps> = (props) => {
+const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialogProps>> = (props) => {
 	const { asPath } = useRouter();
 
 	const inputState = useRef({

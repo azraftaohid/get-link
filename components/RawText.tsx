@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-export const RawText: React.FunctionComponent<RawTextProps> = ({ className, src, initData, errorData, ...rest }) => {
+export const RawText: React.FunctionComponent<React.PropsWithChildren<RawTextProps>> = ({ className, src, initData, errorData, ...rest }) => {
 	const [data, setData] = useState(initData || "Loading text...");
 
 	useEffect(() => {

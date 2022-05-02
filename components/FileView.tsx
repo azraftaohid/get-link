@@ -11,7 +11,7 @@ import { Video } from "./Video";
 
 const PDF = dynamic(() => import("./PDFView"), { ssr: false });
 
-export const FileView: React.FunctionComponent<FileViewProps> = ({ className, src, type, width, height, placeholderDataUrl, ...rest }) => {
+export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewProps>> = ({ className, src, type, width, height, placeholderDataUrl, ...rest }) => {
 	return <div className={mergeNames("border border-secondary rounded d-flex flex-column align-items-center w-100 p-2 text-muted", className)} {...rest}>
 		{(type?.startsWith("image/") && <Image 
 			src={src} 

@@ -10,26 +10,26 @@ import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
 import { Standout } from "../components/Standout";
 
-const Section: React.FunctionComponent<{ noSep?: boolean }> = ({ noSep, children }) => {
+const Section: React.FunctionComponent<React.PropsWithChildren<{ noSep?: boolean }>> = ({ noSep, children }) => {
 	return <>
 		{children}
 		{!noSep && <hr className="my-5" />}
 	</>;
 };
 
-const Lead: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({ children, ...rest }) => {
+const Lead: React.FunctionComponent<React.PropsWithChildren<React.AllHTMLAttributes<HTMLElement>>> = ({ children, ...rest }) => {
 	return <h3 className="mb-3" {...rest}>
 		{children}
 	</h3>;
 };
 
-const Proposition: React.FunctionComponent<React.AllHTMLAttributes<HTMLElement>> = ({ children, ...rest }) => {
+const Proposition: React.FunctionComponent<React.PropsWithChildren<React.AllHTMLAttributes<HTMLElement>>> = ({ children, ...rest }) => {
 	return <div {...rest}>
 		{children}
 	</div>;
 };
 
-const QAndA: React.FunctionComponent<{ question: React.ReactNode, answer: React.ReactNode }> = ({ question, answer }) => {
+const QAndA: React.FunctionComponent<React.PropsWithChildren<{ question: React.ReactNode, answer: React.ReactNode }>> = ({ question, answer }) => {
 	return <>
 		<h4 className="mt-5 mb-3">{question}</h4>
 		<div>{answer}</div>

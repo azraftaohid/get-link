@@ -1,7 +1,7 @@
 import React from "react";
 import { mergeNames } from "../utils/mergeNames";
 
-export const Audio: React.FunctionComponent<AudioProps> = ({ className, src, type, children, ...rest }) => {
+export const Audio: React.FunctionComponent<React.PropsWithChildren<AudioProps>> = ({ className, src, type, children, ...rest }) => {
 	return <audio className={mergeNames("w-100", className)} controls muted={false} autoPlay={false} {...rest}>
 		<source src={src} type={type} />
 		{children}

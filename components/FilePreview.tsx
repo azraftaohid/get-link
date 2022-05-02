@@ -3,7 +3,7 @@ import { mergeNames } from "../utils/mergeNames";
 import { formatSize } from "../utils/strings";
 import { CloseButton } from "./CloseButton";
 
-export const FilePreview: React.FunctionComponent<FilePreviewProps> = ({ className, file, onClose, closable, ...rest }) => {
+export const FilePreview: React.FunctionComponent<React.PropsWithChildren<FilePreviewProps>> = ({ className, file, onClose, closable, ...rest }) => {
 	const { current: initClosable } = useRef(closable);
 
 	return <div className={mergeNames("file-preview hstack gap-3 px-3 py-2 rounded", className)} {...rest}>
