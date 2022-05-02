@@ -2944,17 +2944,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:>=16.14.8, @types/react@npm:>=16.9.11":
-  version: 17.0.39
-  resolution: "@types/react@npm:17.0.39"
-  dependencies:
-    "@types/prop-types": "*"
-    "@types/scheduler": "*"
-    csstype: ^3.0.2
-  checksum: bf04d3c2894559012710d595553e12b422d3b91cd8f4f7e122d8cb044ba9c2ba17f6e8a4e09581359cc5509ddc59cd8c8fabd6774f3505a40a45393f074d6e6e
-  languageName: node
-  linkType: hard
-
 "@types/react@npm:17.0.38":
   version: 17.0.38
   resolution: "@types/react@npm:17.0.38"
@@ -8551,19 +8540,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pdfjs-dist@npm:2.12.313":
-  version: 2.12.313
-  resolution: "pdfjs-dist@npm:2.12.313"
-  peerDependencies:
-    worker-loader: ^3.0.8
-  peerDependenciesMeta:
-    worker-loader:
-      optional: true
-  checksum: 0571ff3653d75e7eaf86c840c6fe83a92456c20b6f40c2de666df2e3c30de1e05a4920f18799a3d59005c73dcea1a6f45728845a20fdae9b08a3a774d13aee1b
-  languageName: node
-  linkType: hard
-
-"pdfjs-dist@npm:^2.10.377":
+"pdfjs-dist@npm:2.13.216":
   version: 2.13.216
   resolution: "pdfjs-dist@npm:2.13.216"
   dependencies:

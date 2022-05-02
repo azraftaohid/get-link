@@ -13,6 +13,10 @@
     "cypress": "cypress open",
     "emulator": "cd ../project-hubble && firebase emulators:start --only \"firestore\",\"auth\",\"storage\""
   },
+  "resolutions": {
+    "@types/react": "17.0.38",
+    "pdfjs-dist": "2.13.216"
+  },
   "dependencies": {
     "@next/bundle-analyzer": "^12.1.0",
     "@popperjs/core": "^2.11.2",
