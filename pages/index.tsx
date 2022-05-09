@@ -37,6 +37,8 @@ const Home: NextPage = () => {
   const [url, setUrl] = useState<string>();
   const [statuses, setStatuses] = useState<StatusCode[]>([]);
 
+  const triggerChooser = router.query.open_chooser;
+
   const resetState = useRef(() => {
     setFile(null);
     setProgress(0);
@@ -72,7 +74,7 @@ const Home: NextPage = () => {
     setFile(dropped[0]);
   }, [makeToast]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({ 
     accept: acceptedFileFormats,
     onDrop: handleDrop,
     maxFiles: 1,
@@ -183,6 +185,13 @@ const Home: NextPage = () => {
   useEffect(() => {
     if (url) router.push(url);
   }, [router, url]);
+
+  useEffect(() => {
+    if (triggerChooser !== "true") return;
+
+    console.debug("manually trigger to open picker");
+    open();
+  }, [triggerChooser, open]);
 
   return <PageContainer>
     <Metadata title="Get Link" image="https://getlink.vercel.app/image/cover.png" />

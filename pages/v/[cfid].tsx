@@ -16,6 +16,7 @@ import { FileView } from "../../components/FileView";
 import { Footer } from "../../components/Footer";
 import { Header } from "../../components/Header";
 import { Icon } from "../../components/Icon";
+import { Link } from "../../components/Link";
 import { Loading } from "../../components/Loading";
 import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
@@ -65,6 +66,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 
 	const [isDeleting, setDeleting] = useState(false);
 	const [warns, setWarns] = useState(_warns);
+	const [showPrompt, setShowPrompt] = useState(true);
 	
 	useEffect(() => {
 		if (!thumbnailSmall) return;
@@ -122,7 +124,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 		<PageContent>
 			<Conditional in={warns?.includes("executable")}>
 				<Alert variant="warning" onClose={() => setWarns((c => [...c.filter(v => v !== "executable")]))} dismissible>
-					This may be an executable file. Open it only if you trust the owner.
+					This may be an executable file. Open only if you trust the owner.
 				</Alert>
 			</Conditional>
 			<FileView 
@@ -166,6 +168,11 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 					{strCreateTime}
 				</p>
 			</div>
+			<Conditional in={showPrompt}>
+				<Alert variant="info" className="mt-4" onClose={() => setShowPrompt(false)} dismissible>
+					Need link for a new file? Choose <Link variant="alert" href="/?open_chooser=true">here</Link>.
+				</Alert>
+			</Conditional>
 			<AssurePrompt 
 				title="File will be deleted permanently"
 				message="Are you sure you want to delete this file. Once deleted, it can not be recovered."
