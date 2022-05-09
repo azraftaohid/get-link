@@ -1,4 +1,6 @@
 .uploadArea {
 	width: 100%;
-	min-height: 600px;
+	height: calc(100vh - 230px);
+	max-height: 600px;
+	min-height: 260px;
 }
