@@ -13,7 +13,7 @@ const PDF = dynamic(() => import("./PDFView"), { ssr: false });
 
 export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewProps>> = ({ className, src, type, width, height, placeholderDataUrl, ...rest }) => {
 	return <div className={mergeNames("border border-secondary rounded d-flex flex-column align-items-center w-100 p-2 text-muted", className)} {...rest}>
-		{(type?.startsWith("image/") && <Image 
+		{(type?.startsWith("image/") && <Link href={src} newTab><Image 
 			src={src} 
 			alt="Image"
 			placeholder={"blur"}
@@ -22,7 +22,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 			objectFit="contain"
 			blurDataURL={placeholderDataUrl || getSolidStallImage()}
 			priority
-		/>) || (type?.startsWith("video/") && <Video
+		/></Link>) || (type?.startsWith("video/") && <Video
 			src={src}
 			type={type}
 			width={width || undefined}
