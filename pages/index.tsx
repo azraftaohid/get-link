@@ -19,7 +19,8 @@ import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
 import { Dimension, DimensionField } from "../models/dimension";
-import { captureFile, createFID, FileField, getFileContentRef } from "../models/files";
+import { createFID, getFileRef } from "../models/files";
+import { createLink, LinkField } from "../models/links";
 import styles from "../styles/home.module.scss";
 import { StatusCode } from "../utils/common";
 import { acceptedFileFormats, createFileLink, FileCustomMetadata, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
@@ -108,7 +109,7 @@ const Home: NextPage = () => {
       console.debug(`mime: ${mime}; ext: ${ext}`);
 
       const fid = createFID(nanoid(12) + ext, uid);
-      const ref = getFileContentRef(fid);
+      const ref = getFileRef(fid);
       const metadata: UploadMetadata = { contentType: mime };
 
       try {
@@ -154,7 +155,7 @@ const Home: NextPage = () => {
         appendStatus.current("files:creating-link");
 
         try {
-          const doc = await captureFile(fid, uid, { [FileField.NAME]: file.name });
+          const doc = await createLink(fid, uid, { [LinkField.TITLE]: file.name });
           console.debug(`file captured at ${doc.path}`);
 
           setUrl(createFileLink(doc.id));
@@ -210,9 +211,9 @@ const Home: NextPage = () => {
       <Conditional in={statuses.some(s => (["files:unknown-error", "files:capture-error", "files:upload-error", "auth:sign-in-error", "files:too-large"] as StatusCode[]).includes(s))}>
         <Alert variant="danger">
           There was an error. Please try again!<br /> 
-          Code: {statuses.map((s, i, arr) => <Link key={s} className="alert-link" href={`/technical#${encodeURIComponent(s)}`} newTab>
-            {s}{i < arr.length - 1 && ", "}
-          </Link>)}.
+          Code: {statuses.map((s, i, arr) => <><Link key={s} className="alert-link" href={`/technical#${encodeURIComponent(s)}`} newTab>
+            {s}
+          </Link>{i < arr.length - 1 && ", "}</>)}.
         </Alert>
       </Conditional>
       <Conditional in={!!file}>

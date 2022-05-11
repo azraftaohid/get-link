@@ -22,7 +22,8 @@ import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
 import { PageContent } from "../../components/PageContent";
 import { DimensionField } from "../../models/dimension";
-import { FileField, FileMetadata, getFileContentRef, getFileRef, getThumbnailContentRef, releaseFile, Warning } from "../../models/files";
+import { getFileRef, getThumbnailRef } from "../../models/files";
+import { getLinkRef, LinkData, LinkField, releaseLink, Warning } from "../../models/links";
 import { UserSnapshotField } from "../../models/users";
 import styles from "../../styles/cfid.module.scss";
 import { notFound } from "../../utils/common";
@@ -111,12 +112,12 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 		</PageContainer>;
 	}
 
-	const createSeconds = snapshot.data?.[FileField.CREATE_TIME]?.seconds;
+	const createSeconds = snapshot.data?.[LinkField.CREATE_TIME]?.seconds;
 	const strCreateTime = createSeconds && formatDate(new Date(createSeconds * 1000), "short", "year", "month", "day");
 
 	return <PageContainer>
 		<Metadata 
-			title={snapshot.data?.[FileField.NAME] || "Get Link"} 
+			title={snapshot.data?.[LinkField.TITLE] || snapshot.data?.[LinkField.NAME] || "Get Link"} 
 			description="Create and instantly share link of files and images."
 			image={thumbnail || thumbnailSmall || (type.startsWith("image/") && directLink)} 
 		/>
@@ -154,7 +155,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 					>
 						<span className="d-none d-md-inline">Share</span>
 					</CopyButton>
-					{user && snapshot.data?.[FileField.USER]?.[UserSnapshotField.UID] === user.uid && <Button
+					{user && snapshot.data?.[LinkField.USER]?.[UserSnapshotField.UID] === user.uid && <Button
 						className="ms-2"
 						variant="outline-danger"
 						left={<Icon name="delete" size="sm" />}
@@ -181,13 +182,13 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 				onConfirm={async () => {
 					setDeleting(true);
 
-					const fid = snapshot.data?.[FileField.FID];
+					const fid = snapshot.data?.[LinkField.FID];
 					try {
 						if (!fid) throw new Error(`fid is undefined [cfid: ${snapshot.id}]`);
 
-						const contentRef = getFileContentRef(fid);
-						await deleteObject(contentRef);
-						await releaseFile(snapshot.id);
+						const fileRef = getFileRef(fid);
+						await deleteObject(fileRef);
+						await releaseLink(snapshot.id);
 						
 						router.push("/");
 						setShowDeletePrompt(false);
@@ -222,19 +223,19 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 
 	console.log(`generating static props [cfid: ${cfid}]`);
 
-	const doc = getFileRef(cfid);
-	const snapshot = await getDoc(doc);
+	const linkRef = getLinkRef(cfid);
+	const snapshot = await getDoc(linkRef);
 	if (!snapshot.exists()) return notFound;
 
 	const staticSnapshot = toStatic(snapshot);
-	const fid = staticSnapshot.data?.[FileField.FID];
-	const createTime = staticSnapshot.data?.[FileField.CREATE_TIME];
-	const expireTime = staticSnapshot.data?.[FileField.EXPIRE_TIME];
+	const fid = staticSnapshot.data?.[LinkField.FID];
+	const createTime = staticSnapshot.data?.[LinkField.CREATE_TIME];
+	const expireTime = staticSnapshot.data?.[LinkField.EXPIRE_TIME];
 	if (!fid || hasExpired(expireTime, createTime)) return notFound;
 
-	const ref = getFileContentRef(fid);
-	const thumbnailRef = getThumbnailContentRef(fid, "1024x1024");
-	const smThumbnailRef = getThumbnailContentRef(fid, "56x56");
+	const ref = getFileRef(fid);
+	const thumbnailRef = getThumbnailRef(fid, "1024x1024");
+	const smThumbnailRef = getThumbnailRef(fid, "56x56");
 
 	const getUrl = getDownloadURL(ref);
 	const getMetas = getMetadata(ref).catch(err => suppressError(err, cfid, "metadata"));
@@ -265,6 +266,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	const smThumbnailUrl = await getSmThumbnailUrl;
 	const thumbailUrl = await getThumbnailUrl;
 
+	const staticMetas = staticSnapshot.data?.[LinkField.FILE];
 	return {
 		notFound: false,
 		revalidate: new Days(1).toSeconds().value,
@@ -272,13 +274,13 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 			name: name,
 			type: type,
 			size: size,
-			width: staticSnapshot.data?.[FileField.DIMENSION]?.[DimensionField.WIDTH] || width || null,
-			height: staticSnapshot.data?.[FileField.DIMENSION]?.[DimensionField.HEIGHT] || height || null,
+			width: staticMetas?.[DimensionField.WIDTH] || width || null,
+			height: staticMetas?.[DimensionField.HEIGHT] || height || null,
 			directLink: downloadUrl,
 			thumbnail: thumbailUrl || null,
 			thumbnailSmall: smThumbnailUrl || null,
 			snapshot: staticSnapshot,
-			warnings: staticSnapshot.data?.[FileField.WARNS] || (isExecutable(type) ? ["executable"] : []),
+			warnings: staticSnapshot.data?.[LinkField.WARNS] || (isExecutable(type) ? ["executable"] : []),
 		},
 	};
 };
@@ -294,7 +296,7 @@ interface StaticProps {
 	size: number,
 	width?: number | null,
 	height?: number | null,
-	snapshot: StaticSnapshot<FileMetadata>,
+	snapshot: StaticSnapshot<LinkData>,
 	thumbnailDataUrl?: string | null,
 	warnings?: Warning[]
 }

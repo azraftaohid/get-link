@@ -22,7 +22,8 @@ import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
 import { ShortLoading } from "../components/ShortLoading";
-import { COLLECTION_FILES, FileField, FileMetadata, getFileContentRef, getThumbnailContentRef } from "../models/files";
+import { getFileRef, getThumbnailRef } from "../models/files";
+import { COLLECTION_LINKS, LinkData, LinkField } from "../models/links";
 import { UserSnapshotField } from "../models/users";
 import styles from "../styles/dashboard.module.scss";
 import { hasExpired } from "../utils/dates";
@@ -59,14 +60,14 @@ const LoadingPreview: React.FunctionComponent<React.PropsWithChildren<React.Deta
 	</div>;
 };
 
-const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDocumentSnapshot<FileMetadata> }>> = ({ file }) => {
+const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDocumentSnapshot<LinkData> }>> = ({ file }) => {
 	const [thumbnail, setThumbnail] = useState<string | null>();
 	const [ic, setIc] = useState<string>();
 
 	const data = file.data({ serverTimestamps: "estimate" });
-	const fid = data[FileField.FID];
-	const createTime = data[FileField.CREATE_TIME];
-	const expireTime = data[FileField.EXPIRE_TIME];
+	const fid = data[LinkField.FID];
+	const createTime = data[LinkField.CREATE_TIME];
+	const expireTime = data[LinkField.EXPIRE_TIME];
 
 	useEffect(() => {
 		if (!fid) {
@@ -75,11 +76,11 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 		}
 		setThumbnail(undefined);
 
-		const thumbRef = getThumbnailContentRef(fid, "384x384");
+		const thumbRef = getThumbnailRef(fid, "384x384");
 		getDownloadURL(thumbRef).then(url => setThumbnail(url)).catch(async err => {
 			console.warn(`thumbnail not available: ${err}`);
 
-			const fileRef = getFileContentRef(fid);
+			const fileRef = getFileRef(fid);
 			try {
 				const metadata = await getMetadata(fileRef);
 				const prefix = metadata.contentType?.split("/")?.[0];
@@ -101,7 +102,7 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 	return <Card className={mergeNames(styles.fileCard, "border-feedback")}>
 		<Card.Header>
 			<Link className="stretched-link text-decoration-none text-reset" href={createUrl("v", file.id)}>
-				<span className="d-block text-truncate">{data[FileField.NAME] || file.id}</span>
+				<span className="d-block text-truncate">{data[LinkField.TITLE] || data[LinkField.NAME] || file.id}</span>
 			</Link>
 		</Card.Header>
 		<div className={mergeNames(styles.linkPreview)}>
@@ -135,7 +136,7 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 	</Card>;
 };
 
-const FileConcat: React.FunctionComponent<React.PropsWithChildren<{ snapshot: QueryDocumentSnapshot<FileMetadata>[] }>> = ({ snapshot }) => {
+const FileConcat: React.FunctionComponent<React.PropsWithChildren<{ snapshot: QueryDocumentSnapshot<LinkData>[] }>> = ({ snapshot }) => {
 	return <>
 		{snapshot.map(file => <Col key={`col-${file.id}`}><FileCard file={file} /></Col>)}
 	</>;
@@ -157,11 +158,11 @@ const ErrorView: React.FunctionComponent<React.PropsWithChildren<unknown>> = () 
 };
 
 const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: string }>> = ({ uid }) => {
-	const baseQuery: Query<FileMetadata> = useMemo(() => {
+	const baseQuery: Query<LinkData> = useMemo(() => {
 		const db = getFirestore();
-		return query(collection(db, COLLECTION_FILES), 
-			where(new FieldPath(FileField.USER, UserSnapshotField.UID), "==", uid),
-			orderBy(FileField.CREATE_TIME, "desc"),
+		return query(collection(db, COLLECTION_LINKS), 
+			where(new FieldPath(LinkField.USER, UserSnapshotField.UID), "==", uid),
+			orderBy(LinkField.CREATE_TIME, "desc"),
 			limit(FETCH_LIMIT));
 	}, [uid]);
 
