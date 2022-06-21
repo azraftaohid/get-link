@@ -6,7 +6,7 @@ import { deleteObject, getDownloadURL, getMetadata } from "firebase/storage";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType, NextPage } from "next";
 import { useRouter } from "next/router";
 import { ParsedUrlQuery } from "querystring";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import { AssurePrompt } from "../../components/AssurePrompt";
 import { Button } from "../../components/Button";
@@ -43,6 +43,36 @@ function suppressError(error: any, cfid: string, subject: string) {
 	return undefined;
 }
 
+async function getBlob(downloadUrl: string): Promise<Blob> {
+	return new Promise((res, rej) => {
+		const xhr = new XMLHttpRequest();
+		xhr.onload = () => {
+			const { status, response } = xhr;
+			if (status !== 200) rej(new Error(`error getting blob file [code: ${status}${typeof response === "string" ? `; cause: ${response}` : ""}]`));
+			else if (typeof response === "object" && response.constructor.name === "Blob") res(response);
+			else rej(new Error(`invalid response type [expected: Blob; actual: ${typeof response === "object" ? response.constructor.name : typeof response}]`));
+		};
+
+		xhr.onerror = () => {
+			rej(new Error("error getting blob"));
+		};
+
+		xhr.responseType = "blob";
+		xhr.open("GET", downloadUrl);
+		xhr.send();
+	});
+}
+
+function downloadBlob(blob: Blob, name: string) {
+	const pretender = document.createElement("a");
+	pretender.download = name;
+	pretender.href = URL.createObjectURL(blob);
+	
+	document.body.appendChild(pretender);
+	pretender.click();
+	pretender.remove();
+}
+
 const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({ 
 	snapshot, 
 	name, 
@@ -65,18 +95,15 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 	const [thumbnailDataUrl, setThumbnailDataUrl] = useState<string | undefined>(tDataUrl || undefined);
 
 	const [isDeleting, setDeleting] = useState(false);
+	const [isDownloading, setDownloading] = useState(false);
 	const [warns, setWarns] = useState(_warns);
 	const [showPrompt, setShowPrompt] = useState(true);
 	
 	useEffect(() => {
 		if (!thumbnailSmall) return;
-		
-		console.debug("loading thumbnail");
-		const xhr = new XMLHttpRequest();
-		xhr.onload = () => {
-			console.debug("thumbnail blob received");
-			const blob = xhr.response;
 
+		console.debug("loading thumbnail");
+		getBlob(thumbnailSmall).then(blob => {
 			const reader = new FileReader();
 			reader.onloadend = () => {
 				console.debug("thumbnail data url loaded");
@@ -86,19 +113,11 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 			};
 
 			reader.onerror = () => {
-				console.warn(`thumbnail data url load failed [status: ${xhr.status}]`);
+				console.warn(`thumbnail data url load failed [status: ${reader.error}]`);
 			};
 
 			reader.readAsDataURL(blob);
-		};
-
-		xhr.onerror = () => {
-			console.error("error getting thumbnail");
-		};
-
-		xhr.responseType = "blob";
-		xhr.open("GET", thumbnailSmall);
-		xhr.send();
+		});
 	}, [thumbnailSmall]);
 	
 	if (!directLink) {
@@ -140,7 +159,22 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 					<Button 
 						className="me-2"
 						variant="outline-vivid" 
-						href={directLink} 
+						href={directLink}
+						onClick={async evt => {
+							evt.preventDefault();
+							setDownloading(true);
+
+							try {
+								const blob = await getBlob(directLink);
+								downloadBlob(blob, name);
+							} catch (error) {
+								console.error(`error getting blob from direct link [cause: ${error}]`);
+								window.open(directLink, "_blank");
+							}
+
+							setDownloading(false);
+						}}
+						state={isDownloading ? "loading" : "none"}
 						target="_blank" 
 						download={name} 
 						left={<Icon name="file_download" size="sm" />}
