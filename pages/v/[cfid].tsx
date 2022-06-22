@@ -30,8 +30,11 @@ import { hasExpired } from "../../utils/dates";
 import { createFileLink, FileCustomMetadata, isExecutable } from "../../utils/files";
 import { mergeNames } from "../../utils/mergeNames";
 import { formatSize } from "../../utils/strings";
+import { useNumber } from "../../utils/useNumber";
 import { useToast } from "../../utils/useToast";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
+
+const THRESHOLD_DIRECT_DOWNLOAD = 30 * 1024 * 1024; // 30 MB
 
 function suppressError(error: any, cfid: string, subject: string) {
 	if (error.code === "storage/object-not-found") {
@@ -43,7 +46,7 @@ function suppressError(error: any, cfid: string, subject: string) {
 	return undefined;
 }
 
-async function getBlob(downloadUrl: string): Promise<Blob> {
+async function getBlob(downloadUrl: string, onProgress?: (received: number, total: number) => unknown): Promise<Blob> {
 	return new Promise((res, rej) => {
 		const xhr = new XMLHttpRequest();
 		xhr.onload = () => {
@@ -55,6 +58,10 @@ async function getBlob(downloadUrl: string): Promise<Blob> {
 
 		xhr.onerror = () => {
 			rej(new Error("error getting blob"));
+		};
+
+		xhr.onprogress = ({ loaded, total }) => {
+			onProgress?.(loaded, total);
 		};
 
 		xhr.responseType = "blob";
@@ -98,6 +105,8 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 	const [isDownloading, setDownloading] = useState(false);
 	const [warns, setWarns] = useState(_warns);
 	const [showPrompt, setShowPrompt] = useState(true);
+
+	const [downloadProgress, setDownloadProgress] = useNumber(0);
 	
 	useEffect(() => {
 		if (!thumbnailSmall) return;
@@ -156,16 +165,26 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 				height={height} />
 			<div>
 				<div className="float-end d-flex flex-row ps-2">
+					<Conditional in={isDownloading} className={mergeNames(isDownloading && "d-inline-flex", "align-items-center")}>
+						<p className="me-2 my-0">{downloadProgress}%</p>
+					</Conditional>
 					<Button 
 						className="me-2"
 						variant="outline-vivid" 
 						href={directLink}
 						onClick={async evt => {
+							if (size >= THRESHOLD_DIRECT_DOWNLOAD) {
+								console.debug("using browser default download mechanism");
+								return;
+							}
+
 							evt.preventDefault();
 							setDownloading(true);
 
 							try {
-								const blob = await getBlob(directLink);
+								const blob = await getBlob(directLink, (received, total) => {
+									setDownloadProgress.to(Math.round(received / total) * 100);
+								});
 								downloadBlob(blob, name);
 							} catch (error) {
 								console.error(`error getting blob from direct link [cause: ${error}]`);
