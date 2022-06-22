@@ -165,7 +165,11 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 				height={height} />
 			<div>
 				<div className="float-end d-flex flex-row ps-2">
-					<Conditional in={isDownloading} className={mergeNames(isDownloading && "d-inline-flex", "align-items-center")}>
+					<Conditional 
+						in={isDownloading} 
+						className={mergeNames(isDownloading && "d-inline-flex", "align-items-center")}
+						direction="horizontal"
+					>
 						<p className="me-2 my-0">{downloadProgress}%</p>
 					</Conditional>
 					<Button 
@@ -183,7 +187,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 
 							try {
 								const blob = await getBlob(directLink, (received, total) => {
-									setDownloadProgress.to(Math.round(received / total) * 100);
+									setDownloadProgress.to(Math.round(received / total * 100));
 								});
 								downloadBlob(blob, name);
 							} catch (error) {
