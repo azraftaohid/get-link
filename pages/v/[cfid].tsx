@@ -72,9 +72,16 @@ async function getBlob(downloadUrl: string, onProgress?: (received: number, tota
 }
 
 function downloadBlob(blob: Blob, name: string) {
+	const url = URL.createObjectURL(blob);
 	const pretender = document.createElement("a");
+	if (typeof pretender.download === "undefined") {
+		console.warn("browser doesn't support download; opening link");
+		window.open(url, "_blank");
+		return;
+	}
+
 	pretender.download = name;
-	pretender.href = URL.createObjectURL(blob);
+	pretender.href = url;
 	
 	document.body.appendChild(pretender);
 	pretender.click();
