@@ -78,6 +78,11 @@ function downloadBlob(blob: Blob, name: string) {
 	pretender.download = name;
 	pretender.href = url;
 	pretender.target = "_blank"; // for browsers that ignore the download attribute
+
+	pretender.addEventListener("error", (evt) => {
+		console.warn(`error direct downloading [cause: ${evt.error}]`);
+		window.open(url, "_blank");
+	});
 	
 	document.body.appendChild(pretender);
 	pretender.click();
