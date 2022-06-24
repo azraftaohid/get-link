@@ -35,6 +35,7 @@ import { useToast } from "../../utils/useToast";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
 
 const THRESHOLD_DIRECT_DOWNLOAD = 30 * 1024 * 1024; // 30 MB
+const PROGRESS_STEP = 3;
 
 function suppressError(error: any, cfid: string, subject: string) {
 	if (error.code === "storage/object-not-found") {
@@ -71,9 +72,17 @@ async function getBlob(downloadUrl: string, onProgress?: (received: number, tota
 }
 
 function downloadBlob(blob: Blob, name: string) {
+	const url = URL.createObjectURL(blob);
 	const pretender = document.createElement("a");
+
 	pretender.download = name;
-	pretender.href = URL.createObjectURL(blob);
+	pretender.href = url;
+	pretender.target = "_blank"; // for browsers that ignore the download attribute
+
+	pretender.addEventListener("error", (evt) => {
+		console.warn(`error direct downloading [cause: ${evt.error}]`);
+		window.open(url, "_blank");
+	});
 	
 	document.body.appendChild(pretender);
 	pretender.click();
@@ -165,7 +174,11 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 				height={height} />
 			<div>
 				<div className="float-end d-flex flex-row ps-2">
-					<Conditional in={isDownloading} className={mergeNames(isDownloading && "d-inline-flex", "align-items-center")}>
+					<Conditional 
+						in={isDownloading} 
+						className={mergeNames(isDownloading && "d-inline-flex", "align-items-center")}
+						direction="horizontal"
+					>
 						<p className="me-2 my-0">{downloadProgress}%</p>
 					</Conditional>
 					<Button 
@@ -182,8 +195,12 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 							setDownloading(true);
 
 							try {
+								let prevProgress = 0;
 								const blob = await getBlob(directLink, (received, total) => {
-									setDownloadProgress.to(Math.round(received / total) * 100);
+									const newProgress = Math.round(received / total * 100);
+									if (newProgress !== 100 && newProgress - prevProgress < PROGRESS_STEP) return;
+
+									setDownloadProgress.to(prevProgress = newProgress);
 								});
 								downloadBlob(blob, name);
 							} catch (error) {
@@ -197,6 +214,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 						target="_blank" 
 						download={name} 
 						left={<Icon name="file_download" size="sm" />}
+						disabled={isDownloading}
 					>
 						<span className="d-none d-md-inline">Download</span>
 					</Button>
