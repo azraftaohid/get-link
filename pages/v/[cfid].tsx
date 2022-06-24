@@ -28,6 +28,7 @@ import { UserSnapshotField } from "../../models/users";
 import styles from "../../styles/cfid.module.scss";
 import { notFound } from "../../utils/common";
 import { hasExpired } from "../../utils/dates";
+import { FetchError } from "../../utils/errors/FetchError";
 import { createFileLink, FileCustomMetadata, isExecutable } from "../../utils/files";
 import { mergeNames } from "../../utils/mergeNames";
 import { formatSize } from "../../utils/strings";
@@ -53,13 +54,9 @@ async function getBlob(downloadUrl: string, onProgress?: (received: number, tota
 		const xhr = new XMLHttpRequest();
 		xhr.onload = () => {
 			const { status, response } = xhr;
-			if (status !== 200) rej(new Error(`error getting blob file [code: ${status}${typeof response === "string" ? `; cause: ${response}` : ""}]`));
+			if (status !== 200) rej(new FetchError(xhr.status, "error getting blob file"));
 			else if (typeof response === "object" && response.constructor.name === "Blob") res(response);
 			else rej(new Error(`invalid response type [expected: Blob; actual: ${typeof response === "object" ? response.constructor.name : typeof response}]`));
-		};
-
-		xhr.onerror = () => {
-			rej(new Error("error getting blob"));
 		};
 
 		xhr.onprogress = ({ loaded, total }) => {
@@ -206,7 +203,11 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 								downloadBlob(blob, name);
 							} catch (error) {
 								console.error(`error getting blob from direct link [cause: ${error}]`);
-								window.open(directLink, "_blank");
+								if (error instanceof FetchError && error.code === 404) {
+									makeToast("The file is no longer available.", "warning");
+								} else {
+									window.open(directLink, "_blank");
+								}
 							}
 
 							setDownloading(false);
