@@ -26,6 +26,7 @@ import { getFileRef, getThumbnailRef } from "../models/files";
 import { COLLECTION_LINKS, LinkData, LinkField } from "../models/links";
 import { UserSnapshotField } from "../models/users";
 import styles from "../styles/dashboard.module.scss";
+import { logClick } from "../utils/analytics";
 import { hasExpired } from "../utils/dates";
 import { initFirestore } from "../utils/firestore";
 import { mergeNames } from "../utils/mergeNames";
@@ -130,7 +131,8 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 				className={mergeNames(styles.btnShare, "ms-auto")}
 				variant="outline-secondary"
 				content={createAbsoluteUrl(DOMAIN, "v", file.id)} 
-				left={<Icon name="link" size="sm" />} 
+				left={<Icon name="link" size="sm" />}
+                onClick={() => logClick("share_file_card")} 
 			/>
 		</Card.Footer>
 	</Card>;

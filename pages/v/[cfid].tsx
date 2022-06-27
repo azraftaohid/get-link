@@ -26,6 +26,7 @@ import { getFileRef, getThumbnailRef } from "../../models/files";
 import { getLinkRef, LinkData, LinkField, releaseLink, Warning } from "../../models/links";
 import { UserSnapshotField } from "../../models/users";
 import styles from "../../styles/cfid.module.scss";
+import { ClickEventContext, logClick } from "../../utils/analytics";
 import { notFound } from "../../utils/common";
 import { hasExpired } from "../../utils/dates";
 import { FetchError } from "../../utils/errors/FetchError";
@@ -184,33 +185,41 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 						variant="outline-vivid" 
 						href={directLink}
 						onClick={async evt => {
+                            const clickCtx: ClickEventContext = { };
+
 							if (size >= THRESHOLD_DIRECT_DOWNLOAD) {
 								console.debug("using browser default download mechanism");
-								return;
-							}
+                                clickCtx.mechanism = "browser_default";
+							} else {
+                                evt.preventDefault();
+                                setDownloading(true);
+                                clickCtx.mechanism = "built-in";
 
-							evt.preventDefault();
-							setDownloading(true);
+                                try {
+                                    let prevProgress = 0;
+                                    const blob = await getBlob(directLink, (received, total) => {
+                                        const newProgress = Math.round(received / total * 100);
+                                        if (newProgress !== 100 && newProgress - prevProgress < PROGRESS_STEP) return;
 
-							try {
-								let prevProgress = 0;
-								const blob = await getBlob(directLink, (received, total) => {
-									const newProgress = Math.round(received / total * 100);
-									if (newProgress !== 100 && newProgress - prevProgress < PROGRESS_STEP) return;
+                                        setDownloadProgress.to(prevProgress = newProgress);
+                                    });
+                                    downloadBlob(blob, name);
+                                    clickCtx.status = "succeed";
+                                } catch (error) {
+                                    console.error(`error getting blob from direct link [cause: ${error}]`);
+                                    if (error instanceof FetchError && error.code === 404) {
+                                        makeToast("The file is no longer available.", "warning");
+                                    } else {
+                                        window.open(directLink, "_blank");
+                                    }
 
-									setDownloadProgress.to(prevProgress = newProgress);
-								});
-								downloadBlob(blob, name);
-							} catch (error) {
-								console.error(`error getting blob from direct link [cause: ${error}]`);
-								if (error instanceof FetchError && error.code === 404) {
-									makeToast("The file is no longer available.", "warning");
-								} else {
-									window.open(directLink, "_blank");
-								}
-							}
+                                    clickCtx.status = "failed";
+                                }
 
-							setDownloading(false);
+                                setDownloading(false);
+                            }
+
+                            logClick("download", clickCtx);
 						}}
 						state={isDownloading ? "loading" : "none"}
 						target="_blank" 
@@ -224,6 +233,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 						variant="outline-vivid"
 						content={createFileLink(snapshot.id, true)}
 						left={<Icon name="link" size="sm" />}
+                        onClick={() => logClick("share")}
 					>
 						<span className="d-none d-md-inline">Share</span>
 					</CopyButton>
@@ -254,7 +264,9 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 				onConfirm={async () => {
 					setDeleting(true);
 
+                    const clickCtx: ClickEventContext = { };
 					const fid = snapshot.data?.[LinkField.FID];
+
 					try {
 						if (!fid) throw new Error(`fid is undefined [cfid: ${snapshot.id}]`);
 
@@ -265,16 +277,22 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 						router.push("/");
 						setShowDeletePrompt(false);
 						makeToast("File deleted successfully.", "info");
+                        clickCtx.status = "succeed";
 					} catch (error) {
 						console.error(`error deleting file [cause: ${error}]`);
 						makeToast("Darn, we couldn't delete the file. Please try again later or file a report below.", "error");
+                        clickCtx.status = "failed";
 					}
 
 					setDeleting(false);
+                    logClick("delete", clickCtx);
 				}}
 				onCancel={() => {
 					setShowDeletePrompt(false);
 					setDeleting(false);
+
+                    const clickCtx: ClickEventContext = { status: "canceled" };
+                    logClick("delete", clickCtx);
 				}}
 			/>
 		</PageContent>

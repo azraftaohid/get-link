@@ -9,6 +9,7 @@ import NavbarCollapse from "react-bootstrap/NavbarCollapse";
 import NavbarToggle from "react-bootstrap/NavbarToggle";
 import NavLink from "react-bootstrap/NavLink";
 import styles from "../styles/header.module.scss";
+import { logClick } from "../utils/analytics";
 import { mergeNames } from "../utils/mergeNames";
 import { Theme, useTheme } from "../utils/useTheme";
 import { Icon } from "./Icon";
@@ -33,8 +34,6 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 	const router = useRouter();
 	const { current: theme, setTheme } = useTheme();
 
-	const toggleTheme = () => setTheme(theme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT);
-
 	return <>
 		<Navbar id="nav" className={mergeNames(styles.main, "py-3")} expand="md" sticky="top">
 			<Container id="nav-container" className={styles.container} fluid="xl">
@@ -56,7 +55,17 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 						</Link>)}
 					</Nav>
 				</NavbarCollapse>
-				<Icon role="button" className={"btn btn-outline-secondary order-0 order-md-2 ms-auto me-3 me-md-0"} name="dark_mode" tabIndex={1} onClick={toggleTheme} />
+				<Icon 
+                    role="button" 
+                    className={"btn btn-outline-secondary order-0 order-md-2 ms-auto me-3 me-md-0"} 
+                    name="dark_mode" 
+                    tabIndex={1} 
+                    onClick={() => {
+                        const newTheme = theme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT; 
+
+                        setTheme(newTheme);
+                        logClick("toggle_theme", { to: newTheme });
+                    }} />
 			</Container>
 		</Navbar>
 		<RouteIndicator />

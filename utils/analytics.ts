@@ -1,4 +1,6 @@
+import { getAnalytics, logEvent } from "firebase/analytics";
 import { nanoid } from "nanoid";
+import { Theme } from "./useTheme";
 
 export const KEY_EID = "experience.id";
 export const KEY_SID = "experience.sid";
@@ -17,4 +19,21 @@ export function acquireExperienceOptions() {
 	}
 
 	return { eid, sid };
+}
+
+export function logClick(btnId: ButtonId, ctx?: ClickEventContext) {
+    const params: ClickEventParams = { ...ctx, button_id: btnId };
+    logEvent(getAnalytics(), "click", params);
+}
+
+export type ButtonId = "download" | "toggle_theme" | "delete" | "share" | "share_file_card";
+
+export interface ClickEventParams extends ClickEventContext {
+    button_id: string,
+}
+
+export interface ClickEventContext {
+    mechanism?: "built-in" | "browser_default",
+    status?: "failed" | "succeed" | "canceled",
+    to?: Theme,
 }
