@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 import { mergeNames } from "../utils/mergeNames";
 import { getSolidStallImage } from "../visuals/stallData";
 import { Audio } from "./Audio";
@@ -12,15 +12,18 @@ import { Video } from "./Video";
 const PDF = dynamic(() => import("./PDFView"), { ssr: false });
 
 export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewProps>> = ({ className, src, type, width, height, placeholderDataUrl, ...rest }) => {
+    const [imageLoaded, setImageLoaded] = useState(false);
+
 	return <div className={mergeNames("border border-secondary rounded d-flex flex-column align-items-center w-100 p-2 text-muted", className)} {...rest}>
 		{(type?.startsWith("image/") && <Link href={src} newTab><Image 
 			src={src} 
 			alt="Image"
-			placeholder={"blur"}
+			placeholder={imageLoaded ? "empty" : "blur"}
 			width={width || 480}
 			height={height || 480}
 			objectFit="contain"
 			blurDataURL={placeholderDataUrl || getSolidStallImage()}
+            onLoadingComplete={() => setImageLoaded(true)}
 			priority
 		/></Link>) || (type?.startsWith("video/") && <Video
 			src={src}
