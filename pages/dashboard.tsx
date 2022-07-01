@@ -10,6 +10,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import Card from "react-bootstrap/Card";
 import Col from "react-bootstrap/Col";
+import Placeholder from "react-bootstrap/Placeholder";
 import Row from "react-bootstrap/Row";
 import { Button } from "../components/Button";
 import { CopyButton } from "../components/CopyButton";
@@ -17,10 +18,10 @@ import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { Icon } from "../components/Icon";
 import { Link } from "../components/Link";
-import { Loading } from "../components/Loading";
 import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
+import { Shimmer } from "../components/Shimmer";
 import { ShortLoading } from "../components/ShortLoading";
 import { getFileRef, getThumbnailRef } from "../models/files";
 import { COLLECTION_LINKS, LinkData, LinkField } from "../models/links";
@@ -54,6 +55,35 @@ const LoadingPreview: React.FunctionComponent<React.PropsWithChildren<React.Deta
 	return <div className={mergeNames(styles.loadingPreview, className)} {...rest}>
 		<ShortLoading />
 	</div>;
+};
+
+const FileListPlaceholder: React.FunctionComponent = () => {
+    return <Row className="g-4" xs={1} sm={2} md={3} lg={4}>
+        <FilePlaceholderConcat />
+    </Row>;
+};
+
+const FileCardPlaceholder: React.FunctionComponent = () => {
+    return <Card className={mergeNames(styles.fileCard, "border-feedback")}>
+        <Card.Header>
+            <Link className="stretched-link text-decoration-none text-reset" href="#">
+                <Shimmer className="w-100 py-1" xs={1} pattern={<Placeholder className="w-75" />} size="lg" />
+            </Link>
+        </Card.Header>
+        <div className={mergeNames(styles.linkPreview)}>
+            <div className={styles.cardImg} />
+        </div>
+        <Card.Footer className="d-flex flex-row align-items-center">
+            <span className="d-block text-muted text-truncate w-50">
+                <Shimmer className="w-100 py-1" pattern={<Placeholder className="w-100" />} size="lg" />
+            </span>
+            <Button 
+                className={mergeNames(styles.btnShare, "ms-auto")} 
+                variant="outline-secondary" 
+                left={<Icon name="" size="sm" />}
+                disabled />
+        </Card.Footer>
+    </Card>;
 };
 
 const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDocumentSnapshot<LinkData> }>> = ({ file }) => {
@@ -132,6 +162,12 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 	</Card>;
 };
 
+const FilePlaceholderConcat: React.FunctionComponent = () => {
+    return <>
+		{new Array(FETCH_LIMIT).fill(null).map((_v, i) => <Col key={`col-${i}`}><FileCardPlaceholder /></Col>)}
+	</>;
+};
+
 const FileConcat: React.FunctionComponent<React.PropsWithChildren<{ snapshot: QueryDocumentSnapshot<LinkData>[] }>> = ({ snapshot }) => {
 	return <>
 		{snapshot.map(file => <Col key={`col-${file.id}`}><FileCard file={file} /></Col>)}
@@ -153,6 +189,22 @@ const ErrorView: React.FunctionComponent<React.PropsWithChildren<unknown>> = () 
 	</Alert>;
 };
 
+const UserDashboardPlaceholder: React.FunctionComponent = () => {
+    return <div>
+        <FileListPlaceholder />
+        <Row className="mt-4">
+            <Col className="mx-auto" md={5}>
+                <Shimmer 
+                    pattern={<Placeholder.Button 
+                        className="w-100 justify-content-center placeholder" 
+                        variant="outline-secondary" 
+                        disabled />} 
+                />
+            </Col>
+        </Row>
+    </div>;
+};
+
 const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: string }>> = ({ uid }) => {
 	const baseQuery: Query<LinkData> = useMemo(() => {
 		const db = getFirestore();
@@ -170,7 +222,7 @@ const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: stri
 	});
 
 	if (!links.data?.pages[0]?.size) {
-		if (links.isLoading || links.isFetching) return <Loading />;
+		if (links.isLoading || links.isFetching) return <FileListPlaceholder />;
 		if (links.isError) {
 			console.error(`fetch error: ${links.error}`);
 			return <ErrorView />;
@@ -211,7 +263,7 @@ const Dashboard: NextPage = () => {
 		<Header />
 		<PageContent>
 			<h1 className="mb-4">Recent files</h1>
-			{user?.uid ? <UserDashboard uid={user.uid} /> : isLoading ? <Loading /> : <EmptyView />}
+			{user?.uid ? <UserDashboard uid={user.uid} /> : isLoading ? <UserDashboardPlaceholder /> : <EmptyView />}
 		</PageContent>
 		<Footer />
 	</PageContainer>;
