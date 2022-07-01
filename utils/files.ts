@@ -38,6 +38,16 @@ export const executableTypes = [
 	"application/vnd.android.package-archive",
 ];
 
+const formatIconMapping: Record<string, string> = {
+    "text/": "text",
+    "video/": "video",
+    "audio/": "audio",
+    "application/pdf": "pdf",
+    "application\\/.*(\\.spreadsheetml)|(\\.ms-excel).*": "ms-excel",
+    "application\\/.*(\\.wordprocessingml)|(msword).*": "ms-word",
+    "application\\/.*(\\.presentationml)|(\\.ms-powerpoint).*": "ms-powerpoint",
+};
+
 export function createFileLink(id: string, absolute = false) {
 	return !absolute ? createUrl("v", id) : createAbsoluteUrl(DOMAIN, "v", id);
 }
@@ -100,6 +110,13 @@ export async function getFileType(file: File): Promise<[string | undefined, stri
 
 export function isExecutable(mimeType: string) {
 	return executableTypes.includes(mimeType);
+}
+
+export function findFileIcon(mimeType: string): string | undefined {
+    const keys = Object.keys(formatIconMapping);
+    const match = keys.find(key => mimeType.match(`^${key}`));
+
+    return match ? formatIconMapping[match] : undefined;
 }
 
 export type FilesStatus = "files:unknown-error" | 

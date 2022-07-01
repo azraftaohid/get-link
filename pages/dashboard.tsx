@@ -28,18 +28,13 @@ import { UserSnapshotField } from "../models/users";
 import styles from "../styles/dashboard.module.scss";
 import { logClick } from "../utils/analytics";
 import { hasExpired } from "../utils/dates";
+import { findFileIcon } from "../utils/files";
 import { initFirestore } from "../utils/firestore";
 import { mergeNames } from "../utils/mergeNames";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
 import { getSolidStallImage } from "../visuals/stallData";
 
 const FETCH_LIMIT = 12;
-
-const icMapping: Record<string, string> = {
-	"text": "text_snippet",
-	"video": "video_file",
-	"audio": "audio_file",
-};
 
 const NoPreview: React.FunctionComponent<React.PropsWithChildren<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> & { icon?: string }>> = ({ 
 	className,
@@ -63,7 +58,6 @@ const LoadingPreview: React.FunctionComponent<React.PropsWithChildren<React.Deta
 
 const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDocumentSnapshot<LinkData> }>> = ({ file }) => {
 	const [thumbnail, setThumbnail] = useState<string | null>();
-	const [ic, setIc] = useState<string>();
 
 	const data = file.data({ serverTimestamps: "estimate" });
 	const fid = data[LinkField.FID];
@@ -79,22 +73,22 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 
 		const thumbRef = getThumbnailRef(fid, "384x384");
 		getDownloadURL(thumbRef).then(url => setThumbnail(url)).catch(async err => {
-			console.warn(`thumbnail not available: ${err}`);
+            if (err.code !== "storage/object-not-found") console.warn(`thumbnail get failed: ${err}`);
 
 			const fileRef = getFileRef(fid);
 			try {
 				const metadata = await getMetadata(fileRef);
-				const prefix = metadata.contentType?.split("/")?.[0];
+                const mimeType = metadata.contentType;
 
-				if (prefix !== "image") {
-					if (prefix) setIc(icMapping[prefix]);
-					throw new Error("content is not of type image");
-				}
-
-				const directLink = await getDownloadURL(fileRef);
-				setThumbnail(directLink);
+                if (mimeType?.startsWith("image/")) {
+                    const directLink = await getDownloadURL(fileRef);
+                    setThumbnail(directLink);
+                } else if (mimeType) {
+                    const fallbackThumbnail = findFileIcon(mimeType);
+                    setThumbnail(fallbackThumbnail ? `/image/ic/${fallbackThumbnail}.png` : null);
+                }
 			} catch (error) {
-				console.debug(`direct download file failed: ${error}`);
+				console.error(`direct download link get failed: ${error}`);
 				setThumbnail(null);	
 			}
 		});
@@ -109,7 +103,7 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 		<div className={mergeNames(styles.linkPreview)}>
 			{thumbnail 
 				? <Image 
-					className="card-img-top" 
+					className={mergeNames("card-img-top", styles.cardImg)} 
 					placeholder="blur"
 					src={thumbnail} 
 					alt="link preview" 
@@ -119,7 +113,7 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 					quality={50}
 					blurDataURL={getSolidStallImage()} /> 
 				: thumbnail === null 
-				? <NoPreview icon={ic} />
+				? <NoPreview />
 				: <LoadingPreview />}
 		</div>
 		<Card.Footer className="d-flex flex-row align-items-center">

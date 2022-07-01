@@ -16,13 +16,13 @@
 }
 
 @include app-theme(dark) {
-	.noPreview, .loadingPreview {
+	.noPreview, .loadingPreview, .cardImg {
 		background-color: $gray-900;
 	}
 }
 
 @include app-theme(light) {
-	.noPreview, .loadingPreview {
+	.noPreview, .loadingPreview, .cardImg {
 		background-color: $gray-100;
 	}
 }
