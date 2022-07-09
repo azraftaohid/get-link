@@ -149,6 +149,8 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 
 	const createSeconds = snapshot.data?.[LinkField.CREATE_TIME]?.seconds;
 	const strCreateTime = createSeconds && formatDate(new Date(createSeconds * 1000), "short", "year", "month", "day");
+    
+    const isUser = user && snapshot.data?.[LinkField.USER]?.[UserSnapshotField.UID] === user.uid;
 
 	return <PageContainer>
 		<Metadata 
@@ -227,7 +229,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 						left={<Icon name="file_download" size="sm" />}
 						disabled={isDownloading}
 					>
-						<span className="d-none d-md-inline">Download</span>
+						<span className={mergeNames(isUser ? "d-none d-md-inline" : "d-inline")}>Download</span>
 					</Button>
 					<CopyButton
 						variant="outline-vivid"
@@ -237,7 +239,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 					>
 						<span className="d-none d-md-inline">Share</span>
 					</CopyButton>
-					{user && snapshot.data?.[LinkField.USER]?.[UserSnapshotField.UID] === user.uid && <Button
+					{isUser && <Button
 						className="ms-2"
 						variant="outline-danger"
 						left={<Icon name="delete" size="sm" />}
