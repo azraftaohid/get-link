@@ -43,6 +43,7 @@ const formatIconMapping: Record<string, string> = {
     "video/": "video",
     "audio/": "audio",
     "application/pdf": "pdf",
+    "application\\/((zip)|(gzip)|(x-zip-compressed))": "folder_zip",
     "application\\/.*(\\.spreadsheetml)|(\\.ms-excel).*": "ms-excel",
     "application\\/.*(\\.wordprocessingml)|(msword).*": "ms-word",
     "application\\/.*(\\.presentationml)|(\\.ms-powerpoint).*": "ms-powerpoint",

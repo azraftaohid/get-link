@@ -55,7 +55,7 @@
     "start_url": "/",
     "theme_color": "#0078d4",
     "background_color": "#000000",
-    "display": "minimal-ui",
+    "display": "standalone",
     "shortcuts": [
         {
             "name": "Open Home Page",
