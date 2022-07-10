@@ -30,7 +30,7 @@ import { ClickEventContext, logClick } from "../../utils/analytics";
 import { notFound } from "../../utils/common";
 import { hasExpired } from "../../utils/dates";
 import { FetchError } from "../../utils/errors/FetchError";
-import { createFileLink, FileCustomMetadata, isExecutable } from "../../utils/files";
+import { createFileLink, FileCustomMetadata, findFileIcon, isExecutable } from "../../utils/files";
 import { mergeNames } from "../../utils/mergeNames";
 import { formatSize } from "../../utils/strings";
 import { useNumber } from "../../utils/useNumber";
@@ -156,7 +156,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 		<Metadata 
 			title={snapshot.data?.[LinkField.TITLE] || snapshot.data?.[LinkField.NAME] || "Get Link"} 
 			description="Create and instantly share link of files and images."
-			image={thumbnail || thumbnailSmall || (type.startsWith("image/") && directLink)} 
+			image={thumbnail || thumbnailSmall || (type.startsWith("image/") && directLink) || findFileIcon(type)} 
 		/>
 		<Header />
 		<PageContent>

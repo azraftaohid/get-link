@@ -117,7 +117,7 @@ export function findFileIcon(mimeType: string): string | undefined {
     const keys = Object.keys(formatIconMapping);
     const match = keys.find(key => mimeType.match(`^${key}`));
 
-    return match ? formatIconMapping[match] : undefined;
+    return match ? `/image/ic/${formatIconMapping[match]}.png` : undefined;
 }
 
 export type FilesStatus = "files:unknown-error" | 

@@ -114,8 +114,7 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
                     const directLink = await getDownloadURL(fileRef);
                     setThumbnail(directLink);
                 } else if (mimeType) {
-                    const fallbackThumbnail = findFileIcon(mimeType);
-                    setThumbnail(fallbackThumbnail ? `/image/ic/${fallbackThumbnail}.png` : null);
+                    setThumbnail(findFileIcon(mimeType) || null);
                 }
 			} catch (error) {
 				console.error(`direct download link get failed: ${error}`);
