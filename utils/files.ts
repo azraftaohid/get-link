@@ -125,7 +125,8 @@ export type FilesStatus = "files:unknown-error" |
 	"files:upload-error" | 
 	"files:capture-error" |
 	"files:creating-link" |
-	"files:too-large";
+	"files:too-large" |
+    "files:creating-thumbnail";
 
 export type FileCustomMetadata = UploadMetadata["customMetadata"] & Dimension;
 

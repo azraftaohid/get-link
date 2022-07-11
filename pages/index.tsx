@@ -1,10 +1,10 @@
 import { useAuthUser } from "@react-query-firebase/auth";
 import { getAuth, signInAnonymously } from "firebase/auth";
-import { uploadBytesResumable, UploadMetadata } from "firebase/storage";
+import { uploadBytes, uploadBytesResumable, UploadMetadata } from "firebase/storage";
 import { nanoid } from "nanoid";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import FormLabel from "react-bootstrap/FormLabel";
 import ProgressBar from "react-bootstrap/ProgressBar";
@@ -27,6 +27,7 @@ import { acceptedFileFormats, createFileLink, FileCustomMetadata, getFileType, g
 import { mergeNames } from "../utils/mergeNames";
 import { formatSize } from "../utils/strings";
 import { useToast } from "../utils/useToast";
+import { generateThumbnailFromVideo } from "../utils/video";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -49,6 +50,15 @@ const Home: NextPage = () => {
     setStatuses(c => {
       if (c.includes(status)) return [...c];
       return [...c, status];
+    });
+  });
+
+  const removeStatus = useRef((status: StatusCode) => {
+    setStatuses(c => {
+        const i = c.indexOf(status);
+        if (i === -1) return c;
+    
+        return [...c.slice(0, i), ...c.slice(i + 1)];  
     });
   });
 
@@ -108,7 +118,8 @@ const Home: NextPage = () => {
       const [mime, ext] = await getFileType(file); // respect user specified extension
       console.debug(`mime: ${mime}; ext: ${ext}`);
 
-      const fid = createFID(nanoid(12) + ext, uid);
+      const prefix = nanoid(12);
+      const fid = createFID(prefix + ext, uid);
       const ref = getFileRef(fid);
       const metadata: UploadMetadata = { contentType: mime };
 
@@ -122,6 +133,25 @@ const Home: NextPage = () => {
         } else if (mime?.startsWith("video")) {
           localUrl = URL.createObjectURL(file);
           dimension = await getVideoDimension(localUrl);
+
+          appendStatus.current("files:creating-thumbnail");
+          try {
+            const thumbnail = await generateThumbnailFromVideo(localUrl, "image/png");
+            if (thumbnail) {
+                await uploadBytes(getFileRef(createFID(prefix + ".png", uid)), thumbnail, {
+                    contentType: "image/png",
+                    customMetadata: {
+                        width: dimension[DimensionField.WIDTH],
+                        height: dimension[DimensionField.HEIGHT],
+                    } as FileCustomMetadata,
+                });
+            } else {
+                console.warn("skipping to generate video thumbnail");
+            }
+          } catch (error) {
+            console.error(`error generating thumbnail from video [cause: ${error}]`);
+          }
+          removeStatus.current("files:creating-thumbnail");
         } else if (mime === "application/pdf") {
           localUrl = URL.createObjectURL(file);
           dimension = await getPdfDimension(localUrl);
@@ -199,12 +229,7 @@ const Home: NextPage = () => {
     <Header />
     <PageContent>
       <Conditional in={statuses.includes("files:upload-cancelled")}>
-        <Alert variant="warning" dismissible onClose={() => setStatuses(c => {
-          const i = c.indexOf("files:upload-cancelled");
-          if (i === -1) return c;
-
-          return [...c.slice(0, i), ...c.slice(i + 1)];
-        })}>
+        <Alert variant="warning" dismissible onClose={() => removeStatus.current("files:upload-cancelled")}>
           Upload cancelled.
         </Alert>
       </Conditional>
@@ -227,6 +252,8 @@ const Home: NextPage = () => {
             ? <><Link variant="reset" href={url || "#"}>Redirecting</Link>&hellip;</>
             : statuses.includes("files:creating-link") 
             ? <>Creating link.</> 
+            : statuses.includes("files:creating-thumbnail") 
+            ? <>Creating thumbnail.</> 
             : <>{progress}% completed.</>}
         </small>
       </Conditional>
