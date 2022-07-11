@@ -33,7 +33,7 @@ export async function generateThumbnailFromVideo(src: string, type?: Parameters<
                 rej(error);
             }
         };
-        element.onerror = (_evt, _src, _lineno, _colno, err) => rej(err);
+        element.onerror = () => rej(`cause: ${element.error?.message}; cause: ${element.error?.code}`);
         
         element.src = src;
     });

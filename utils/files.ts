@@ -55,11 +55,12 @@ export function createFileLink(id: string, absolute = false) {
 
 export async function getVideoDimension(src: string): Promise<Dimension> {
 	const element = document.createElement("video");
-	return new Promise((res) => {
+	return new Promise((res, rej) => {
 		element.onloadedmetadata = () => {
 			const { videoWidth: width, videoHeight: height } = element;
 			res({ width, height });
 		};
+        element.onerror = () => rej(new Error(`cause: ${element.error?.message}; code: ${element.error?.code}`));
 
 		element.src = src;
 	});
@@ -67,11 +68,12 @@ export async function getVideoDimension(src: string): Promise<Dimension> {
 
 export async function getImageDimension(src: string): Promise<Dimension> {
 	const image = new Image();
-	return new Promise((res) => {
+	return new Promise((res, rej) => {
 		image.onload = () => {
 			const { width, height } = image;
 			res({ width, height });
 		};
+        image.onerror = () => rej(new Error("image could not be loaded"));
 		
 		image.src = src;
 	});
