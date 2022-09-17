@@ -29,6 +29,10 @@ export const Footer: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 				<FooterAction href="https://www.facebook.com/getlinksoft" target="_blank">
 					Facebook
 				</FooterAction>
+				<div className="vr" />
+				<FooterAction href="https://github.com/azraftaohid/get-link" target="_blank">
+					Source
+				</FooterAction>
 			</div>
 			<small className="text-center text-muted">Author <a className="text-reset" href="https://github.com/azraftaohid" target="_blank" rel="noreferrer">Azraf Taohid</a></small>
 		</Container>
