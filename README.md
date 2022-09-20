@@ -23,7 +23,7 @@ Open the shared link directly in your browser and Get Link will open the relevan
 Download the shared file using the __Download__ button at the bottom of the file view.
 
 ## Contribution
-Pull requests for any level of improvement are welcome! See the [contribution guidelines](https://github.com/azraftaohid/get-link/docs/contributing) for more information.
+Pull requests for any level of improvement are welcome! See the [contribution guidelines](/docs/contributing.md) for more information.
 
 ## License
 All files on the get-link GitHub repository are subject to the MIT License. Please read the LICENSE file at the root of the project.
