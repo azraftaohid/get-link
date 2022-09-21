@@ -1,34 +1,29 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Get Link
+Get Link is truly a one-tap solution that lets you create shareable links for files on the internet. It's fast, lightweight, and easy to use — just gets the thing done; nothing else.
+ - Original quality: photos along with any other types of files are shared without any level of compressions. 
+ - Security: by default, links are generated with random, and unguessable characters — making it extremely hard for unintended users to find your files.
+ - Expire: generated links automatically expire after 14 days. And then it will be deleted from the server forever.
 
-## Getting Started
+## Usage
+### Get Link
+Generating links for files with Get Link is easy. You only have to a) upload the file, and b) copy the generated link. 
 
-First, run the development server:
+You can upload files by:
+ 1. Click on the __Upload file__ button from the _Home_ page. Then choose your desired file. or,
+ 1. Drag & drop your desired file into the __Upload file__ button area.
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+Get Link will then open a new page with the uploaded file. You can copy the generated link by:
+ 1. Click the __Share__ button at the bottom of the file view. or,
+ 1. Copy the current URL from the browser's Address bar.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Access
+Open the shared link directly in your browser and Get Link will open the relevant files. Get Link can currently preview most of the images, videos, audio files, and pdf.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+### Download
+Download the shared file using the __Download__ button at the bottom of the file view.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## Contribution
+Pull requests for any level of improvement are welcome! See the [contribution guidelines](/docs/contributing.md) for more information.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## License
+All files on the get-link GitHub repository are subject to the MIT License. Please read the LICENSE file at the root of the project.

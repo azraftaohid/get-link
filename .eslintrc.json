@@ -31,6 +31,7 @@
   "rules": {
     "semi": ["error", "always"],
     "quotes": ["error", "double"],
-    "@typescript-eslint/no-empty-interface": "off"
+    "@typescript-eslint/no-empty-interface": "off",
+    "react/no-unknown-property": ["error", { "ignore": ["apple-mobile-web-app-title"] }]
   }
 }
