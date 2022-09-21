@@ -1,10 +1,8 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /users/{uid}/{name} {
-      allow read: if true;
-      allow create: if true;
-      allow delete: if true;
+    match /{allPaths=**} {
+      allow read, write: if true;
     }
   }
 }
