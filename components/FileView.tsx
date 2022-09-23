@@ -11,7 +11,16 @@ import { Video } from "./Video";
 
 const PDF = dynamic(() => import("./PDFView"), { ssr: false });
 
-export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewProps>> = ({ className, src, type, width, height, placeholderDataUrl, ...rest }) => {
+export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewProps>> = ({ 
+    className, 
+    src, 
+    size, 
+    type, 
+    width, 
+    height, 
+    placeholderDataUrl, 
+    ...rest 
+}) => {
     const [imageLoaded, setImageLoaded] = useState(false);
 
 	return <div className={mergeNames("border border-secondary rounded d-flex flex-column align-items-center w-100 p-2 text-muted", className)} {...rest}>
@@ -35,7 +44,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 		/>) || ((type?.startsWith("text/") || ["application/json", "application/xml"].includes(type || "")) && <RawText 
 			className={mergeNames("w-100 mb-0 px-3 py-3", type === "text/plain" && "text-wrap")}
 			src={src}
-		/>) || (type === "application/pdf" && <PDF file={src} />) || <>
+		/>) || (type === "application/pdf" && <PDF file={src} width={width || undefined} height={height || undefined} size={size} />) || <>
 			<Icon 
 				className="d-block"
 				name={type?.startsWith("audio") ? "audio_file" : type?.startsWith("video") ? "video_file" : "description"} 

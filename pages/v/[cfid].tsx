@@ -338,8 +338,8 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	let name: string;
 	let type: string;
 	let size: number;
-	let width: number | undefined;
-	let height: number | undefined;
+	let width: string | number | undefined;
+	let height: string | number | undefined;
 	try {
 		downloadUrl = await getUrl;
 		const metas = await getMetas;
@@ -366,8 +366,8 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 			name: name,
 			type: type,
 			size: size,
-			width: staticMetas?.[DimensionField.WIDTH] || width || null,
-			height: staticMetas?.[DimensionField.HEIGHT] || height || null,
+			width: +(staticMetas?.[DimensionField.WIDTH] || width || 0) || null,
+			height: +(staticMetas?.[DimensionField.HEIGHT] || height || 0) || null,
 			directLink: downloadUrl,
 			thumbnail: thumbailUrl || null,
 			thumbnailSmall: smThumbnailUrl || null,

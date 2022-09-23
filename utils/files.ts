@@ -130,5 +130,7 @@ export type FilesStatus = "files:unknown-error" |
 	"files:too-large" |
     "files:creating-thumbnail";
 
-export type FileCustomMetadata = UploadMetadata["customMetadata"] & Dimension;
+export type FileCustomMetadata = UploadMetadata["customMetadata"] & {
+    [prop in keyof Dimension]?: string
+};
 
