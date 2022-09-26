@@ -1,10 +1,10 @@
 import { FetchError } from "./errors/FetchError";
-import { getModernizr } from "./modernizr";
 
 export const THRESHOLD_DIRECT_DOWNLOAD = 30 * 1024 * 1024; // 30 MB
 
 export function shouldStepUpDownload() {
-    return !getModernizr()?.adownload || window.navigator.userAgent.includes("FB_IAB/");
+    return (typeof Modernizr !== "undefined" && !Modernizr.adownload) || 
+        (typeof window !== "undefined" && window.navigator.userAgent.includes("FB_IAB/"));
 }
 
 export function downloadBlob(blob: Blob, name: string) {

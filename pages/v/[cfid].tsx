@@ -80,6 +80,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 	const [warns, setWarns] = useState(_warns);
 	const [showPrompt, setShowPrompt] = useState(true);
 
+    const [stepUpDownload, setStepUpDownload] = useState(false);
 	const [downloadProgress, setDownloadProgress] = useNumber(0);
 	
 	useEffect(() => {
@@ -102,6 +103,12 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 			reader.readAsDataURL(blob);
 		});
 	}, [thumbnailSmall]);
+
+    useEffect(() => {
+        // stored as state; update client after initial render because
+        // prop value mismatch may cause href to not change on client w/o a re-render.
+        setStepUpDownload(shouldStepUpDownload());
+    }, []);
 	
 	if (!directLink) {
 		return <PageContainer>
@@ -117,7 +124,6 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 	const strCreateTime = createSeconds && formatDate(new Date(createSeconds * 1000), "short", "year", "month", "day");
     
     const isUser = user && snapshot.data?.[LinkField.USER]?.[UserSnapshotField.UID] === user.uid;
-    const stepUpDownload = shouldStepUpDownload();
     const downloadMechanism: ClickEventContext["mechanism"] = size >= THRESHOLD_DIRECT_DOWNLOAD ? "browser_default" : "built-in";
 
 	return <PageContainer>
@@ -159,9 +165,7 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                                 mechanism: downloadMechanism,
                             };
 
-							if (downloadMechanism === "browser_default" || stepUpDownload) {
-								console.debug("using browser default download mechanism");
-							} else {
+							if (downloadMechanism === "built-in" && !stepUpDownload) {
                                 evt.preventDefault();
                                 setDownloading(true);
 
