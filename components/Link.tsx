@@ -18,6 +18,8 @@ export const Link: React.FunctionComponent<React.PropsWithChildren<LinkProps>> =
 	</NextLink>;
 };
 
+export default Link;
+
 export type LinkVariant = "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "reset" | "alert";
 
 export interface LinkProps extends React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement> {

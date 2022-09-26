@@ -6,6 +6,10 @@ import { initPdfWorker } from "./pdf";
 import { extractExtension } from "./strings";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "./urls";
 
+export const STORAGE_URL_PREFIX = process.env.NODE_ENV === "development" 
+    ? `http://localhost:9199/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o` 
+    : `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o`;
+
 export const acceptedFileFormats = [
 	"audio/*", "video/*", "image/*", "text/*",
 	"application/pdf",
@@ -51,6 +55,25 @@ const formatIconMapping: Record<string, string> = {
 
 export function createFileLink(id: string, absolute = false) {
 	return !absolute ? createUrl("v", id) : createAbsoluteUrl(DOMAIN, "v", id);
+}
+
+export function compartDirectLink(url: string): { path: string, token: string } {
+    const instance = new URL(url);
+    
+    const path = instance.pathname.substring(instance.pathname.lastIndexOf("/") + 1);
+    const token = instance.searchParams.get("token");
+    if (typeof path !== "string" || typeof token !== "string") throw new Error(`invalid direct link: ${url}`);
+
+    return { path, token };
+}
+
+export function makeDirectLink(path: string, token: string) {
+    return `${STORAGE_URL_PREFIX}/${encodeURIComponent(path)}?alt=media&token=${token}`;
+}
+
+export function isValidDirectLink(url: string) {
+    return url.startsWith(STORAGE_URL_PREFIX) &&
+        url.includes("&token=");
 }
 
 export async function getVideoDimension(src: string): Promise<Dimension> {
