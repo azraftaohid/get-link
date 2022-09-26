@@ -41,7 +41,7 @@ const Download: NextPage = () => {
     const path = router.query.path;
     const token = router.query.token;
     const dl = router.query.dl;
-    const mechanism = router.query.mechanism;
+    const mechanism = router.query.mechanism as ClickEventContext["mechanism"];
 
     let directLink: string | undefined;
     if (typeof dl === "string") directLink = decodeURIComponent(dl);
@@ -70,7 +70,11 @@ const Download: NextPage = () => {
                 </Alert>
             </Conditional>
             <Conditional in={!displayError}><>
-                <Conditional in={size === 0}><Loading /></Conditional>
+                <Conditional in={size === 0 && mechanism !== "browser_default"}><Loading /></Conditional>
+                <Conditional in={size === 0 && mechanism === "browser_default"}><Alert>
+                    {/* storing a state object may rather be a over-work; better optimized for the most cases. */}
+                    Your download should be started.
+                </Alert></Conditional>
                 <Conditional in={size !== 0}><>
                     <DownloadProgress 
                         label={`Downloading${name ? ` ${name}` : ""}`} 
@@ -87,7 +91,7 @@ const Download: NextPage = () => {
                     tabIndex={1}
                     download={typeof name === "string" ? name : true}
                     onClick={async (evt) => {
-                        if (mechanism as ClickEventContext["mechanism"]  !== "built-in") return;
+                        if (mechanism  !== "built-in") return;
                         evt.preventDefault();
                         
                         directDownloadFromUrl(evt.currentTarget.href, evt.currentTarget.download, (received, total) => {
