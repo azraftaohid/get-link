@@ -2904,6 +2904,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/modernizr@npm:^3.5.3":
+  version: 3.5.3
+  resolution: "@types/modernizr@npm:3.5.3"
+  checksum: b1ed5c67c724eb939cdde25805f944dcd4a4886b65e7dbf41f6f9fcf8d428f54a13330469bf892fbbba9cf1399d05176231b3fb78b418cd672f57a4e65fa35a8
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:*":
   version: 17.0.22
   resolution: "@types/node@npm:17.0.22"
@@ -5619,6 +5626,7 @@ __metadata:
     "@testing-library/jest-dom": ^5.16.2
     "@testing-library/react": ^12.1.4
     "@thegoodcompany/common-utils-js": ^1.4.3
+    "@types/modernizr": ^3.5.3
     "@types/node": 17.0.14
     "@types/react": 17.0.38
     "@types/react-pdf": 5.7.1

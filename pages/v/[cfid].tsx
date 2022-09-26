@@ -29,15 +29,19 @@ import styles from "../../styles/cfid.module.scss";
 import { ClickEventContext, logClick } from "../../utils/analytics";
 import { notFound } from "../../utils/common";
 import { hasExpired } from "../../utils/dates";
+import { directDownloadFromUrl, getBlob, shouldStepUpDownload, THRESHOLD_DIRECT_DOWNLOAD } from "../../utils/downloads";
 import { FetchError } from "../../utils/errors/FetchError";
 import { createFileLink, FileCustomMetadata, findFileIcon, isExecutable } from "../../utils/files";
 import { mergeNames } from "../../utils/mergeNames";
+import { initModernizr } from "../../utils/modernizr";
 import { formatSize } from "../../utils/strings";
 import { useNumber } from "../../utils/useNumber";
 import { useToast } from "../../utils/useToast";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
+import { makeDownloadParams } from "../d";
 
-const THRESHOLD_DIRECT_DOWNLOAD = 30 * 1024 * 1024; // 30 MB
+initModernizr();
+
 const PROGRESS_STEP = 3;
 
 function suppressError(error: any, cfid: string, subject: string) {
@@ -48,44 +52,6 @@ function suppressError(error: any, cfid: string, subject: string) {
 	}
 
 	return undefined;
-}
-
-async function getBlob(downloadUrl: string, onProgress?: (received: number, total: number) => unknown): Promise<Blob> {
-	return new Promise((res, rej) => {
-		const xhr = new XMLHttpRequest();
-		xhr.onload = () => {
-			const { status, response } = xhr;
-			if (status !== 200) rej(new FetchError(xhr.status, "error getting blob file"));
-			else if (typeof response === "object" && response.constructor.name === "Blob") res(response);
-			else rej(new Error(`invalid response type [expected: Blob; actual: ${typeof response === "object" ? response.constructor.name : typeof response}]`));
-		};
-
-		xhr.onprogress = ({ loaded, total }) => {
-			onProgress?.(loaded, total);
-		};
-
-		xhr.responseType = "blob";
-		xhr.open("GET", downloadUrl);
-		xhr.send();
-	});
-}
-
-function downloadBlob(blob: Blob, name: string) {
-	const url = URL.createObjectURL(blob);
-	const pretender = document.createElement("a");
-
-	pretender.download = name;
-	pretender.href = url;
-	pretender.target = "_blank"; // for browsers that ignore the download attribute
-
-	pretender.addEventListener("error", (evt) => {
-		console.warn(`error direct downloading [cause: ${evt.error}]`);
-		window.open(url, "_blank");
-	});
-	
-	document.body.appendChild(pretender);
-	pretender.click();
-	pretender.remove();
 }
 
 const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({ 
@@ -151,6 +117,8 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 	const strCreateTime = createSeconds && formatDate(new Date(createSeconds * 1000), "short", "year", "month", "day");
     
     const isUser = user && snapshot.data?.[LinkField.USER]?.[UserSnapshotField.UID] === user.uid;
+    const stepUpDownload = shouldStepUpDownload();
+    const downloadMechanism: ClickEventContext["mechanism"] = size >= THRESHOLD_DIRECT_DOWNLOAD ? "browser_default" : "built-in";
 
 	return <PageContainer>
 		<Metadata 
@@ -185,27 +153,27 @@ const View: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 					<Button 
 						className="me-2"
 						variant="outline-vivid" 
-						href={directLink}
+						href={stepUpDownload ? `d?${makeDownloadParams(directLink, name, downloadMechanism)}` : directLink}
 						onClick={async evt => {
-                            const clickCtx: ClickEventContext = { };
+                            const clickCtx: ClickEventContext = {
+                                mechanism: downloadMechanism,
+                            };
 
-							if (size >= THRESHOLD_DIRECT_DOWNLOAD) {
+							if (downloadMechanism === "browser_default" || stepUpDownload) {
 								console.debug("using browser default download mechanism");
-                                clickCtx.mechanism = "browser_default";
 							} else {
                                 evt.preventDefault();
                                 setDownloading(true);
-                                clickCtx.mechanism = "built-in";
 
                                 try {
                                     let prevProgress = 0;
-                                    const blob = await getBlob(directLink, (received, total) => {
+                                    await directDownloadFromUrl(directLink, name, (received, total) => {
                                         const newProgress = Math.round(received / total * 100);
                                         if (newProgress !== 100 && newProgress - prevProgress < PROGRESS_STEP) return;
 
                                         setDownloadProgress.to(prevProgress = newProgress);
                                     });
-                                    downloadBlob(blob, name);
+
                                     clickCtx.status = "succeed";
                                 } catch (error) {
                                     console.error(`error getting blob from direct link [cause: ${error}]`);
