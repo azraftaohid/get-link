@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Pagination, ProgressBar } from "react-bootstrap";
+import Pagination from "react-bootstrap/Pagination";
 import { DocumentProps as PDFProps } from "react-pdf";
 import { Document as PDF, Page as PDFPage, pdfjs } from "react-pdf/dist/esm/entry.webpack";
 import styles from "../styles/pdf-view.module.scss";
 import { mergeNames } from "../utils/mergeNames";
 import { initPdfWorker } from "../utils/pdf";
-import { formatSize } from "../utils/strings";
 import { useNumber } from "../utils/useNumber";
+import { DownloadProgress } from "./DownloadProgress";
 
 initPdfWorker(pdfjs);
 
@@ -34,10 +34,7 @@ export const PDFView: React.FunctionComponent<React.PropsWithChildren<PdfViewPro
 			setPageCount(pdf.numPages);
 			onLoadSuccess?.(pdf);
 		}}
-        loading={<div className="px-2 py-3 mw-100" style={{ width }}>
-            <p>Loading PDF: {formatSize(loadedSize)} out of {formatSize(size)}.</p>
-            <ProgressBar variant="info" now={(loadedSize / size) * 100 | 0} />
-        </div>}
+        loading={<DownloadProgress as="div" label="Loading PDF" size={size} loaded={loadedSize} style={{ width }} />}
 		{...rest}
 	>
 		<PDFPage 
