@@ -11,6 +11,20 @@ import { Video } from "./Video";
 
 const PDF = dynamic(() => import("./PDFView"), { ssr: false });
 
+const NoPreview: React.FunctionComponent<React.PropsWithChildren<{ src: string, type?: string | null }>> = ({
+    type,
+    src,
+}) => {
+    return <>
+        <Icon className="d-block"
+			name={type?.startsWith("audio") ? "audio_file" : type?.startsWith("video") ? "video_file" : "description"} 
+			size="lg"
+		/>
+		<p className="mb-0">Preview not available.</p> 
+		<p><Link href={src} newTab download>Download</Link> ({type}).</p>
+    </>;
+};
+
 export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewProps>> = ({ 
     className, 
     src, 
@@ -22,9 +36,10 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
     ...rest 
 }) => {
     const [imageLoaded, setImageLoaded] = useState(false);
+    const [useFallback, setUseFallback] = useState(false);
 
 	return <div className={mergeNames("border border-secondary rounded d-flex flex-column align-items-center w-100 p-2 text-muted", className)} {...rest}>
-		{(type?.startsWith("image/") && <Link href={src} newTab><Image 
+		{!useFallback && ((type?.startsWith("image/") && <Link href={src} newTab><Image 
 			src={src} 
 			alt="Image"
 			placeholder={imageLoaded ? "empty" : "blur"}
@@ -32,8 +47,9 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 			height={height || 480}
 			objectFit="contain"
 			blurDataURL={placeholderDataUrl || getSolidStallImage()}
-            onLoadingComplete={() => setImageLoaded(true)}
+            onLoadingComplete={() => { setImageLoaded(true); setUseFallback(false); } }
 			priority
+            onError={() => setUseFallback(true)}
 		/></Link>) || (type?.startsWith("video/") && <Video
 			src={src}
 			type={type}
@@ -44,15 +60,12 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 		/>) || ((type?.startsWith("text/") || ["application/json", "application/xml"].includes(type || "")) && <RawText 
 			className={mergeNames("w-100 mb-0 px-3 py-3", type === "text/plain" && "text-wrap")}
 			src={src}
-		/>) || (type === "application/pdf" && <PDF file={src} width={width || undefined} height={height || undefined} size={size} />) || <>
-			<Icon 
-				className="d-block"
-				name={type?.startsWith("audio") ? "audio_file" : type?.startsWith("video") ? "video_file" : "description"} 
-				size="lg"
-			/>
-			<p className="mb-0">Preview not available.</p> 
-			<p><Link href={src} newTab download>Download</Link> ({type}).</p>
-		</>}
+		/>) || (type === "application/pdf" && <PDF 
+            file={src} 
+            width={width || undefined} 
+            height={height || undefined} 
+            size={size} 
+        />)) || <NoPreview src={src} type={type} />}
 	</div>;
 };
 
