@@ -52,22 +52,24 @@ export const executableTypes = [
     "application/postscript",
 ];
 
+// key: (ext)|(mimeType)
+// value: file display name
 const formatIconMapping: Record<string, string> = {
-    "image/vnd.adobe.photoshop": "psd",
+    "(psd)|(image/vnd.adobe.photoshop)": "psd",
     "text/": "text",
     "video/": "video",
     "audio/": "audio",
-    "application/pdf": "pdf",
-    "application\\/((zip)|(gzip)|(x-zip-compressed))": "folder_zip",
+    "(psd)|(application/pdf)": "pdf",
+    "(zip)|(application\\/((zip)|(gzip)|(x-zip-compressed)))": "folder_zip",
     "application\\/.*(\\.spreadsheetml)|(\\.ms-excel).*": "ms-excel",
     "application\\/.*(\\.wordprocessingml)|(msword).*": "ms-word",
     "application\\/.*(\\.presentationml)|(\\.ms-powerpoint).*": "ms-powerpoint",
-    "application/illustrator": "ai",
-    "application/postscript": "code",
-    "application/vnd.oasis.opendocument.graphics": "odg",
-    "application/vnd.oasis.opendocument.spreadsheet": "ods",
-    "application/vnd.oasis.opendocument.presentation": "odp",
-    "application/vnd.oasis.opendocument.text": "odt",
+    "(ai)|(application/illustrator)": "ai",
+    "(ps)|(application/postscript)": "code",
+    "(odg)|(application/vnd.oasis.opendocument.graphics)": "odg",
+    "(ods)|(application/vnd.oasis.opendocument.spreadsheet)": "ods",
+    "(odp)|(application/vnd.oasis.opendocument.presentation)": "odp",
+    "(odt)|(application/vnd.oasis.opendocument.text)": "odt",
 };
 
 export function createFileLink(id: string, absolute = false) {
@@ -165,9 +167,10 @@ export function isExecutable(mimeType: string) {
 	return executableTypes.includes(mimeType);
 }
 
-export function findFileIcon(mimeType: string): string | undefined {
+// todo: update all referencing function to call with file extension first
+export function findFileIcon(extOrMimeType: string): string | undefined {
     const keys = Object.keys(formatIconMapping);
-    const match = keys.find(key => mimeType.match(`^${key}`));
+    const match = keys.find(key => extOrMimeType.match(`^${key}`));
 
     return match ? `/image/ic/${formatIconMapping[match]}.png` : undefined;
 }
