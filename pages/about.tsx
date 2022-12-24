@@ -106,7 +106,7 @@ const About: NextPage = () => {
 					answer={<>
 						The list of file formats that are supported include:
 						<Standout>
-							image, video, audio, text, pdf, xml, json, apk, exe, ms-excel, ms-word, ms-powerpoint and its template files, and rtf.
+							image, video, audio, text, pdf, xml, json, apk, exe, ps, psd, ai, odt, odp, ods, odg, ms-excel, ms-word, ms-powerpoint and its template files, and rtf.
 						</Standout>
 						We are planning on expanding this list soon.
 					</>}

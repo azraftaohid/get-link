@@ -29,7 +29,7 @@ import { UserSnapshotField } from "../models/users";
 import styles from "../styles/dashboard.module.scss";
 import { logClick } from "../utils/analytics";
 import { hasExpired } from "../utils/dates";
-import { findFileIcon } from "../utils/files";
+import { findFileIcon, NON_PREVIEW_SUPPORTING_TYPE } from "../utils/files";
 import { initFirestore } from "../utils/firestore";
 import { mergeNames } from "../utils/mergeNames";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
@@ -110,7 +110,7 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 				const metadata = await getMetadata(fileRef);
                 const mimeType = metadata.contentType;
 
-                if (mimeType?.startsWith("image/")) {
+                if (mimeType?.startsWith("image/") && !NON_PREVIEW_SUPPORTING_TYPE.includes(mimeType)) {
                     const directLink = await getDownloadURL(fileRef);
                     setThumbnail(directLink);
                 } else if (mimeType) {
@@ -140,7 +140,8 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 					layout="fill"
 					sizes="50vw"
 					quality={50}
-					blurDataURL={getSolidStallImage()} /> 
+					blurDataURL={getSolidStallImage()}
+                    onError={() => setThumbnail(null)} /> 
 				: thumbnail === null 
 				? <NoPreview />
 				: <LoadingPreview />}
