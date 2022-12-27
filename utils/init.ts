@@ -38,7 +38,7 @@ function initFirebase() {
 		console.debug = noOp;
 		console.log = noOp;
 	}
-	
+
 	isAnalyticsSupported().then((bool) => {
 		if (!bool) return;
 
@@ -48,6 +48,6 @@ function initFirebase() {
 		const { eid } = acquireExperienceOptions();
 		setUserId(instance, eid, { global: true });
 	});
-	
+
 	return app;
 }

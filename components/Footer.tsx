@@ -4,12 +4,12 @@ import Container from "react-bootstrap/Container";
 import { Button, ButtonProps } from "./Button";
 import { Loading } from "./Loading";
 
-const ReportDialog = dynamic(() => import("./ReportDialog"), { 
-	loading: () => <Loading /> 
+const ReportDialog = dynamic(() => import("./ReportDialog"), {
+	loading: () => <Loading />
 });
 
 const FooterAction: React.FunctionComponent<React.PropsWithChildren<ButtonProps>> = (props) => {
-	return <Button className="text-muted" variant="link" size="sm" {...props}/>;
+	return <Button className="text-muted" variant="link" size="sm" {...props} />;
 };
 
 export const Footer: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {

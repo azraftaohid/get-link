@@ -9,7 +9,7 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 /**
  * @type {import('next/dist/lib/load-custom-routes').Header["headers"]}
  */
- const securities = [
+const securities = [
 	{
 		key: "Strict-Transport-Security",
 		value: "max-age=31536000; includeSubDomains"
@@ -53,15 +53,15 @@ const nextConfig = {
 
 		config.plugins.push(
 			new CopyPlugin({
-			  patterns: [
-				{
-				  from: path.join(__dirname, "node_modules/pdfjs-dist/build/pdf.worker.min.js"),
-				  to: path.join(__dirname, "public"),
-				},
-			  ],
+				patterns: [
+					{
+						from: path.join(__dirname, "node_modules/pdfjs-dist/build/pdf.worker.min.js"),
+						to: path.join(__dirname, "public"),
+					},
+				],
 			})
-		  );
-		
+		);
+
 		return config;
 	}
 };

@@ -30,248 +30,248 @@ import { useToast } from "../utils/useToast";
 import { generateThumbnailFromVideo } from "../utils/video";
 
 const Home: NextPage = () => {
-  const router = useRouter();
-  const { makeToast } = useToast();
-  const { data: user } = useAuthUser(["user"], getAuth());
+	const router = useRouter();
+	const { makeToast } = useToast();
+	const { data: user } = useAuthUser(["user"], getAuth());
 
-  const [file, setFile] = useState<File | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [url, setUrl] = useState<string>();
-  const [statuses, setStatuses] = useState<StatusCode[]>([]);
+	const [file, setFile] = useState<File | null>(null);
+	const [progress, setProgress] = useState(0);
+	const [url, setUrl] = useState<string>();
+	const [statuses, setStatuses] = useState<StatusCode[]>([]);
 
-  const triggerChooser = router.query.open_chooser;
+	const triggerChooser = router.query.open_chooser;
 
-  const resetState = useRef(() => {
-    setFile(null);
-    setProgress(0);
-  });
+	const resetState = useRef(() => {
+		setFile(null);
+		setProgress(0);
+	});
 
-  const appendStatus = useRef((status: StatusCode) => {
-    setStatuses(c => {
-      if (c.includes(status)) return [...c];
-      return [...c, status];
-    });
-  });
+	const appendStatus = useRef((status: StatusCode) => {
+		setStatuses(c => {
+			if (c.includes(status)) return [...c];
+			return [...c, status];
+		});
+	});
 
-  const removeStatus = useRef((status: StatusCode) => {
-    setStatuses(c => {
-        const i = c.indexOf(status);
-        if (i === -1) return c;
-    
-        return [...c.slice(0, i), ...c.slice(i + 1)];  
-    });
-  });
+	const removeStatus = useRef((status: StatusCode) => {
+		setStatuses(c => {
+			const i = c.indexOf(status);
+			if (i === -1) return c;
 
-  const handleDrop = useCallback<NonNullable<DropzoneOptions["onDrop"]>>((dropped, rejects) => {
-    if (!dropped.length) {
-      if (!rejects.length) return;
+			return [...c.slice(0, i), ...c.slice(i + 1)];
+		});
+	});
 
-      let errMssg: string;
-      if (rejects.length === 1 && rejects[0].errors.length === 1) {
-        const err = rejects[0].errors[0];
-        errMssg = `Upload cancelled: ${err.code}`;
-        console.debug(`actual type: ${rejects[0].file.type}`);
-      } else {
-        errMssg = `Upload cancelled for the following files\n${rejects.map(reject => {
-          return `${reject.file.name}: ${reject.errors.map(err => err.code).join(", ")}`;
-        }).join("\n")}`;
-      }
+	const handleDrop = useCallback<NonNullable<DropzoneOptions["onDrop"]>>((dropped, rejects) => {
+		if (!dropped.length) {
+			if (!rejects.length) return;
 
-      makeToast(errMssg, "error");
+			let errMssg: string;
+			if (rejects.length === 1 && rejects[0].errors.length === 1) {
+				const err = rejects[0].errors[0];
+				errMssg = `Upload cancelled: ${err.code}`;
+				console.debug(`actual type: ${rejects[0].file.type}`);
+			} else {
+				errMssg = `Upload cancelled for the following files\n${rejects.map(reject => {
+					return `${reject.file.name}: ${reject.errors.map(err => err.code).join(", ")}`;
+				}).join("\n")}`;
+			}
 
-      return;
-    }
+			makeToast(errMssg, "error");
 
-    setFile(dropped[0]);
-  }, [makeToast]);
+			return;
+		}
 
-  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({ 
-    accept: acceptedFileFormats,
-    onDrop: handleDrop,
-    maxFiles: 1,
-    maxSize: (100 * 1024 * 1024) - 1,
-    multiple: false,
-  });
+		setFile(dropped[0]);
+	}, [makeToast]);
 
-  const uid = user?.uid;
-  useEffect(() => {
-    if (!file) return;
-    if (!uid) {
-      console.debug("signing in user anonymously");
-      signInAnonymously(getAuth()).catch(err => {
-        console.error(`error signing in user [cause: ${err}]`);
-        appendStatus.current("auth:sign-in-error");
-      });
+	const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
+		accept: acceptedFileFormats,
+		onDrop: handleDrop,
+		maxFiles: 1,
+		maxSize: (100 * 1024 * 1024) - 1,
+		multiple: false,
+	});
 
-      return;
-    }
+	const uid = user?.uid;
+	useEffect(() => {
+		if (!file) return;
+		if (!uid) {
+			console.debug("signing in user anonymously");
+			signInAnonymously(getAuth()).catch(err => {
+				console.error(`error signing in user [cause: ${err}]`);
+				appendStatus.current("auth:sign-in-error");
+			});
 
-    if (file.size >= 100 * 1024 * 1024) {
-      console.warn(`file too large [accepted: 100 MB, actual: ${formatSize(file.size)}]`);
-      appendStatus.current("files:too-large");
-      resetState.current();
+			return;
+		}
 
-      return;
-    }
+		if (file.size >= 100 * 1024 * 1024) {
+			console.warn(`file too large [accepted: 100 MB, actual: ${formatSize(file.size)}]`);
+			appendStatus.current("files:too-large");
+			resetState.current();
 
-    const task = (async () => {
-      const [mime, ext] = await getFileType(file); // respect user specified extension
-      console.debug(`mime: ${mime}; ext: ${ext}`);
+			return;
+		}
 
-      const prefix = nanoid(12);
-      const fid = createFID(prefix + ext, uid);
-      const ref = getFileRef(fid);
-      const metadata: UploadMetadata = { contentType: mime };
+		const task = (async () => {
+			const [mime, ext] = await getFileType(file); // respect user specified extension
+			console.debug(`mime: ${mime}; ext: ${ext}`);
 
-      try {
-        let localUrl: string | undefined;
-        let dimension: Dimension | undefined;
+			const prefix = nanoid(12);
+			const fid = createFID(prefix + ext, uid);
+			const ref = getFileRef(fid);
+			const metadata: UploadMetadata = { contentType: mime };
 
-        if (mime?.startsWith("image")) {
-          localUrl = URL.createObjectURL(file);
-          dimension = await getImageDimension(localUrl);
-        } else if (mime?.startsWith("video")) {
-          localUrl = URL.createObjectURL(file);
-          dimension = await getVideoDimension(localUrl);
+			try {
+				let localUrl: string | undefined;
+				let dimension: Dimension | undefined;
 
-          appendStatus.current("files:creating-thumbnail");
-          try {
-            const thumbnail = await generateThumbnailFromVideo(localUrl, "image/png");
-            if (thumbnail) {
-                await uploadBytes(getFileRef(createFID(prefix + ".png", uid)), thumbnail, {
-                    contentType: "image/png",
-                    customMetadata: {
-                        width: dimension[DimensionField.WIDTH],
-                        height: dimension[DimensionField.HEIGHT],
-                    } as FileCustomMetadata,
-                });
-            } else {
-                console.warn("skipping to generate video thumbnail");
-            }
-          } catch (error) {
-            console.error(`error generating thumbnail from video [cause: ${error}]`);
-          }
-          removeStatus.current("files:creating-thumbnail");
-        } else if (mime === "application/pdf") {
-          localUrl = URL.createObjectURL(file);
-          dimension = await getPdfDimension(localUrl);
-        }
+				if (mime?.startsWith("image")) {
+					localUrl = URL.createObjectURL(file);
+					dimension = await getImageDimension(localUrl);
+				} else if (mime?.startsWith("video")) {
+					localUrl = URL.createObjectURL(file);
+					dimension = await getVideoDimension(localUrl);
 
-        if (localUrl) URL.revokeObjectURL(localUrl);
-        if (dimension) {
-          metadata.customMetadata = { 
-            width: dimension[DimensionField.WIDTH], 
-            height: dimension[DimensionField.HEIGHT] 
-          } as FileCustomMetadata;
-        }
-      } catch (error) {
-          console.error(`error getting dimension from selected file [cause: ${error}]`);
-      }
+					appendStatus.current("files:creating-thumbnail");
+					try {
+						const thumbnail = await generateThumbnailFromVideo(localUrl, "image/png");
+						if (thumbnail) {
+							await uploadBytes(getFileRef(createFID(prefix + ".png", uid)), thumbnail, {
+								contentType: "image/png",
+								customMetadata: {
+									width: dimension[DimensionField.WIDTH],
+									height: dimension[DimensionField.HEIGHT],
+								} as FileCustomMetadata,
+							});
+						} else {
+							console.warn("skipping to generate video thumbnail");
+						}
+					} catch (error) {
+						console.error(`error generating thumbnail from video [cause: ${error}]`);
+					}
+					removeStatus.current("files:creating-thumbnail");
+				} else if (mime === "application/pdf") {
+					localUrl = URL.createObjectURL(file);
+					dimension = await getPdfDimension(localUrl);
+				}
 
-      const upload = uploadBytesResumable(ref, file, metadata);
-      const unsubscribe = upload.on("state_changed", async snapshot => {
-        setProgress(Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
-      }, err => {
-        if (err.code === "storage/canceled") {
-          console.info("upload cancelled");
-          appendStatus.current("files:upload-cancelled");
-        } else {
-          console.error(`upload failed [code: ${err.code}; cause: ${err.message}]`);
-          appendStatus.current("files:upload-error");
-        }
+				if (localUrl) URL.revokeObjectURL(localUrl);
+				if (dimension) {
+					metadata.customMetadata = {
+						width: dimension[DimensionField.WIDTH],
+						height: dimension[DimensionField.HEIGHT]
+					} as FileCustomMetadata;
+				}
+			} catch (error) {
+				console.error(`error getting dimension from selected file [cause: ${error}]`);
+			}
 
-        resetState.current();
-      }, async () => {
-        appendStatus.current("files:creating-link");
+			const upload = uploadBytesResumable(ref, file, metadata);
+			const unsubscribe = upload.on("state_changed", async snapshot => {
+				setProgress(Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
+			}, err => {
+				if (err.code === "storage/canceled") {
+					console.info("upload cancelled");
+					appendStatus.current("files:upload-cancelled");
+				} else {
+					console.error(`upload failed [code: ${err.code}; cause: ${err.message}]`);
+					appendStatus.current("files:upload-error");
+				}
 
-        try {
-          const doc = await createLink(fid, uid, { [LinkField.TITLE]: file.name });
-          console.debug(`file captured at ${doc.path}`);
+				resetState.current();
+			}, async () => {
+				appendStatus.current("files:creating-link");
 
-          setUrl(createFileLink(doc.id));
-          setStatuses(["page:redirecting"]);
-        } catch (error) {
-          console.debug(`capture failed [cause; ${error}]`);
-          appendStatus.current("files:capture-error");
-        }
-      });
+				try {
+					const doc = await createLink(fid, uid, { [LinkField.TITLE]: file.name });
+					console.debug(`file captured at ${doc.path}`);
 
-      return { upload, unsubscribe };
-    })();
+					setUrl(createFileLink(doc.id));
+					setStatuses(["page:redirecting"]);
+				} catch (error) {
+					console.debug(`capture failed [cause; ${error}]`);
+					appendStatus.current("files:capture-error");
+				}
+			});
 
-    return () => {
-      task.then(({ upload, unsubscribe }) => {
-        if (upload.snapshot.state === "running" || upload.snapshot.state === "paused") {
-          upload.snapshot.task.cancel();
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          appendStatus.current("files:upload-cancelled");
-          console.log(`upload cancelled [from_state: ${upload.snapshot.state}]`);
-        }
+			return { upload, unsubscribe };
+		})();
 
-        unsubscribe();
-      });
-    };
-  }, [file, uid]);
+		return () => {
+			task.then(({ upload, unsubscribe }) => {
+				if (upload.snapshot.state === "running" || upload.snapshot.state === "paused") {
+					upload.snapshot.task.cancel();
+					// eslint-disable-next-line react-hooks/exhaustive-deps
+					appendStatus.current("files:upload-cancelled");
+					console.log(`upload cancelled [from_state: ${upload.snapshot.state}]`);
+				}
 
-  useEffect(() => {
-    if (url) router.push(url);
-  }, [router, url]);
+				unsubscribe();
+			});
+		};
+	}, [file, uid]);
 
-  useEffect(() => {
-    if (triggerChooser !== "true") return;
+	useEffect(() => {
+		if (url) router.push(url);
+	}, [router, url]);
 
-    console.debug("manually trigger to open picker");
-    open();
-  }, [triggerChooser, open]);
+	useEffect(() => {
+		if (triggerChooser !== "true") return;
 
-  return <PageContainer>
-    <Metadata title="Get Link" image="https://getlink.vercel.app/image/cover.png" />
-    <Header />
-    <PageContent>
-      <Conditional in={statuses.includes("files:upload-cancelled")}>
-        <Alert variant="warning" dismissible onClose={() => removeStatus.current("files:upload-cancelled")}>
-          Upload cancelled.
-        </Alert>
-      </Conditional>
-      <Conditional in={statuses.some(s => (["files:unknown-error", "files:capture-error", "files:upload-error", "auth:sign-in-error", "files:too-large"] as StatusCode[]).includes(s))}>
-        <Alert variant="danger">
-          There was an error. Please try again!<br /> 
-          Code: {statuses.map((s, i, arr) => <><Link key={s} className="alert-link" href={`/technical#${encodeURIComponent(s)}`} newTab>
-            {s}
-          </Link>{i < arr.length - 1 && ", "}</>)}.
-        </Alert>
-      </Conditional>
-      <Conditional in={!!file}>
-        <FormLabel aria-label="file-upload-progress">
-          Uploading
-        </FormLabel>
-        <FilePreview className="mb-3" file={file} onClose={() => setFile(null)} closable={progress < 100} />
-        <ProgressBar id="file-upload-progress" animated now={progress}/>
-        <small className="text-muted">
-          {(statuses.includes("page:redirecting")) 
-            ? <><Link variant="reset" href={url || "#"}>Redirecting</Link>&hellip;</>
-            : statuses.includes("files:creating-link") 
-            ? <>Creating link.</> 
-            : statuses.includes("files:creating-thumbnail") 
-            ? <>Creating thumbnail.</> 
-            : <>{progress}% completed.</>}
-        </small>
-      </Conditional>
-      <Conditional in={!file}>
-        <button {...getRootProps({
-          id: "upload-area", 
-          type: "button", 
-          className: mergeNames(styles.uploadArea, "btn btn-outline-secondary", isDragActive && "active"),
-        })}>
-          <input {...getInputProps()}/>
-          <Icon name="file_upload" size="lg" />
-          <p className="fs-5 mb-0">{!isDragActive ? "Upload file" : "Drop to upload"}</p>
-          <small className="text-mute">(Expires after 14 days)</small>
-        </button>
-      </Conditional>
-    </PageContent>
-    <Footer />
-  </PageContainer>;
+		console.debug("manually trigger to open picker");
+		open();
+	}, [triggerChooser, open]);
+
+	return <PageContainer>
+		<Metadata title="Get Link" image="https://getlink.vercel.app/image/cover.png" />
+		<Header />
+		<PageContent>
+			<Conditional in={statuses.includes("files:upload-cancelled")}>
+				<Alert variant="warning" dismissible onClose={() => removeStatus.current("files:upload-cancelled")}>
+					Upload cancelled.
+				</Alert>
+			</Conditional>
+			<Conditional in={statuses.some(s => (["files:unknown-error", "files:capture-error", "files:upload-error", "auth:sign-in-error", "files:too-large"] as StatusCode[]).includes(s))}>
+				<Alert variant="danger">
+					There was an error. Please try again!<br />
+					Code: {statuses.map((s, i, arr) => <><Link key={s} className="alert-link" href={`/technical#${encodeURIComponent(s)}`} newTab>
+						{s}
+					</Link>{i < arr.length - 1 && ", "}</>)}.
+				</Alert>
+			</Conditional>
+			<Conditional in={!!file}>
+				<FormLabel aria-label="file-upload-progress">
+					Uploading
+				</FormLabel>
+				<FilePreview className="mb-3" file={file} onClose={() => setFile(null)} closable={progress < 100} />
+				<ProgressBar id="file-upload-progress" animated now={progress} />
+				<small className="text-muted">
+					{(statuses.includes("page:redirecting"))
+						? <><Link variant="reset" href={url || "#"}>Redirecting</Link>&hellip;</>
+						: statuses.includes("files:creating-link")
+							? <>Creating link.</>
+							: statuses.includes("files:creating-thumbnail")
+								? <>Creating thumbnail.</>
+								: <>{progress}% completed.</>}
+				</small>
+			</Conditional>
+			<Conditional in={!file}>
+				<button {...getRootProps({
+					id: "upload-area",
+					type: "button",
+					className: mergeNames(styles.uploadArea, "btn btn-outline-secondary", isDragActive && "active"),
+				})}>
+					<input {...getInputProps()} />
+					<Icon name="file_upload" size="lg" />
+					<p className="fs-5 mb-0">{!isDragActive ? "Upload file" : "Drop to upload"}</p>
+					<small className="text-mute">(Expires after 14 days)</small>
+				</button>
+			</Conditional>
+		</PageContent>
+		<Footer />
+	</PageContainer>;
 };
 
 export default Home;

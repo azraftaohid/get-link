@@ -41,17 +41,17 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 		email: "",
 		message: "",
 	});
-	
+
 	const [status, setState] = useState<"none" | "processing" | "submitted">("none");
 	const [submitId, setSubmitId] = useState<string>();
 	const [submitError, setSubmitError] = useState(false);
 
-	return <Modal 
-		fullscreen="md-down" 
+	return <Modal
+		fullscreen="md-down"
 		size="xl"
 		backdrop={status !== "submitted" ? "static" : undefined}
 		keyboard={false}
-		aria-labelledby="report form" 
+		aria-labelledby="report form"
 		{...props}
 	>
 		<ModalHeader closeButton>
@@ -96,14 +96,14 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 					<ModalBody>
 						<p>
 							Prefer direct messaging? Our twitter handle is <Link href="https://twitter.com/getlinksoft" newTab>
-							@getlinksoft</Link>. Or you can also <Link href="https://m.me/getlinksoft" newTab>message us</Link> on <cite
-								title="Facebook is an American online social media and social networking service owned by Meta Platforms."
-							>Facebook</cite>.
+								@getlinksoft</Link>. Or you can also <Link href="https://m.me/getlinksoft" newTab>message us</Link> on <cite
+									title="Facebook is an American online social media and social networking service owned by Meta Platforms."
+								>Facebook</cite>.
 						</p>
 						<small className="d-block mb-3"><Required /> Required</small>
 						<FormGroup className="mb-3">
 							<FormLabel>Name</FormLabel>
-							<FormControl 
+							<FormControl
 								type="text"
 								name="name"
 								placeholder="Keep it empty to report anonymously"
@@ -118,7 +118,7 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 						</FormGroup>
 						<FormGroup className="mb-3">
 							<FormLabel>Email address</FormLabel>
-							<FormControl 
+							<FormControl
 								type="text"
 								name="email"
 								placeholder="example@provider.com"
@@ -136,7 +136,7 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 						</FormGroup>
 						<FormGroup>
 							<FormLabel>Statement <Required /></FormLabel>
-							<FormControl 
+							<FormControl
 								as="textarea"
 								rows={5}
 								name="message"
@@ -170,9 +170,9 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 						<Button variant="outline-secondary" onClick={props.onHide}>
 							Cancel
 						</Button>
-						<Button 
-							variant="outline-primary" 
-							type="submit" 
+						<Button
+							variant="outline-primary"
+							type="submit"
 							state={status === "processing" ? "loading" : "none"}
 							disabled={Object.values(errors).some(err => !!err)}
 						>

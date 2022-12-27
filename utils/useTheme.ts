@@ -5,9 +5,9 @@ import { useMediaQuery } from "./useMediaQuery";
 const KEY_THEME = "theme";
 
 export enum Theme {
-  LIGHT = "light",
-  DARK = "dark",
-  DEFAULT = LIGHT
+	LIGHT = "light",
+	DARK = "dark",
+	DEFAULT = LIGHT
 }
 
 export const useTheme = (): ThemePops => {
@@ -25,10 +25,12 @@ export const useTheme = (): ThemePops => {
 		document.documentElement.setAttribute("data-theme", theme);
 	}, [theme]);
 
-	return useMemo(() => ({ current: theme, setTheme: (th) => {
-		localStorage.setItem(KEY_THEME, th);
-		setTheme(th);
-	}}), [theme]);
+	return useMemo(() => ({
+		current: theme, setTheme: (th) => {
+			localStorage.setItem(KEY_THEME, th);
+			setTheme(th);
+		}
+	}), [theme]);
 };
 
 export interface ThemePops {

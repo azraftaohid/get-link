@@ -34,7 +34,7 @@ export function getLinks(uid?: string) {
 	const links: CollectionReference<LinkData> = collection(getFirestore(), COLLECTION_LINKS);
 	if (!uid) return links;
 
-	return query(links, where(new FieldPath(LinkField.USER, UserSnapshotField.UID), "==", uid), 
+	return query(links, where(new FieldPath(LinkField.USER, UserSnapshotField.UID), "==", uid),
 		orderBy(LinkField.CREATE_TIME, "desc"));
 }
 

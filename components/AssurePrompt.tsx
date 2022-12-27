@@ -7,19 +7,19 @@ import ModalTitle from "react-bootstrap/ModalTitle";
 import { combineCallbacks } from "../utils/func";
 import { Button, ButtonProps } from "./Button";
 
-export const AssurePrompt: React.FunctionComponent<React.PropsWithChildren<AssurePromptProps>> = ({ 
-	title, 
-	message,  
+export const AssurePrompt: React.FunctionComponent<React.PropsWithChildren<AssurePromptProps>> = ({
+	title,
+	message,
 	onConfirm,
-	onCancel, 
+	onCancel,
 	confirmProps,
 	cancelProps,
-	...rest 
+	...rest
 }) => {
-	const { onClick: onConfirmClick, ...restConfirms } = confirmProps || { };
-	const { onClick: onCancelClick, ...restCancels } = cancelProps || { };
+	const { onClick: onConfirmClick, ...restConfirms } = confirmProps || {};
+	const { onClick: onCancelClick, ...restCancels } = cancelProps || {};
 
-	return <Modal 
+	return <Modal
 		backdrop="static"
 		keyboard
 		onEscapeKeyDown={onCancel} // on dispute is not called if overriden by {...rest}

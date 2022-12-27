@@ -29,13 +29,13 @@ export interface StaticSnapshot<T extends DocumentData> {
 }
 
 export type StaticData<T extends DocumentData> = {
-	[K in keyof T]: Timestamp extends T[K] 
-		? ReturnType<Timestamp["toJSON"]> 
-		: GeoPoint extends T[K] 
-		? ReturnType<GeoPoint["toJSON"]> 
-		: DocumentReference extends T[K]
-		? string
-		: T[K] extends Record<string, unknown> 
-		? StaticData<T[K]> 
-		: T[K];
+	[K in keyof T]: Timestamp extends T[K]
+	? ReturnType<Timestamp["toJSON"]>
+	: GeoPoint extends T[K]
+	? ReturnType<GeoPoint["toJSON"]>
+	: DocumentReference extends T[K]
+	? string
+	: T[K] extends Record<string, unknown>
+	? StaticData<T[K]>
+	: T[K];
 }

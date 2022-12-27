@@ -2,27 +2,27 @@ import React from "react";
 import Placeholder, { PlaceholderProps } from "react-bootstrap/Placeholder";
 import { mergeNames } from "../utils/mergeNames";
 
-export const Shimmer: React.FunctionComponent<ShimmerProps> = ({ 
-	className, 
-	direction="horizontal", 
-	gap = 1, 
-	pattern, 
+export const Shimmer: React.FunctionComponent<ShimmerProps> = ({
+	className,
+	direction = "horizontal",
+	gap = 1,
+	pattern,
 	size,
-	children, 
-	...rest 
+	children,
+	...rest
 }) => {
-	return <Placeholder 
-		className={mergeNames(direction === "vertical" ? "vstack" : "hstack", `overflow-hidden gap-${gap}`, className)} 
+	return <Placeholder
+		className={mergeNames(direction === "vertical" ? "vstack" : "hstack", `overflow-hidden gap-${gap}`, className)}
 		animation="glow"
 		{...rest}
 	>
-		{Array.isArray(pattern) 
-			? pattern.map((p, i) => typeof p === "number" ? <Placeholder 
-				key={`${i}-${p}`} 
+		{Array.isArray(pattern)
+			? pattern.map((p, i) => typeof p === "number" ? <Placeholder
+				key={`${i}-${p}`}
 				xs={p}
-				size={size} /> 
-			: p)
-		: pattern}
+				size={size} />
+				: p)
+			: pattern}
 		{children}
 	</Placeholder>;
 };

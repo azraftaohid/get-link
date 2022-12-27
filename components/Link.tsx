@@ -9,8 +9,8 @@ const variantMapping: Partial<Record<LinkVariant, string>> = {
 
 export const Link: React.FunctionComponent<React.PropsWithChildren<LinkProps>> = ({ className, href, newTab, variant, children, ...rest }) => {
 	return <NextLink href={href}>
-		<a className={mergeNames(variant && (variantMapping[variant] || `link-${variant}`), className)} 
-			target={newTab ? "_blank" : undefined} 
+		<a className={mergeNames(variant && (variantMapping[variant] || `link-${variant}`), className)}
+			target={newTab ? "_blank" : undefined}
 			{...rest}
 		>
 			{children}

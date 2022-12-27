@@ -24,7 +24,7 @@ export class AppDocument extends Document {
 				<meta name="msapplication-TileColor" content="#2d89ef" />
 				<meta name="theme-color" content="#f5f6f7" media="(prefers-color-scheme: light)" />
 				<meta name="theme-color" content="#141516" media="(prefers-color-scheme: dark)" />
-    			<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"></link>
+				<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"></link>
 			</Head>
 			<body>
 				<Main />

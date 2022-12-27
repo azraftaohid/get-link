@@ -3,24 +3,24 @@ import { FetchError } from "./errors/FetchError";
 export const THRESHOLD_DIRECT_DOWNLOAD = 30 * 1024 * 1024; // 30 MB
 
 export function shouldStepUpDownload() {
-    return (typeof Modernizr !== "undefined" && !Modernizr.adownload) || 
-        (typeof window !== "undefined" && window.navigator.userAgent.includes("FB_IAB/"));
+	return (typeof Modernizr !== "undefined" && !Modernizr.adownload) ||
+		(typeof window !== "undefined" && window.navigator.userAgent.includes("FB_IAB/"));
 }
 
 export function downloadBlob(blob: Blob, name: string) {
 	const url = URL.createObjectURL(blob);
 	downloadFromUrl(url, name);
 
-    URL.revokeObjectURL(url);
+	URL.revokeObjectURL(url);
 }
 
 export async function directDownloadFromUrl(url: string, name: string, onProgress: OnProgress) {
-    const blob = await getBlob(url, onProgress);
-    return downloadBlob(blob, name);
+	const blob = await getBlob(url, onProgress);
+	return downloadBlob(blob, name);
 }
 
 export function downloadFromUrl(url: string, name: string) {
-    const pretender = document.createElement("a");
+	const pretender = document.createElement("a");
 
 	pretender.download = name;
 	pretender.href = url;
@@ -30,7 +30,7 @@ export function downloadFromUrl(url: string, name: string) {
 		console.warn(`error direct downloading [cause: ${evt.error}]`);
 		window.open(url, "_blank");
 	});
-	
+
 	document.body.appendChild(pretender);
 	pretender.click();
 	pretender.remove();

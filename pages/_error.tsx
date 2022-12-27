@@ -8,7 +8,7 @@ import { PageContent } from "../components/PageContent";
 
 function Error({ statusCode }: { statusCode: number }) {
 	return <PageContainer>
-		<Metadata 
+		<Metadata
 			title={`${statusCode || "Server error"} - Get Link`}
 			description="Something happened to our server."
 			image="https://getlink.vercel.app/image/cover.png"

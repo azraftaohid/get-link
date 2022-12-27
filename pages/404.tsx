@@ -1,5 +1,4 @@
 import { NextPage } from "next";
-import React from "react";
 import Alert from "react-bootstrap/Alert";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
@@ -9,7 +8,7 @@ import { PageContent } from "../components/PageContent";
 
 const NotFound: NextPage = () => {
 	return <PageContainer>
-		<Metadata 
+		<Metadata
 			title="Not found - Get Link"
 			description="Darn! We couldn't find the page you are looking for."
 			image="https://getlink.vercel.app/image/not_found.png"

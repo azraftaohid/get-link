@@ -29,7 +29,7 @@ const toastBgMapping: Record<ToastType, string | undefined> = {
 function MyApp({ Component, pageProps }: AppProps) {
 	const [toast, setToast] = useState<React.ReactNode>();
 	const [toastType, setToastType] = useState<ToastType>("info");
-	
+
 	const [showToast, setShowToast] = useState(false);
 
 	const makeToast = (mssg: string, type: ToastType = "info") => {
@@ -51,9 +51,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 				<Head>
 					<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				</Head>
-				<Script 
-					id="init-clarity" 
-					type="text/javascript" 
+				<Script
+					id="init-clarity"
+					type="text/javascript"
 					strategy="afterInteractive"
 				>{`
 					(function(c,l,a,r,i,t,y){
@@ -63,18 +63,18 @@ function MyApp({ Component, pageProps }: AppProps) {
 					})(window, document, "clarity", "script", "b215twzvnz");
 				`}</Script>
 				<ToastContainer className="toast-container position-fixed p-3" position="bottom-end">
-					<Toast 
+					<Toast
 						className={toastBgMapping[toastType] && `border border-${toastBgMapping[toastType]}`}
-						show={showToast} 
-						onClose={() => setShowToast(!showToast)} 
-						autohide 
+						show={showToast}
+						onClose={() => setShowToast(!showToast)}
+						autohide
 						delay={5000}
 					>
 						<ToastHeader>
-							<Image 
-								src="/favicon-32x32.png" 
-								height={20} 
-								width={20} 
+							<Image
+								src="/favicon-32x32.png"
+								height={20}
+								width={20}
 								alt="Get-Link logo" />
 							<strong className="ms-2 me-auto">Get-Link</strong>
 						</ToastHeader>

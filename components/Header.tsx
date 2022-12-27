@@ -45,7 +45,7 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 						alt="Get-Link logo"
 					/>
 				</NavbarBrand>
-				<NavbarToggle className="order-1" aria-controls="navbar-nav"/>
+				<NavbarToggle className="order-1" aria-controls="navbar-nav" />
 				<NavbarCollapse id="navbar-nav">
 					<Nav className={mergeNames(styles.navItems, "position-md-absolute top-md-50 start-md-50 translate-middle-md")} activeKey={router.pathname}>
 						{navs.map(nav => <Link key={nav.pathname} href={nav.pathname} prefetch={false} passHref>
@@ -55,17 +55,17 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 						</Link>)}
 					</Nav>
 				</NavbarCollapse>
-				<Icon 
-                    role="button" 
-                    className={"btn btn-outline-secondary order-0 order-md-2 ms-auto me-3 me-md-0"} 
-                    name="dark_mode" 
-                    tabIndex={1} 
-                    onClick={() => {
-                        const newTheme = theme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT; 
+				<Icon
+					role="button"
+					className={"btn btn-outline-secondary order-0 order-md-2 ms-auto me-3 me-md-0"}
+					name="dark_mode"
+					tabIndex={1}
+					onClick={() => {
+						const newTheme = theme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT;
 
-                        setTheme(newTheme);
-                        logClick("toggle_theme", { to: newTheme });
-                    }} />
+						setTheme(newTheme);
+						logClick("toggle_theme", { to: newTheme });
+					}} />
 			</Container>
 		</Navbar>
 		<RouteIndicator />
