@@ -6,12 +6,16 @@ import { initPdfWorker } from "./pdf";
 import { extractExtension } from "./strings";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "./urls";
 
-export const STORAGE_URL_PREFIX = process.env.NODE_ENV === "development"
-	? `http://localhost:9199/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o`
-	: `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o`;
+export const STORAGE_URL_PREFIX =
+	process.env.NODE_ENV === "development"
+		? `http://localhost:9199/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o`
+		: `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o`;
 
 export const acceptedFileFormats = [
-	"audio/*", "video/*", "image/*", "text/*",
+	"audio/*",
+	"video/*",
+	"image/*",
+	"text/*",
 	"application/pdf",
 	"application/zip",
 	"application/x-zip-compressed",
@@ -76,7 +80,10 @@ export function createFileLink(id: string, absolute = false) {
 	return !absolute ? createUrl("v", id) : createAbsoluteUrl(DOMAIN, "v", id);
 }
 
-export function compartDirectLink(url: string): { path: string, token: string } {
+export function compartDirectLink(url: string): {
+	path: string;
+	token: string;
+} {
 	const instance = new URL(url);
 
 	const path = instance.pathname.substring(instance.pathname.lastIndexOf("/") + 1);
@@ -91,8 +98,7 @@ export function makeDirectLink(path: string, token: string) {
 }
 
 export function isValidDirectLink(url: string) {
-	return url.startsWith(STORAGE_URL_PREFIX) &&
-		url.includes("&token=");
+	return url.startsWith(STORAGE_URL_PREFIX) && url.includes("&token=");
 }
 
 export async function getVideoDimension(src: string): Promise<Dimension> {
@@ -143,20 +149,32 @@ export async function getFileType(file: File): Promise<[string | undefined, stri
 
 	if (!mime) {
 		switch (ext) {
-			case ".svg": mime = "image/svg+xml"; break;
-			case ".csv": mime = "text/csv"; break;
+			case ".svg":
+				mime = "image/svg+xml";
+				break;
+			case ".csv":
+				mime = "text/csv";
+				break;
 		}
 	} else if (mime === "application/zip") {
 		switch (ext) {
-			case ".apk": mime = "application/vnd.android.package-archive"; break;
-			case ".odg": mime = "application/vnd.oasis.opendocument.graphics"; break;
+			case ".apk":
+				mime = "application/vnd.android.package-archive";
+				break;
+			case ".odg":
+				mime = "application/vnd.oasis.opendocument.graphics";
+				break;
 			case ".ai":
-			case ".eps": mime = "application/illustrator"; break;
+			case ".eps":
+				mime = "application/illustrator";
+				break;
 		}
 	} else if (mime === "application/postscript") {
 		switch (ext) {
 			case ".ai":
-			case ".eps": mime = "application/illustrator"; break;
+			case ".eps":
+				mime = "application/illustrator";
+				break;
 		}
 	}
 
@@ -170,20 +188,20 @@ export function isExecutable(mimeType: string) {
 // todo: update all referencing function to call with file extension first
 export function findFileIcon(extOrMimeType: string): string | undefined {
 	const keys = Object.keys(formatIconMapping);
-	const match = keys.find(key => extOrMimeType.match(`^${key}`));
+	const match = keys.find((key) => extOrMimeType.match(`^${key}`));
 
 	return match ? `/image/ic/${formatIconMapping[match]}.png` : undefined;
 }
 
-export type FilesStatus = "files:unknown-error" |
-	"files:upload-cancelled" |
-	"files:upload-error" |
-	"files:capture-error" |
-	"files:creating-link" |
-	"files:too-large" |
-	"files:creating-thumbnail";
+export type FilesStatus =
+	| "files:unknown-error"
+	| "files:upload-cancelled"
+	| "files:upload-error"
+	| "files:capture-error"
+	| "files:creating-link"
+	| "files:too-large"
+	| "files:creating-thumbnail";
 
 export type FileCustomMetadata = UploadMetadata["customMetadata"] & {
-	[prop in keyof Dimension]?: string
+	[prop in keyof Dimension]?: string;
 };
-

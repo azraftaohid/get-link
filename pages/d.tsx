@@ -17,7 +17,11 @@ import { compartDirectLink, isValidDirectLink, makeDirectLink } from "../utils/f
 
 const NLink = dynamic(() => import("../components/Link"), { ssr: false });
 
-export function makeDownloadParams(directLink: string, fileName: string, mechanism: ClickEventContext["mechanism"] = "browser_default") {
+export function makeDownloadParams(
+	directLink: string,
+	fileName: string,
+	mechanism: ClickEventContext["mechanism"] = "browser_default"
+) {
 	try {
 		const { path, token } = compartDirectLink(directLink);
 		return `name=${fileName}&path=${path}&token=${token}&mechanism=${mechanism}`;
@@ -61,55 +65,70 @@ const Download: NextPage = () => {
 	const directLinkIsValid = directLink && isValidDirectLink(directLink);
 	const displayError = eligError && (!!error || !directLinkIsValid);
 
-	return <PageContainer>
-		<Header />
-		<PageContent>
-			<Conditional in={displayError}>
-				<Alert variant="danger">
-					{error || "Invalid download link."}
-				</Alert>
-			</Conditional>
-			<Conditional in={!displayError}><>
-				<Conditional in={size === 0 && mechanism !== "browser_default"}><Loading /></Conditional>
-				<Conditional in={size === 0 && mechanism === "browser_default"}><Alert>
-					{/* storing a state object may rather be a over-work; better optimized for the most cases. */}
-					Your download should be started.
-				</Alert></Conditional>
-				<Conditional in={size !== 0}><>
-					<DownloadProgress
-						label={`Downloading${name ? ` ${name}` : ""}`}
-						size={size}
-						loaded={downloaded}
-					/>
-					<NLink variant="reset" href={directLink || "#"} newTab>
-						Open instead
-					</NLink>
-				</></Conditional>
-				{directLinkIsValid && <a ref={aRef}
-					className="text-reset"
-					href={directLink}
-					tabIndex={1}
-					download={typeof name === "string" ? name : true}
-					onClick={async (evt) => {
-						if (mechanism !== "built-in") return;
-						evt.preventDefault();
+	return (
+		<PageContainer>
+			<Header />
+			<PageContent>
+				<Conditional in={displayError}>
+					<Alert variant="danger">{error || "Invalid download link."}</Alert>
+				</Conditional>
+				<Conditional in={!displayError}>
+					<>
+						<Conditional in={size === 0 && mechanism !== "browser_default"}>
+							<Loading />
+						</Conditional>
+						<Conditional in={size === 0 && mechanism === "browser_default"}>
+							<Alert>
+								{/* storing a state object may rather be a over-work; better optimized for the most cases. */}
+								Your download should be started.
+							</Alert>
+						</Conditional>
+						<Conditional in={size !== 0}>
+							<>
+								<DownloadProgress
+									label={`Downloading${name ? ` ${name}` : ""}`}
+									size={size}
+									loaded={downloaded}
+								/>
+								<NLink variant="reset" href={directLink || "#"} newTab>
+									Open instead
+								</NLink>
+							</>
+						</Conditional>
+						{directLinkIsValid && (
+							<a
+								ref={aRef}
+								className="text-reset"
+								href={directLink}
+								tabIndex={1}
+								download={typeof name === "string" ? name : true}
+								onClick={async (evt) => {
+									if (mechanism !== "built-in") return;
+									evt.preventDefault();
 
-						directDownloadFromUrl(evt.currentTarget.href, evt.currentTarget.download, (received, total) => {
-							if (size !== total) setSize(total);
-							setDownloaded(received);
-						}).catch(err => {
-							if (err instanceof FetchError && err.code === 404) {
-								setError("File is no longer available.");
-							} else {
-								window.open(directLink, "_blank");
-							}
-						});
-					}}
-				/>}
-			</></Conditional>
-		</PageContent>
-		<Footer />
-	</PageContainer>;
+									directDownloadFromUrl(
+										evt.currentTarget.href,
+										evt.currentTarget.download,
+										(received, total) => {
+											if (size !== total) setSize(total);
+											setDownloaded(received);
+										}
+									).catch((err) => {
+										if (err instanceof FetchError && err.code === 404) {
+											setError("File is no longer available.");
+										} else {
+											window.open(directLink, "_blank");
+										}
+									});
+								}}
+							/>
+						)}
+					</>
+				</Conditional>
+			</PageContent>
+			<Footer />
+		</PageContainer>
+	);
 };
 
 export default Download;

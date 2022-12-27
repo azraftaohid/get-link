@@ -21,21 +21,21 @@ export function toStatic<T extends DocumentData>(snapshot: DocumentSnapshot<T>):
 }
 
 export interface StaticSnapshot<T extends DocumentData> {
-	data: StaticData<T> | undefined,
-	exists: boolean,
-	id: string,
-	path: string,
-	firebaseApp: string,
+	data: StaticData<T> | undefined;
+	exists: boolean;
+	id: string;
+	path: string;
+	firebaseApp: string;
 }
 
 export type StaticData<T extends DocumentData> = {
 	[K in keyof T]: Timestamp extends T[K]
-	? ReturnType<Timestamp["toJSON"]>
-	: GeoPoint extends T[K]
-	? ReturnType<GeoPoint["toJSON"]>
-	: DocumentReference extends T[K]
-	? string
-	: T[K] extends Record<string, unknown>
-	? StaticData<T[K]>
-	: T[K];
-}
+		? ReturnType<Timestamp["toJSON"]>
+		: GeoPoint extends T[K]
+		? ReturnType<GeoPoint["toJSON"]>
+		: DocumentReference extends T[K]
+		? string
+		: T[K] extends Record<string, unknown>
+		? StaticData<T[K]>
+		: T[K];
+};

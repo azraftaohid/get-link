@@ -8,21 +8,25 @@
 @import "utils/app-theme";
 
 .linkPreview {
-	@extend .ratio, .ratio-1x1;
+  @extend .ratio, .ratio-1x1;
 }
 
 .btnShare {
-	z-index: 100;
+  z-index: 100;
 }
 
 @include app-theme(dark) {
-	.noPreview, .loadingPreview, .cardImg {
-		background-color: $gray-900;
-	}
+  .noPreview,
+  .loadingPreview,
+  .cardImg {
+    background-color: $gray-900;
+  }
 }
 
 @include app-theme(light) {
-	.noPreview, .loadingPreview, .cardImg {
-		background-color: $gray-100;
-	}
+  .noPreview,
+  .loadingPreview,
+  .cardImg {
+    background-color: $gray-100;
+  }
 }

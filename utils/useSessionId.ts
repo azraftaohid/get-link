@@ -1,7 +1,9 @@
 import { nanoid } from "nanoid";
 import React, { useContext } from "react";
 
-export const SessionId = React.createContext<SessionIdInterface>({ str: nanoid(10) });
+export const SessionId = React.createContext<SessionIdInterface>({
+	str: nanoid(10),
+});
 
 export const useSessionId = () => {
 	const hook = useContext(SessionId);
@@ -9,5 +11,5 @@ export const useSessionId = () => {
 };
 
 export interface SessionIdInterface {
-	str: string,
+	str: string;
 }

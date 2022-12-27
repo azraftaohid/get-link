@@ -3,5 +3,5 @@ export enum FileNameField {
 }
 
 export interface FileName {
-	[FileNameField.DISPLAY]?: string,
+	[FileNameField.DISPLAY]?: string;
 }

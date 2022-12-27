@@ -7,11 +7,11 @@ const KEY_THEME = "theme";
 export enum Theme {
 	LIGHT = "light",
 	DARK = "dark",
-	DEFAULT = LIGHT
+	DEFAULT = LIGHT,
 }
 
 export const useTheme = (): ThemePops => {
-	const savedTheme: Theme | null = hasWindow ? localStorage.getItem(KEY_THEME) as (Theme | null) : null;
+	const savedTheme: Theme | null = hasWindow ? (localStorage.getItem(KEY_THEME) as Theme | null) : null;
 	const systemDark = useMediaQuery("(prefers-color-scheme: dark)");
 
 	let initTheme: Theme;
@@ -25,15 +25,19 @@ export const useTheme = (): ThemePops => {
 		document.documentElement.setAttribute("data-theme", theme);
 	}, [theme]);
 
-	return useMemo(() => ({
-		current: theme, setTheme: (th) => {
-			localStorage.setItem(KEY_THEME, th);
-			setTheme(th);
-		}
-	}), [theme]);
+	return useMemo(
+		() => ({
+			current: theme,
+			setTheme: (th) => {
+				localStorage.setItem(KEY_THEME, th);
+				setTheme(th);
+			},
+		}),
+		[theme]
+	);
 };
 
 export interface ThemePops {
-	current: Theme,
-	setTheme: (theme: Theme) => void
+	current: Theme;
+	setTheme: (theme: Theme) => void;
 }

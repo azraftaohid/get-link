@@ -19,43 +19,39 @@ export const AssurePrompt: React.FunctionComponent<React.PropsWithChildren<Assur
 	const { onClick: onConfirmClick, ...restConfirms } = confirmProps || {};
 	const { onClick: onCancelClick, ...restCancels } = cancelProps || {};
 
-	return <Modal
-		backdrop="static"
-		keyboard
-		onEscapeKeyDown={onCancel} // on dispute is not called if overriden by {...rest}
-		aria-labelledby="confirmation prompt"
-		{...rest}
-	>
-		<ModalHeader>
-			<ModalTitle>{title}</ModalTitle>
-		</ModalHeader>
-		<ModalBody>
-			{message}
-		</ModalBody>
-		<ModalFooter>
-			<Button
-				variant="outline-primary"
-				onClick={combineCallbacks(onCancelClick, onCancel)}
-				{...restCancels}
-			>
-				Cancel
-			</Button>
-			<Button
-				variant="outline-secondary"
-				onClick={combineCallbacks(onConfirmClick, onConfirm)}
-				{...restConfirms}
-			>
-				Confirm
-			</Button>
-		</ModalFooter>
-	</Modal>;
+	return (
+		<Modal
+			backdrop="static"
+			keyboard
+			onEscapeKeyDown={onCancel} // on dispute is not called if overriden by {...rest}
+			aria-labelledby="confirmation prompt"
+			{...rest}
+		>
+			<ModalHeader>
+				<ModalTitle>{title}</ModalTitle>
+			</ModalHeader>
+			<ModalBody>{message}</ModalBody>
+			<ModalFooter>
+				<Button variant="outline-primary" onClick={combineCallbacks(onCancelClick, onCancel)} {...restCancels}>
+					Cancel
+				</Button>
+				<Button
+					variant="outline-secondary"
+					onClick={combineCallbacks(onConfirmClick, onConfirm)}
+					{...restConfirms}
+				>
+					Confirm
+				</Button>
+			</ModalFooter>
+		</Modal>
+	);
 };
 
 export interface AssurePromptProps extends ModalProps {
-	title: React.ReactNode,
-	message: React.ReactNode,
-	onConfirm?: () => unknown,
-	onCancel?: () => unknown,
-	confirmProps?: ButtonProps,
-	cancelProps?: ButtonProps,
+	title: React.ReactNode;
+	message: React.ReactNode;
+	onConfirm?: () => unknown;
+	onCancel?: () => unknown;
+	confirmProps?: ButtonProps;
+	cancelProps?: ButtonProps;
 }

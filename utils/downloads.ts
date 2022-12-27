@@ -3,8 +3,10 @@ import { FetchError } from "./errors/FetchError";
 export const THRESHOLD_DIRECT_DOWNLOAD = 30 * 1024 * 1024; // 30 MB
 
 export function shouldStepUpDownload() {
-	return (typeof Modernizr !== "undefined" && !Modernizr.adownload) ||
-		(typeof window !== "undefined" && window.navigator.userAgent.includes("FB_IAB/"));
+	return (
+		(typeof Modernizr !== "undefined" && !Modernizr.adownload) ||
+		(typeof window !== "undefined" && window.navigator.userAgent.includes("FB_IAB/"))
+	);
 }
 
 export function downloadBlob(blob: Blob, name: string) {
@@ -43,7 +45,14 @@ export async function getBlob(downloadUrl: string, onProgress?: OnProgress): Pro
 			const { status, response } = xhr;
 			if (status !== 200) rej(new FetchError(xhr.status, "error getting blob file"));
 			else if (typeof response === "object" && response.constructor.name === "Blob") res(response);
-			else rej(new Error(`invalid response type [expected: Blob; actual: ${typeof response === "object" ? response.constructor.name : typeof response}]`));
+			else
+				rej(
+					new Error(
+						`invalid response type [expected: Blob; actual: ${
+							typeof response === "object" ? response.constructor.name : typeof response
+						}]`
+					)
+				);
 		};
 
 		xhr.onprogress = ({ loaded, total }) => {

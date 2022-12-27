@@ -1,2 +1,3 @@
 # Self-hosting
-TODO: add guidelines for hosting this application in personal environments. 
+
+TODO: add guidelines for hosting this application in personal environments.

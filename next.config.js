@@ -12,20 +12,20 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 const securities = [
 	{
 		key: "Strict-Transport-Security",
-		value: "max-age=31536000; includeSubDomains"
+		value: "max-age=31536000; includeSubDomains",
 	},
 	{
 		key: "X-DNS-Prefetch-Control",
-		value: "on"
+		value: "on",
 	},
 	{
 		key: "X-Frame-Options",
-		value: "SAMEORIGIN"
+		value: "SAMEORIGIN",
 	},
 	{
 		key: "X-Content-Type-Options",
-		value: "nosniff"
-	}
+		value: "nosniff",
+	},
 ];
 
 /**
@@ -36,12 +36,12 @@ const nextConfig = {
 	trailingSlash: false,
 	distDir: "./.next",
 	reactStrictMode: true,
-	headers: async () => ([
+	headers: async () => [
 		{
 			source: "/(.*)",
 			headers: securities,
-		}
-	]),
+		},
+	],
 	images: {
 		domains: ["localhost", "firebasestorage.googleapis.com"],
 	},
@@ -63,7 +63,7 @@ const nextConfig = {
 		);
 
 		return config;
-	}
+	},
 };
 
 module.exports = withBundleAnalyzer(nextConfig);

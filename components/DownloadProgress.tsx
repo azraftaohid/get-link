@@ -11,19 +11,24 @@ export const DownloadProgress: React.FunctionComponent<React.PropsWithChildren<D
 	size,
 	...rest
 }) => {
-	return <div
-		role="alert"
-		className={mergeNames(as === "alert" ? "alert alert-primary" : "px-2 py-3", "mw-100", className)}
-		{...rest}
-	>
-		<p><b>{label}:</b> {formatSize(loaded)} out of {formatSize(size)}.</p>
-		<ProgressBar variant={as === "div" ? "info" : "primary"} now={(loaded / size) * 100 | 0} />
-	</div>;
+	return (
+		<div
+			role="alert"
+			className={mergeNames(as === "alert" ? "alert alert-primary" : "px-2 py-3", "mw-100", className)}
+			{...rest}
+		>
+			<p>
+				<b>{label}:</b> {formatSize(loaded)} out of {formatSize(size)}.
+			</p>
+			<ProgressBar variant={as === "div" ? "info" : "primary"} now={((loaded / size) * 100) | 0} />
+		</div>
+	);
 };
 
-export interface DownloadProgressProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
-	as?: "alert" | "div",
-	label?: React.ReactNode,
-	loaded: number,
-	size: number,
+export interface DownloadProgressProps
+	extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
+	as?: "alert" | "div";
+	label?: React.ReactNode;
+	loaded: number;
+	size: number;
 }

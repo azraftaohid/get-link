@@ -1,4 +1,18 @@
-import { collection, CollectionReference, deleteDoc, doc, FieldPath, getFirestore, orderBy, Query, query, serverTimestamp, setDoc, Timestamp, where } from "firebase/firestore/lite";
+import {
+	collection,
+	CollectionReference,
+	deleteDoc,
+	doc,
+	FieldPath,
+	getFirestore,
+	orderBy,
+	Query,
+	query,
+	serverTimestamp,
+	setDoc,
+	Timestamp,
+	where,
+} from "firebase/firestore/lite";
 import { StorageReference } from "firebase/storage";
 import { v5 } from "uuid";
 import { FileCustomMetadata } from "../utils/files";
@@ -6,16 +20,16 @@ import { UserSnapshot, UserSnapshotField } from "./users";
 
 /**
  * # Database structure
- * 
+ *
  * ## Definitions
  * 	- FID: unique file ID; often implies to the file path
  * 	- CFID: canonical file id; refers to the document that stores file metadata
  * 	- UID: shorten from User ID
  * 	- Name: name of the file, that comprises the display name + extension
- * 
+ *
  * ## Firestore
  * links/cfid { fids: FID[] }
- * 
+ *
  * ## Storage
  * user/uid/name
  */
@@ -34,8 +48,11 @@ export function getLinks(uid?: string) {
 	const links: CollectionReference<LinkData> = collection(getFirestore(), COLLECTION_LINKS);
 	if (!uid) return links;
 
-	return query(links, where(new FieldPath(LinkField.USER, UserSnapshotField.UID), "==", uid),
-		orderBy(LinkField.CREATE_TIME, "desc"));
+	return query(
+		links,
+		where(new FieldPath(LinkField.USER, UserSnapshotField.UID), "==", uid),
+		orderBy(LinkField.CREATE_TIME, "desc")
+	);
 }
 
 export function getLinkRef(cfid?: string) {
@@ -50,7 +67,11 @@ export function getLinkRefOf(ref: StorageReference) {
 	return getLinkRefByFID(ref.fullPath);
 }
 
-export async function createLink(fid: string, uid: string, data?: Omit<LinkData, LinkField.FID | LinkField.USER | LinkField.CREATE_TIME>) {
+export async function createLink(
+	fid: string,
+	uid: string,
+	data?: Omit<LinkData, LinkField.FID | LinkField.USER | LinkField.CREATE_TIME>
+) {
 	const ref = getLinkRefByFID(fid);
 	await setDoc(ref, {
 		...data,
@@ -81,12 +102,12 @@ export enum LinkField {
 export type Warning = "executable";
 
 export interface LinkData {
-	[LinkField.TITLE]?: string,
-	[LinkField.NAME]?: string,
-	[LinkField.FID]?: string,
-	[LinkField.USER]?: UserSnapshot,
-	[LinkField.CREATE_TIME]?: Timestamp,
-	[LinkField.EXPIRE_TIME]?: Timestamp,
-	[LinkField.WARNS]?: Warning[],
-	[LinkField.FILE]?: FileCustomMetadata,
+	[LinkField.TITLE]?: string;
+	[LinkField.NAME]?: string;
+	[LinkField.FID]?: string;
+	[LinkField.USER]?: UserSnapshot;
+	[LinkField.CREATE_TIME]?: Timestamp;
+	[LinkField.EXPIRE_TIME]?: Timestamp;
+	[LinkField.WARNS]?: Warning[];
+	[LinkField.FILE]?: FileCustomMetadata;
 }

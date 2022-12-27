@@ -3,5 +3,5 @@ export enum UserSnapshotField {
 }
 
 export interface UserSnapshot {
-	[UserSnapshotField.UID]?: string,
+	[UserSnapshotField.UID]?: string;
 }

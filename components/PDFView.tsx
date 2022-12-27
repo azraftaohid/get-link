@@ -22,40 +22,46 @@ export const PDFView: React.FunctionComponent<React.PropsWithChildren<PdfViewPro
 	const [size, setSize] = useState(initSize || 0);
 	const [loadedSize, setLoadedSize] = useState(0);
 
-	return <PDF
-		file={file}
-		className={mergeNames(styles.pdfView, "mw-100")}
-		externalLinkTarget="_blank"
-		onLoadProgress={({ loaded, total }) => {
-			if (size !== total) setSize(total);
-			setLoadedSize(loaded);
-		}}
-		onLoadSuccess={(pdf) => {
-			setPageCount(pdf.numPages);
-			onLoadSuccess?.(pdf);
-		}}
-		loading={<DownloadProgress as="div" label="Loading PDF" size={size} loaded={loadedSize} style={{ width }} />}
-		{...rest}
-	>
-		<PDFPage
-			key={`page-${activePage}`}
-			className="mw-100 overflow-hidden"
-			pageIndex={activePage}
-		/>
-		{pageCount > 1 && <Pagination className="justify-content-center mt-3 mb-2" size="sm">
-			<Pagination.First onClick={() => page.to(0)} disabled={activePage === 0} />
-			<Pagination.Item onClick={page.decrease} disabled={activePage <= 0}>Prev</Pagination.Item>
-			<Pagination.Item active>{activePage + 1}</Pagination.Item>
-			<Pagination.Item onClick={page.increase} disabled={activePage + 1 >= pageCount}>Next</Pagination.Item>
-			<Pagination.Last onClick={() => page.to(pageCount - 1)} disabled={activePage === pageCount - 1} />
-		</Pagination>}
-	</PDF>;
+	return (
+		<PDF
+			file={file}
+			className={mergeNames(styles.pdfView, "mw-100")}
+			externalLinkTarget="_blank"
+			onLoadProgress={({ loaded, total }) => {
+				if (size !== total) setSize(total);
+				setLoadedSize(loaded);
+			}}
+			onLoadSuccess={(pdf) => {
+				setPageCount(pdf.numPages);
+				onLoadSuccess?.(pdf);
+			}}
+			loading={
+				<DownloadProgress as="div" label="Loading PDF" size={size} loaded={loadedSize} style={{ width }} />
+			}
+			{...rest}
+		>
+			<PDFPage key={`page-${activePage}`} className="mw-100 overflow-hidden" pageIndex={activePage} />
+			{pageCount > 1 && (
+				<Pagination className="justify-content-center mt-3 mb-2" size="sm">
+					<Pagination.First onClick={() => page.to(0)} disabled={activePage === 0} />
+					<Pagination.Item onClick={page.decrease} disabled={activePage <= 0}>
+						Prev
+					</Pagination.Item>
+					<Pagination.Item active>{activePage + 1}</Pagination.Item>
+					<Pagination.Item onClick={page.increase} disabled={activePage + 1 >= pageCount}>
+						Next
+					</Pagination.Item>
+					<Pagination.Last onClick={() => page.to(pageCount - 1)} disabled={activePage === pageCount - 1} />
+				</Pagination>
+			)}
+		</PDF>
+	);
 };
 
 export default PDFView;
 
 export interface PdfViewProps extends PDFProps {
-	width?: number,
-	height?: number,
-	size?: number,
+	width?: number;
+	height?: number;
+	size?: number;
 }

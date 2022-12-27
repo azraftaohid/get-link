@@ -23,7 +23,15 @@ import { createFID, getFileRef } from "../models/files";
 import { createLink, LinkField } from "../models/links";
 import styles from "../styles/home.module.scss";
 import { StatusCode } from "../utils/common";
-import { acceptedFileFormats, createFileLink, FileCustomMetadata, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
+import {
+	acceptedFileFormats,
+	createFileLink,
+	FileCustomMetadata,
+	getFileType,
+	getImageDimension,
+	getPdfDimension,
+	getVideoDimension,
+} from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
 import { formatSize } from "../utils/strings";
 import { useToast } from "../utils/useToast";
@@ -47,14 +55,14 @@ const Home: NextPage = () => {
 	});
 
 	const appendStatus = useRef((status: StatusCode) => {
-		setStatuses(c => {
+		setStatuses((c) => {
 			if (c.includes(status)) return [...c];
 			return [...c, status];
 		});
 	});
 
 	const removeStatus = useRef((status: StatusCode) => {
-		setStatuses(c => {
+		setStatuses((c) => {
 			const i = c.indexOf(status);
 			if (i === -1) return c;
 
@@ -62,34 +70,39 @@ const Home: NextPage = () => {
 		});
 	});
 
-	const handleDrop = useCallback<NonNullable<DropzoneOptions["onDrop"]>>((dropped, rejects) => {
-		if (!dropped.length) {
-			if (!rejects.length) return;
+	const handleDrop = useCallback<NonNullable<DropzoneOptions["onDrop"]>>(
+		(dropped, rejects) => {
+			if (!dropped.length) {
+				if (!rejects.length) return;
 
-			let errMssg: string;
-			if (rejects.length === 1 && rejects[0].errors.length === 1) {
-				const err = rejects[0].errors[0];
-				errMssg = `Upload cancelled: ${err.code}`;
-				console.debug(`actual type: ${rejects[0].file.type}`);
-			} else {
-				errMssg = `Upload cancelled for the following files\n${rejects.map(reject => {
-					return `${reject.file.name}: ${reject.errors.map(err => err.code).join(", ")}`;
-				}).join("\n")}`;
+				let errMssg: string;
+				if (rejects.length === 1 && rejects[0].errors.length === 1) {
+					const err = rejects[0].errors[0];
+					errMssg = `Upload cancelled: ${err.code}`;
+					console.debug(`actual type: ${rejects[0].file.type}`);
+				} else {
+					errMssg = `Upload cancelled for the following files\n${rejects
+						.map((reject) => {
+							return `${reject.file.name}: ${reject.errors.map((err) => err.code).join(", ")}`;
+						})
+						.join("\n")}`;
+				}
+
+				makeToast(errMssg, "error");
+
+				return;
 			}
 
-			makeToast(errMssg, "error");
-
-			return;
-		}
-
-		setFile(dropped[0]);
-	}, [makeToast]);
+			setFile(dropped[0]);
+		},
+		[makeToast]
+	);
 
 	const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
 		accept: acceptedFileFormats,
 		onDrop: handleDrop,
 		maxFiles: 1,
-		maxSize: (100 * 1024 * 1024) - 1,
+		maxSize: 100 * 1024 * 1024 - 1,
 		multiple: false,
 	});
 
@@ -98,7 +111,7 @@ const Home: NextPage = () => {
 		if (!file) return;
 		if (!uid) {
 			console.debug("signing in user anonymously");
-			signInAnonymously(getAuth()).catch(err => {
+			signInAnonymously(getAuth()).catch((err) => {
 				console.error(`error signing in user [cause: ${err}]`);
 				appendStatus.current("auth:sign-in-error");
 			});
@@ -161,7 +174,7 @@ const Home: NextPage = () => {
 				if (dimension) {
 					metadata.customMetadata = {
 						width: dimension[DimensionField.WIDTH],
-						height: dimension[DimensionField.HEIGHT]
+						height: dimension[DimensionField.HEIGHT],
 					} as FileCustomMetadata;
 				}
 			} catch (error) {
@@ -169,32 +182,37 @@ const Home: NextPage = () => {
 			}
 
 			const upload = uploadBytesResumable(ref, file, metadata);
-			const unsubscribe = upload.on("state_changed", async snapshot => {
-				setProgress(Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
-			}, err => {
-				if (err.code === "storage/canceled") {
-					console.info("upload cancelled");
-					appendStatus.current("files:upload-cancelled");
-				} else {
-					console.error(`upload failed [code: ${err.code}; cause: ${err.message}]`);
-					appendStatus.current("files:upload-error");
+			const unsubscribe = upload.on(
+				"state_changed",
+				async (snapshot) => {
+					setProgress(Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
+				},
+				(err) => {
+					if (err.code === "storage/canceled") {
+						console.info("upload cancelled");
+						appendStatus.current("files:upload-cancelled");
+					} else {
+						console.error(`upload failed [code: ${err.code}; cause: ${err.message}]`);
+						appendStatus.current("files:upload-error");
+					}
+
+					resetState.current();
+				},
+				async () => {
+					appendStatus.current("files:creating-link");
+
+					try {
+						const doc = await createLink(fid, uid, { [LinkField.TITLE]: file.name });
+						console.debug(`file captured at ${doc.path}`);
+
+						setUrl(createFileLink(doc.id));
+						setStatuses(["page:redirecting"]);
+					} catch (error) {
+						console.debug(`capture failed [cause; ${error}]`);
+						appendStatus.current("files:capture-error");
+					}
 				}
-
-				resetState.current();
-			}, async () => {
-				appendStatus.current("files:creating-link");
-
-				try {
-					const doc = await createLink(fid, uid, { [LinkField.TITLE]: file.name });
-					console.debug(`file captured at ${doc.path}`);
-
-					setUrl(createFileLink(doc.id));
-					setStatuses(["page:redirecting"]);
-				} catch (error) {
-					console.debug(`capture failed [cause; ${error}]`);
-					appendStatus.current("files:capture-error");
-				}
-			});
+			);
 
 			return { upload, unsubscribe };
 		})();
@@ -224,54 +242,92 @@ const Home: NextPage = () => {
 		open();
 	}, [triggerChooser, open]);
 
-	return <PageContainer>
-		<Metadata title="Get Link" image="https://getlink.vercel.app/image/cover.png" />
-		<Header />
-		<PageContent>
-			<Conditional in={statuses.includes("files:upload-cancelled")}>
-				<Alert variant="warning" dismissible onClose={() => removeStatus.current("files:upload-cancelled")}>
-					Upload cancelled.
-				</Alert>
-			</Conditional>
-			<Conditional in={statuses.some(s => (["files:unknown-error", "files:capture-error", "files:upload-error", "auth:sign-in-error", "files:too-large"] as StatusCode[]).includes(s))}>
-				<Alert variant="danger">
-					There was an error. Please try again!<br />
-					Code: {statuses.map((s, i, arr) => <><Link key={s} className="alert-link" href={`/technical#${encodeURIComponent(s)}`} newTab>
-						{s}
-					</Link>{i < arr.length - 1 && ", "}</>)}.
-				</Alert>
-			</Conditional>
-			<Conditional in={!!file}>
-				<FormLabel aria-label="file-upload-progress">
-					Uploading
-				</FormLabel>
-				<FilePreview className="mb-3" file={file} onClose={() => setFile(null)} closable={progress < 100} />
-				<ProgressBar id="file-upload-progress" animated now={progress} />
-				<small className="text-muted">
-					{(statuses.includes("page:redirecting"))
-						? <><Link variant="reset" href={url || "#"}>Redirecting</Link>&hellip;</>
-						: statuses.includes("files:creating-link")
-							? <>Creating link.</>
-							: statuses.includes("files:creating-thumbnail")
-								? <>Creating thumbnail.</>
-								: <>{progress}% completed.</>}
-				</small>
-			</Conditional>
-			<Conditional in={!file}>
-				<button {...getRootProps({
-					id: "upload-area",
-					type: "button",
-					className: mergeNames(styles.uploadArea, "btn btn-outline-secondary", isDragActive && "active"),
-				})}>
-					<input {...getInputProps()} />
-					<Icon name="file_upload" size="lg" />
-					<p className="fs-5 mb-0">{!isDragActive ? "Upload file" : "Drop to upload"}</p>
-					<small className="text-mute">(Expires after 14 days)</small>
-				</button>
-			</Conditional>
-		</PageContent>
-		<Footer />
-	</PageContainer>;
+	return (
+		<PageContainer>
+			<Metadata title="Get Link" image="https://getlink.vercel.app/image/cover.png" />
+			<Header />
+			<PageContent>
+				<Conditional in={statuses.includes("files:upload-cancelled")}>
+					<Alert variant="warning" dismissible onClose={() => removeStatus.current("files:upload-cancelled")}>
+						Upload cancelled.
+					</Alert>
+				</Conditional>
+				<Conditional
+					in={statuses.some((s) =>
+						(
+							[
+								"files:unknown-error",
+								"files:capture-error",
+								"files:upload-error",
+								"auth:sign-in-error",
+								"files:too-large",
+							] as StatusCode[]
+						).includes(s)
+					)}
+				>
+					<Alert variant="danger">
+						There was an error. Please try again!
+						<br />
+						Code:{" "}
+						{statuses.map((s, i, arr) => (
+							<>
+								<Link
+									key={s}
+									className="alert-link"
+									href={`/technical#${encodeURIComponent(s)}`}
+									newTab
+								>
+									{s}
+								</Link>
+								{i < arr.length - 1 && ", "}
+							</>
+						))}
+						.
+					</Alert>
+				</Conditional>
+				<Conditional in={!!file}>
+					<FormLabel aria-label="file-upload-progress">Uploading</FormLabel>
+					<FilePreview className="mb-3" file={file} onClose={() => setFile(null)} closable={progress < 100} />
+					<ProgressBar id="file-upload-progress" animated now={progress} />
+					<small className="text-muted">
+						{statuses.includes("page:redirecting") ? (
+							<>
+								<Link variant="reset" href={url || "#"}>
+									Redirecting
+								</Link>
+								&hellip;
+							</>
+						) : statuses.includes("files:creating-link") ? (
+							<>Creating link.</>
+						) : statuses.includes("files:creating-thumbnail") ? (
+							<>Creating thumbnail.</>
+						) : (
+							<>{progress}% completed.</>
+						)}
+					</small>
+				</Conditional>
+				<Conditional in={!file}>
+					<button
+						{...getRootProps({
+							id: "upload-area",
+							type: "button",
+							className: mergeNames(
+								styles.uploadArea,
+								"btn btn-outline-secondary",
+								isDragActive && "active"
+							),
+						})}
+					>
+						<input {...getInputProps()} />
+						<Icon name="file_upload" size="lg" />
+						<p className="fs-5 mb-0">{!isDragActive ? "Upload file" : "Drop to upload"}</p>
+						<small className="text-mute">(Expires after 14 days)</small>
+					</button>
+				</Conditional>
+			</PageContent>
+			<Footer />
+		</PageContainer>
+	);
 };
 
 export default Home;
