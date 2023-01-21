@@ -6,10 +6,12 @@ function initPdfWorker0(pdfjs: PdfJs) {
 	pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 }
 
-export function initPdfWorker<T extends PdfJs | undefined>(pdfjs?: T): undefined extends T ? Promise<PdfJs | undefined> : PdfJs {
+export function initPdfWorker<T extends PdfJs | undefined>(
+	pdfjs?: T
+): undefined extends T ? Promise<PdfJs | undefined> : PdfJs {
 	if (!pdfjs) {
 		if (!canInitPdfWorker()) return Promise.resolve(undefined) as any;
-		return import("react-pdf/dist/esm/entry.webpack").then(value => {
+		return import("react-pdf/dist/esm/entry.webpack").then((value) => {
 			initPdfWorker0(value.pdfjs);
 			return value.pdfjs;
 		}) as any;

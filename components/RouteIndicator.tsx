@@ -8,7 +8,9 @@ export const RouteIndicator: React.FunctionComponent<React.PropsWithChildren<unk
 	const router = useRouter();
 	const state = useRouteState(router);
 
-	return <Conditional in={state === "loading"}>
-		<ShortLoading reset={state !== "loading"} />
-	</Conditional>;
+	return (
+		<Conditional in={state === "loading"}>
+			<ShortLoading reset={state !== "loading"} />
+		</Conditional>
+	);
 };

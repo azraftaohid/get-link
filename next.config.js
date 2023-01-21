@@ -9,23 +9,23 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 /**
  * @type {import('next/dist/lib/load-custom-routes').Header["headers"]}
  */
- const securities = [
+const securities = [
 	{
 		key: "Strict-Transport-Security",
-		value: "max-age=31536000; includeSubDomains"
+		value: "max-age=31536000; includeSubDomains",
 	},
 	{
 		key: "X-DNS-Prefetch-Control",
-		value: "on"
+		value: "on",
 	},
 	{
 		key: "X-Frame-Options",
-		value: "SAMEORIGIN"
+		value: "SAMEORIGIN",
 	},
 	{
 		key: "X-Content-Type-Options",
-		value: "nosniff"
-	}
+		value: "nosniff",
+	},
 ];
 
 /**
@@ -36,12 +36,12 @@ const nextConfig = {
 	trailingSlash: false,
 	distDir: "./.next",
 	reactStrictMode: true,
-	headers: async () => ([
+	headers: async () => [
 		{
 			source: "/(.*)",
 			headers: securities,
-		}
-	]),
+		},
+	],
 	images: {
 		domains: ["localhost", "firebasestorage.googleapis.com"],
 	},
@@ -53,17 +53,17 @@ const nextConfig = {
 
 		config.plugins.push(
 			new CopyPlugin({
-			  patterns: [
-				{
-				  from: path.join(__dirname, "node_modules/pdfjs-dist/build/pdf.worker.min.js"),
-				  to: path.join(__dirname, "public"),
-				},
-			  ],
+				patterns: [
+					{
+						from: path.join(__dirname, "node_modules/pdfjs-dist/build/pdf.worker.min.js"),
+						to: path.join(__dirname, "public"),
+					},
+				],
 			})
-		  );
-		
+		);
+
 		return config;
-	}
+	},
 };
 
 module.exports = withBundleAnalyzer(nextConfig);

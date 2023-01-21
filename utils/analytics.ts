@@ -22,18 +22,18 @@ export function acquireExperienceOptions() {
 }
 
 export function logClick(btnId: ButtonId, ctx?: ClickEventContext) {
-    const params: ClickEventParams = { ...ctx, button_id: btnId };
-    logEvent(getAnalytics(), "click", params);
+	const params: ClickEventParams = { ...ctx, button_id: btnId };
+	logEvent(getAnalytics(), "click", params);
 }
 
 export type ButtonId = "download" | "toggle_theme" | "delete" | "share" | "share_file_card";
 
 export interface ClickEventParams extends ClickEventContext {
-    button_id: string,
+	button_id: string;
 }
 
 export interface ClickEventContext {
-    mechanism?: "built-in" | "browser_default",
-    status?: "failed" | "succeed" | "canceled",
-    to?: Theme,
+	mechanism?: "built-in" | "browser_default";
+	status?: "failed" | "succeed" | "canceled";
+	to?: Theme;
 }

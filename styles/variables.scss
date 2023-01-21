@@ -5,30 +5,89 @@
 @import "~bootstrap/scss/variables";
 @import "~bootstrap/scss/utilities";
 
-$utilities: map-merge($utilities, (
-	"position": map-merge(map-get($utilities, position), ( responsive: true )),
-	"top": map-merge(map-get($utilities, top), ( responsive: true )),
-	"bottom": map-merge(map-get($utilities, bottom), ( responsive: true )),
-	"start": map-merge(map-get($utilities, start), ( responsive: true )),
-	"end": map-merge(map-get($utilities, end), ( responsive: true )),
-	"translate-middle": map-merge(map-get($utilities, translate-middle), ( responsive: true )),
-	"max-width": map-merge(map-get($utilities, max-width), ( values: map-merge(map-get(map-get($utilities, max-width), values), (
-		md: map-get($grid-breakpoints, md),
-		lg: map-get($grid-breakpoints, lg),
-		xl: map-get($grid-breakpoints, xl)
-	)))),
-	"background-color": map-merge(map-get($utilities, background-color), ( values: map-merge(map-get(map-get($utilities, background-color), values), (
-		gray-100: $gray-100,
-		gray-200: $gray-200,
-		gray-800: $gray-800,
-		gray-900: $gray-900
-	)))),
-	"object-fit": (
-		property: object-fit,
-		class: fit,
-		values: cover contain,
-	),
-));
+$utilities: map-merge(
+  $utilities,
+  (
+    "position":
+      map-merge(
+        map-get($utilities, position),
+        (
+          responsive: true,
+        )
+      ),
+    "top":
+      map-merge(
+        map-get($utilities, top),
+        (
+          responsive: true,
+        )
+      ),
+    "bottom":
+      map-merge(
+        map-get($utilities, bottom),
+        (
+          responsive: true,
+        )
+      ),
+    "start":
+      map-merge(
+        map-get($utilities, start),
+        (
+          responsive: true,
+        )
+      ),
+    "end":
+      map-merge(
+        map-get($utilities, end),
+        (
+          responsive: true,
+        )
+      ),
+    "translate-middle":
+      map-merge(
+        map-get($utilities, translate-middle),
+        (
+          responsive: true,
+        )
+      ),
+    "max-width":
+      map-merge(
+        map-get($utilities, max-width),
+        (
+          values:
+            map-merge(
+              map-get(map-get($utilities, max-width), values),
+              (
+                md: map-get($grid-breakpoints, md),
+                lg: map-get($grid-breakpoints, lg),
+                xl: map-get($grid-breakpoints, xl),
+              )
+            ),
+        )
+      ),
+    "background-color":
+      map-merge(
+        map-get($utilities, background-color),
+        (
+          values:
+            map-merge(
+              map-get(map-get($utilities, background-color), values),
+              (
+                gray-100: $gray-100,
+                gray-200: $gray-200,
+                gray-800: $gray-800,
+                gray-900: $gray-900,
+              )
+            ),
+        )
+      ),
+    "object-fit": (
+      property: object-fit,
+      class: fit,
+      values: cover contain,
+    ),
+  )
+);
 
 // Configuration
 @import "~bootstrap/scss/mixins";

@@ -4,6 +4,6 @@ export enum DimensionField {
 }
 
 export interface Dimension {
-	[DimensionField.WIDTH]?: number,
-	[DimensionField.HEIGHT]?: number,
+	[DimensionField.WIDTH]?: number;
+	[DimensionField.HEIGHT]?: number;
 }

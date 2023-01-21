@@ -1,202 +1,209 @@
 @import "restart";
 
 @mixin apply-fs-size($level) {
-	width: map-get($map: $font-sizes, $key: $level);
-	height: map-get($map: $font-sizes, $key: $level);
+  width: map-get($map: $font-sizes, $key: $level);
+  height: map-get($map: $font-sizes, $key: $level);
 }
 
-#nav-container, #footer-container, .page-content {
-	@extend .px-4, .px-md-5;
+#nav-container,
+#footer-container,
+.page-content {
+  @extend .px-4, .px-md-5;
 }
 
-#nav-container, #footer-container {
-	@extend .mw-xl;
+#nav-container,
+#footer-container {
+  @extend .mw-xl;
 }
 
 .toast-container {
-	z-index: $zindex-tooltip;
+  z-index: $zindex-tooltip;
 }
 
 .standout {
-	@extend .px-3, .py-4, .my-3, .rounded;
+  @extend .px-3, .py-4, .my-3, .rounded;
 }
 
 .stall {
-	.progress {
-		height: .4rem;
-	}
+  .progress {
+    height: 0.4rem;
+  }
 }
 
 .pre-break {
-	white-space: pre-line;
+  white-space: pre-line;
 }
 
 .alive {
-	@include border-radius();
-	padding: $btn-close-padding-y $btn-close-padding-x;
-	opacity: $btn-close-opacity;
+  @include border-radius();
+  padding: $btn-close-padding-y $btn-close-padding-x;
+  opacity: $btn-close-opacity;
 
-	&:hover {
-		opacity: $btn-close-hover-opacity;
-	}
-	
-	&:focus {
-		box-shadow: $btn-close-focus-shadow;
-		opacity: $btn-close-focus-opacity;
-	}
+  &:hover {
+    opacity: $btn-close-hover-opacity;
+  }
 
-	&:disabled,
-	&.disabled {
-		pointer-events: none;
-		user-select: none;
-		opacity: $btn-close-disabled-opacity;
-	}
+  &:focus {
+    box-shadow: $btn-close-focus-shadow;
+    opacity: $btn-close-focus-opacity;
+  }
+
+  &:disabled,
+  &.disabled {
+    pointer-events: none;
+    user-select: none;
+    opacity: $btn-close-disabled-opacity;
+  }
 }
 
 .ic-alive {
-	@extend .alive;
+  @extend .alive;
 }
 
 .material-icons-outlined {
-	@extend .text-truncate;
-	width: 24px;
-	height: 24px;
+  @extend .text-truncate;
+  width: 24px;
+  height: 24px;
 
-	&.fs-1 {
-		@include apply-fs-size(1);
-	}
+  &.fs-1 {
+    @include apply-fs-size(1);
+  }
 
-	&.fs-5 {
-		@include apply-fs-size(5);
-	}
+  &.fs-5 {
+    @include apply-fs-size(5);
+  }
 }
 
 .border-feedback {
-	&:hover {
-		@extend .border, .border-secondary;
-	}
+  &:hover {
+    @extend .border, .border-secondary;
+  }
 }
 
 blockquote {
-	@extend .blockquote;
+  @extend .blockquote;
 }
 
-ul, ol {
-	@extend .my-3;
+ul,
+ol {
+  @extend .my-3;
 }
 
 @include app-theme(dark) {
-	#nav {
-		@extend .navbar-dark, .bg-dark;
-	}
+  #nav {
+    @extend .navbar-dark, .bg-dark;
+  }
 
-	#root {
-		@extend .text-white;
-		background-color: $black;
-	}
+  #root {
+    @extend .text-white;
+    background-color: $black;
+  }
 
-	.toast {
-		@extend .text-white, .bg-gray-900;
+  .toast {
+    @extend .text-white, .bg-gray-900;
 
-		.toast-header {
-			@extend .navbar-dark, .bg-gray-800;
-		}
-	}
+    .toast-header {
+      @extend .navbar-dark, .bg-gray-800;
+    }
+  }
 
-	.card {
-		@extend .bg-black;
-		border-color: rgba($white, .125);
-	}
+  .card {
+    @extend .bg-black;
+    border-color: rgba($white, 0.125);
+  }
 
-	.card-footer {
-		@extend .bg-dark;
-	}
+  .card-footer {
+    @extend .bg-dark;
+  }
 
-	.file-preview {
-		@extend .bg-dark;
-	}
+  .file-preview {
+    @extend .bg-dark;
+  }
 
-	.btn-outline-vivid {
-		@extend .btn-outline-light;
-	}
+  .btn-outline-vivid {
+    @extend .btn-outline-light;
+  }
 
-	.border-vivid {
-		@extend .border-light;
-	}
+  .border-vivid {
+    @extend .border-light;
+  }
 
-	.btn-close {
-		@extend .btn-close-white;
-	}
+  .btn-close {
+    @extend .btn-close-white;
+  }
 
-	.page-link {
-		@extend .border, .border-secondary, .bg-gray-900;
-	}
+  .page-link {
+    @extend .border, .border-secondary, .bg-gray-900;
+  }
 
-	.modal-content {
-		@extend .bg-dark, .text-white;
-	}
+  .modal-content {
+    @extend .bg-dark, .text-white;
+  }
 
-	.modal-header, .modal-body, .modal-footer {
-		@extend .border-secondary;
-	}
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    @extend .border-secondary;
+  }
 
-	.form-control {
-		@extend .bg-dark, .text-white;
-	}
+  .form-control {
+    @extend .bg-dark, .text-white;
+  }
 
-	.form-control:not(.is-invalid) {
-		@extend .border-secondary;
-	}
+  .form-control:not(.is-invalid) {
+    @extend .border-secondary;
+  }
 
-	.form-control:disabled, .form-control[readonly] {
-		@extend .bg-gray-900;
-	}
+  .form-control:disabled,
+  .form-control[readonly] {
+    @extend .bg-gray-900;
+  }
 
-	.standout {
-		@extend .bg-gray-900;
-	}
+  .standout {
+    @extend .bg-gray-900;
+  }
 
-	.progress {
-		background-color: $gray-800;
-	}
+  .progress {
+    background-color: $gray-800;
+  }
 
-	.alert {
-		.btn-close {
-			filter: unset;
-		}
-	}
+  .alert {
+    .btn-close {
+      filter: unset;
+    }
+  }
 
-	.border-feedback {
-		&:active {
-			@extend .border, .border-light;
-		}
-	}
+  .border-feedback {
+    &:active {
+      @extend .border, .border-light;
+    }
+  }
 }
 
 @include app-theme(light) {
-	#nav {
-		@extend .navbar-light, .bg-light;
-	}
+  #nav {
+    @extend .navbar-light, .bg-light;
+  }
 
-	.file-preview {
-		@extend .bg-light;
-	}
+  .file-preview {
+    @extend .bg-light;
+  }
 
-	.btn-outline-vivid {
-		@extend .btn-outline-dark;
-	}
+  .btn-outline-vivid {
+    @extend .btn-outline-dark;
+  }
 
-	.border-vivid {
-		@extend .border-dark;
-	}
+  .border-vivid {
+    @extend .border-dark;
+  }
 
-	.standout {
-		@extend .bg-gray-100;
-	}
+  .standout {
+    @extend .bg-gray-100;
+  }
 
-	.border-feedback {
-		&:active {
-			@extend .border, .border-dark;
-		}
-	}
+  .border-feedback {
+    &:active {
+      @extend .border, .border-dark;
+    }
+  }
 }

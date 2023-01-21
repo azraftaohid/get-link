@@ -6,7 +6,8 @@ const svgs: Record<StallContent, string> = {
 };
 
 export function getStallImage(content: StallContent, width = 192, height = 192) {
-	const svg = svgs[content].replace(PLACEHOLDER_WIDTH, width.toString())
+	const svg = svgs[content]
+		.replace(PLACEHOLDER_WIDTH, width.toString())
 		.replace(PLACEHOLDER_HEIGHT, height.toString());
 
 	const base64 = Buffer.from(svg).toString("base64");

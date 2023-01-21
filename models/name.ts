@@ -3,5 +3,5 @@ export enum NameField {
 }
 
 export interface Name {
-	[NameField.SURNAME]?: string | null,
+	[NameField.SURNAME]?: string | null;
 }

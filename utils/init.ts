@@ -1,7 +1,21 @@
-import { initializeAnalytics, isSupported as isAnalyticsSupported, setAnalyticsCollectionEnabled, setUserId } from "firebase/analytics";
+import {
+	initializeAnalytics,
+	isSupported as isAnalyticsSupported,
+	setAnalyticsCollectionEnabled,
+	setUserId,
+} from "firebase/analytics";
 import { getApps, initializeApp } from "firebase/app";
-import { browserLocalPersistence, browserSessionPersistence, connectAuthEmulator, indexedDBLocalPersistence, initializeAuth } from "firebase/auth";
-import { connectFirestoreEmulator as connectFirestoreLiteEmulator, getFirestore as getFirestoreLite } from "firebase/firestore/lite";
+import {
+	browserLocalPersistence,
+	browserSessionPersistence,
+	connectAuthEmulator,
+	indexedDBLocalPersistence,
+	initializeAuth,
+} from "firebase/auth";
+import {
+	connectFirestoreEmulator as connectFirestoreLiteEmulator,
+	getFirestore as getFirestoreLite,
+} from "firebase/firestore/lite";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
 import { acquireExperienceOptions } from "./analytics";
 import { firebaseConfig } from "./configs";
@@ -18,7 +32,7 @@ export function init() {
 
 function initFirebase() {
 	const apps = getApps();
-	const currentApp = apps.find(v => v.name === FIREBASE_APP_NAME);
+	const currentApp = apps.find((v) => v.name === FIREBASE_APP_NAME);
 	if (currentApp) return currentApp;
 
 	const app = initializeApp(firebaseConfig);
@@ -32,13 +46,17 @@ function initFirebase() {
 	if (process.env.NODE_ENV === "development") {
 		connectFirestoreLiteEmulator(firestore, "localhost", 8080);
 		connectStorageEmulator(storage, "localhost", 9199);
-		connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
+		connectAuthEmulator(auth, "http://localhost:9099", {
+			disableWarnings: true,
+		});
 	} else if (process.env.NODE_ENV === "production") {
-		const noOp = () => { /* no-op */ };
+		const noOp = () => {
+			/* no-op */
+		};
 		console.debug = noOp;
 		console.log = noOp;
 	}
-	
+
 	isAnalyticsSupported().then((bool) => {
 		if (!bool) return;
 
@@ -48,6 +66,6 @@ function initFirebase() {
 		const { eid } = acquireExperienceOptions();
 		setUserId(instance, eid, { global: true });
 	});
-	
+
 	return app;
 }

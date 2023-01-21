@@ -7,24 +7,35 @@ const variantMapping: Partial<Record<LinkVariant, string>> = {
 	alert: "alert-link",
 };
 
-export const Link: React.FunctionComponent<React.PropsWithChildren<LinkProps>> = ({ className, href, newTab, variant, children, ...rest }) => {
-	return <NextLink href={href}>
-		<a className={mergeNames(variant && (variantMapping[variant] || `link-${variant}`), className)} 
-			target={newTab ? "_blank" : undefined} 
-			{...rest}
-		>
-			{children}
-		</a>
-	</NextLink>;
+export const Link: React.FunctionComponent<React.PropsWithChildren<LinkProps>> = ({
+	className,
+	href,
+	newTab,
+	variant,
+	children,
+	...rest
+}) => {
+	return (
+		<NextLink href={href}>
+			<a
+				className={mergeNames(variant && (variantMapping[variant] || `link-${variant}`), className)}
+				target={newTab ? "_blank" : undefined}
+				{...rest}
+			>
+				{children}
+			</a>
+		</NextLink>
+	);
 };
 
 export default Link;
 
 export type LinkVariant = "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "reset" | "alert";
 
-export interface LinkProps extends React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement> {
-	href: string,
-	newTab?: boolean,
-	target?: never,
-	variant?: LinkVariant,
+export interface LinkProps
+	extends React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement> {
+	href: string;
+	newTab?: boolean;
+	target?: never;
+	variant?: LinkVariant;
 }

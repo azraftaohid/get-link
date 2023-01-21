@@ -34,9 +34,9 @@ export enum ReportField {
 }
 
 export interface ReportData {
-	[ReportField.NAME]?: Name,
-	[ReportField.EMAIL]?: string,
-	[ReportField.MESSAGE]?: string,
-	[ReportField.PATH]?: string,
-	[ReportField.SESSION]?: string,
+	[ReportField.NAME]?: Name;
+	[ReportField.EMAIL]?: string;
+	[ReportField.MESSAGE]?: string;
+	[ReportField.PATH]?: string;
+	[ReportField.SESSION]?: string;
 }
