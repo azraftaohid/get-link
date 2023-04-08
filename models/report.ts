@@ -1,4 +1,4 @@
-import { collection, CollectionReference, doc, getFirestore, setDoc } from "firebase/firestore/lite";
+import { collection, CollectionReference, doc, getFirestore, setDoc, Timestamp, WithFieldValue } from "firebase/firestore/lite";
 import { Name } from "./name";
 
 /**
@@ -18,7 +18,7 @@ export function getReportRef(id?: string) {
 	return id ? doc(col, id) : doc(col);
 }
 
-export async function captureReport(data: ReportData) {
+export async function captureReport(data: WithFieldValue<ReportData>) {
 	const ref = getReportRef();
 	await setDoc(ref, data);
 
@@ -31,6 +31,8 @@ export enum ReportField {
 	MESSAGE = "message",
 	PATH = "website_path",
 	SESSION = "session_id",
+	CREATE_TIME = "create_time",
+	TICKET = "ticket_id",
 }
 
 export interface ReportData {
@@ -39,4 +41,6 @@ export interface ReportData {
 	[ReportField.MESSAGE]?: string;
 	[ReportField.PATH]?: string;
 	[ReportField.SESSION]?: string;
+	[ReportField.CREATE_TIME]?: Timestamp,
+	[ReportField.TICKET]?: string,
 }

@@ -1,3 +1,4 @@
+import { WithFieldValue, serverTimestamp } from "firebase/firestore/lite";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useRef, useState } from "react";
@@ -14,7 +15,8 @@ import ModalHeader from "react-bootstrap/ModalHeader";
 import ModalTitle from "react-bootstrap/ModalTitle";
 import * as yup from "yup";
 import { NameField } from "../models/name";
-import { captureReport, ReportData, ReportField } from "../models/report";
+import { ReportData, ReportField, captureReport } from "../models/report";
+import { createTicketId } from "../models/tickets";
 import { KEY_SID } from "../utils/analytics";
 import { Button } from "./Button";
 import { Conditional } from "./Conditional";
@@ -46,7 +48,7 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 	});
 
 	const [status, setState] = useState<"none" | "processing" | "submitted">("none");
-	const [submitId, setSubmitId] = useState<string>();
+	const [ticketId, setTicketId] = useState<string>();
 	const [submitError, setSubmitError] = useState(false);
 
 	return (
@@ -69,23 +71,27 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 					setState("processing");
 
 					inputState.current = values;
-					const data: ReportData = {
+
+					const newTicketId = createTicketId();
+					const data: WithFieldValue<ReportData> = {
 						[ReportField.NAME]: { [NameField.SURNAME]: values.name },
 						[ReportField.EMAIL]: values.email,
 						[ReportField.MESSAGE]: values.message,
 						[ReportField.PATH]: asPath,
 						[ReportField.SESSION]: sessionStorage.getItem(KEY_SID) || "",
+						[ReportField.CREATE_TIME]: serverTimestamp(),
+						[ReportField.TICKET]: newTicketId,
 					};
 
 					try {
-						const id = await captureReport(data);
-						setSubmitId(id);
+						await captureReport(data);
+						setTicketId(newTicketId);
 						setSubmitError(false);
 						setState("submitted");
 					} catch (error) {
 						console.error(`error capturing report [cause: ${error}]`);
 						setSubmitError(true);
-						setSubmitId(undefined);
+						setTicketId(undefined);
 						setState("none");
 					}
 
@@ -165,10 +171,10 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 									</FormText>
 									<FormControl.Feedback type="invalid">{errors.message}</FormControl.Feedback>
 								</FormGroup>
-								<Conditional in={!!submitId}>
+								<Conditional in={!!ticketId}>
 									<Alert className="mt-3" variant="success">
 										Thanks, your report has been captured. Please use this ID for future references:{" "}
-										<span className="fst-italic">{submitId}</span>.
+										<span className="fst-italic">{ticketId}</span>.
 									</Alert>
 								</Conditional>
 								<Conditional in={submitError}>
