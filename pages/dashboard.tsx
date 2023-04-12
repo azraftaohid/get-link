@@ -25,6 +25,7 @@ import Placeholder from "react-bootstrap/Placeholder";
 import Row from "react-bootstrap/Row";
 import { Button } from "../components/Button";
 import { CopyButton } from "../components/CopyButton";
+import { ExpandButton } from "../components/ExpandButton";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { Icon } from "../components/Icon";
@@ -309,19 +310,14 @@ const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: stri
 					<FileConcat key={`page-${i}`} snapshot={page.docs} />
 				))}
 			</Row>
-			<Row className="mt-4">
-				<Col className="mx-auto" md={5}>
-					<Button
-						className="w-100 justify-content-center"
-						variant="outline-secondary"
-						state={links.isLoading || links.isFetching ? "loading" : "none"}
-						onClick={() => links.fetchNextPage()}
-						disabled={!links.hasNextPage || !links.isSuccess}
-					>
-						{links.hasNextPage ? "Load more" : "End"}
-					</Button>
-				</Col>
-			</Row>
+			<ExpandButton
+				className="mt-4"
+				state={links.isLoading || links.isFetching ? "loading" : "none"}
+				onClick={() => links.fetchNextPage()}
+				disabled={!links.hasNextPage || !links.isSuccess}
+			>
+				{links.hasNextPage ? "Load more" : "End"}
+			</ExpandButton>
 		</div>
 	);
 };
