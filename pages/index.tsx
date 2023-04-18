@@ -1,16 +1,14 @@
 import { useAuthUser } from "@react-query-firebase/auth";
 import { getAuth, signInAnonymously } from "firebase/auth";
-import { uploadBytes, uploadBytesResumable, UploadMetadata } from "firebase/storage";
-import { nanoid } from "nanoid";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import FormLabel from "react-bootstrap/FormLabel";
-import ProgressBar from "react-bootstrap/ProgressBar";
+import Stack from "react-bootstrap/Stack";
 import { DropzoneOptions, useDropzone } from "react-dropzone";
 import { Conditional } from "../components/Conditional";
-import { FilePreview } from "../components/FilePreview";
+import { FileUpload, FileUploadProps } from "../components/FileUpload";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { Icon } from "../components/Icon";
@@ -18,63 +16,57 @@ import { Link } from "../components/Link";
 import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
-import { Dimension, DimensionField } from "../models/dimension";
-import { createFID, getFileRef } from "../models/files";
-import { createLink, LinkField } from "../models/links";
+import { Link as LinkObject, MAX_LEN_LINK_TITLE } from "../models/links";
 import styles from "../styles/home.module.scss";
 import { StatusCode } from "../utils/common";
 import {
-	acceptedFileFormats,
-	createFileLink,
-	FileCustomMetadata,
-	getFileType,
-	getImageDimension,
-	getPdfDimension,
-	getVideoDimension,
+	acceptedFileFormats, createViewLink
 } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
-import { formatSize } from "../utils/strings";
+import { useFeatures } from "../utils/useFeatures";
+import { useParallelTracker } from "../utils/useParallelTracker";
+import { useProgressTracker } from "../utils/useProgressTracker";
+import { useStatus } from "../utils/useStatus";
 import { useToast } from "../utils/useToast";
-import { generateThumbnailFromVideo } from "../utils/video";
+
+const MAX_CONCURRENT_UPLOAD = 3;
 
 const Home: NextPage = () => {
 	const router = useRouter();
 	const { makeToast } = useToast();
 	const { data: user } = useAuthUser(["user"], getAuth());
+	const features = useFeatures();
 
-	const [file, setFile] = useState<File | null>(null);
-	const [progress, setProgress] = useState(0);
+	const {
+		keys: files, setKeys: setFiles,
+		markCompleted, markCancelled, markFailed,
+		completedCount, failedCount, cancelledCount,
+	} = useProgressTracker<File>([]);
+	const parallels = useParallelTracker(files, MAX_CONCURRENT_UPLOAD);
+
+	const link = useRef(new LinkObject());
 	const [url, setUrl] = useState<string>();
-	const [statuses, setStatuses] = useState<StatusCode[]>([]);
+
+	const { status, setStatus, appendStatus, removeStatus } = useStatus<StatusCode>();
 
 	const triggerChooser = router.query.open_chooser;
 
-	const resetState = useRef(() => {
-		setFile(null);
-		setProgress(0);
-	});
-
-	const appendStatus = useRef((status: StatusCode) => {
-		setStatuses((c) => {
-			if (c.includes(status)) return [...c];
-			return [...c, status];
-		});
-	});
-
-	const removeStatus = useRef((status: StatusCode) => {
-		setStatuses((c) => {
-			const i = c.indexOf(status);
-			if (i === -1) return c;
-
-			return [...c.slice(0, i), ...c.slice(i + 1)];
-		});
-	});
+	const handleUploadCompleted: FileUploadProps["onComplete"] = (file, fid) => {
+		if (!link.current.getCover()) link.current.setCover({ fid });
+		
+		markCompleted(file);
+		parallels.markCompleted(file);
+	};
+	const handleUploadCancelled: FileUploadProps["onCancel"] = file => { markCancelled(file); parallels.markPaused(file); };
+	const handleUploadError: FileUploadProps["onError"] = (file, err) => {
+		console.error(`error uploading file: ${err}`);
+		markFailed(file);
+		parallels.markPaused(file);
+	};
 
 	const handleDrop = useCallback<NonNullable<DropzoneOptions["onDrop"]>>(
 		(dropped, rejects) => {
-			if (!dropped.length) {
-				if (!rejects.length) return;
-
+			if (rejects.length) {
 				let errMssg: string;
 				if (rejects.length === 1 && rejects[0].errors.length === 1) {
 					const err = rejects[0].errors[0];
@@ -89,147 +81,36 @@ const Home: NextPage = () => {
 				}
 
 				makeToast(errMssg, "error");
-
 				return;
 			}
 
-			setFile(dropped[0]);
+			const pTracker = new Map<File, boolean>();
+			dropped.forEach(value => pTracker.set(value, false));
+
+			setFiles(dropped);
 		},
-		[makeToast]
+		[makeToast, setFiles]
 	);
 
 	const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
 		accept: acceptedFileFormats,
 		onDrop: handleDrop,
-		maxFiles: 1,
-		maxSize: 100 * 1024 * 1024 - 1,
+		maxFiles: features.quotas.links?.inline_fids.limit || 5,
+		maxSize: features.quotas.storage?.file_size?.limit || 100 * 1024 * 1024 - 1,
 		multiple: false,
 	});
 
 	const uid = user?.uid;
 	useEffect(() => {
-		if (!file) return;
+		if (!files.length) return;
 		if (!uid) {
 			console.debug("signing in user anonymously");
 			signInAnonymously(getAuth()).catch((err) => {
 				console.error(`error signing in user [cause: ${err}]`);
-				appendStatus.current("auth:sign-in-error");
+				appendStatus("auth:sign-in-error");
 			});
-
-			return;
 		}
-
-		if (file.size >= 100 * 1024 * 1024) {
-			console.warn(`file too large [accepted: 100 MB, actual: ${formatSize(file.size)}]`);
-			appendStatus.current("files:too-large");
-			resetState.current();
-
-			return;
-		}
-
-		const task = (async () => {
-			const [mime, ext] = await getFileType(file); // respect user specified extension
-			console.debug(`mime: ${mime}; ext: ${ext}`);
-
-			const prefix = nanoid(12);
-			const fid = createFID(prefix + ext, uid);
-			const ref = getFileRef(fid);
-			const metadata: UploadMetadata = { contentType: mime };
-
-			try {
-				let localUrl: string | undefined;
-				let dimension: Dimension | undefined;
-
-				if (mime?.startsWith("image")) {
-					localUrl = URL.createObjectURL(file);
-					dimension = await getImageDimension(localUrl);
-				} else if (mime?.startsWith("video")) {
-					localUrl = URL.createObjectURL(file);
-					dimension = await getVideoDimension(localUrl);
-
-					appendStatus.current("files:creating-thumbnail");
-					try {
-						const thumbnail = await generateThumbnailFromVideo(localUrl, "image/png");
-						if (thumbnail) {
-							await uploadBytes(getFileRef(createFID(prefix + ".png", uid)), thumbnail, {
-								contentType: "image/png",
-								customMetadata: {
-									width: dimension[DimensionField.WIDTH],
-									height: dimension[DimensionField.HEIGHT],
-								} as FileCustomMetadata,
-							});
-						} else {
-							console.warn("skipping to generate video thumbnail");
-						}
-					} catch (error) {
-						console.error(`error generating thumbnail from video [cause: ${error}]`);
-					}
-					removeStatus.current("files:creating-thumbnail");
-				} else if (mime === "application/pdf") {
-					localUrl = URL.createObjectURL(file);
-					dimension = await getPdfDimension(localUrl);
-				}
-
-				if (localUrl) URL.revokeObjectURL(localUrl);
-				if (dimension) {
-					metadata.customMetadata = {
-						width: dimension[DimensionField.WIDTH],
-						height: dimension[DimensionField.HEIGHT],
-					} as FileCustomMetadata;
-				}
-			} catch (error) {
-				console.error(`error getting dimension from selected file [cause: ${error}]`);
-			}
-
-			const upload = uploadBytesResumable(ref, file, metadata);
-			const unsubscribe = upload.on(
-				"state_changed",
-				async (snapshot) => {
-					setProgress(Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
-				},
-				(err) => {
-					if (err.code === "storage/canceled") {
-						console.info("upload cancelled");
-						appendStatus.current("files:upload-cancelled");
-					} else {
-						console.error(`upload failed [code: ${err.code}; cause: ${err.message}]`);
-						appendStatus.current("files:upload-error");
-					}
-
-					resetState.current();
-				},
-				async () => {
-					appendStatus.current("files:creating-link");
-
-					try {
-						const doc = await createLink(fid, uid, { [LinkField.TITLE]: file.name });
-						console.debug(`file captured at ${doc.path}`);
-
-						setUrl(createFileLink(doc.id));
-						setStatuses(["page:redirecting"]);
-					} catch (error) {
-						console.debug(`capture failed [cause; ${error}]`);
-						appendStatus.current("files:capture-error");
-					}
-				}
-			);
-
-			return { upload, unsubscribe };
-		})();
-
-		return () => {
-			task.then(({ upload, unsubscribe }) => {
-				if (upload.snapshot.state === "running" || upload.snapshot.state === "paused") {
-					upload.snapshot.task.cancel();
-					// eslint-disable-next-line react-hooks/exhaustive-deps
-					appendStatus.current("files:upload-cancelled");
-					console.log(`upload cancelled [from_state: ${upload.snapshot.state}]`);
-				}
-
-				unsubscribe();
-			});
-		};
-	}, [file, uid]);
+	}, [appendStatus, files.length, uid]);
 
 	useEffect(() => {
 		if (url) router.push(url);
@@ -242,18 +123,39 @@ const Home: NextPage = () => {
 		open();
 	}, [triggerChooser, open]);
 
+	// capture link when file count is equal to complete + cancel count
+	// and some other criteria
+	useEffect(() => {
+		const leadFile = files[0];
+		if (uid && leadFile && files.length === (completedCount + cancelledCount)) {
+			const title = leadFile.name.substring(0, MAX_LEN_LINK_TITLE);
+			link.current.create(title).then(value => {
+				setUrl(createViewLink(value.id));
+				setStatus(["page:redirecting"]);
+			}).catch(err => {
+				console.error(`capture failed [cause: ${err}]`);
+				appendStatus("links:create-failed");
+			});
+		}
+	}, [appendStatus, cancelledCount, completedCount, files, setStatus, uid]);
+
+	useEffect(() => {
+		if (cancelledCount) appendStatus("files:upload-cancelled");
+		if (failedCount) appendStatus("files:upload-failed");
+	}, [appendStatus, cancelledCount, failedCount]);
+
 	return (
 		<PageContainer>
 			<Metadata title="Get Link" image="https://getlink.vercel.app/image/cover.png" />
 			<Header />
 			<PageContent>
-				<Conditional in={statuses.includes("files:upload-cancelled")}>
-					<Alert variant="warning" dismissible onClose={() => removeStatus.current("files:upload-cancelled")}>
-						Upload cancelled.
+				<Conditional in={status.includes("files:upload-cancelled")}>
+					<Alert variant="warning" dismissible onClose={() => removeStatus("files:upload-cancelled")}>
+						Some or all of your uploads were cancelled.
 					</Alert>
 				</Conditional>
 				<Conditional
-					in={statuses.some((s) =>
+					in={status.some((s) =>
 						(
 							[
 								"files:unknown-error",
@@ -261,15 +163,16 @@ const Home: NextPage = () => {
 								"files:upload-error",
 								"auth:sign-in-error",
 								"files:too-large",
+								"links:create-failed"
 							] as StatusCode[]
 						).includes(s)
 					)}
 				>
 					<Alert variant="danger">
-						There was an error. Please try again!
+						There were some errors for some or all of your files. Please try again!
 						<br />
 						Code:{" "}
-						{statuses.map((s, i, arr) => (
+						{status.map((s, i, arr) => (
 							<>
 								<Link
 									key={s}
@@ -285,28 +188,24 @@ const Home: NextPage = () => {
 						.
 					</Alert>
 				</Conditional>
-				<Conditional in={!!file}>
-					<FormLabel aria-label="file-upload-progress">Uploading</FormLabel>
-					<FilePreview className="mb-3" file={file} onClose={() => setFile(null)} closable={progress < 100} />
-					<ProgressBar id="file-upload-progress" animated now={progress} />
-					<small className="text-muted">
-						{statuses.includes("page:redirecting") ? (
-							<>
-								<Link variant="reset" href={url || "#"}>
-									Redirecting
-								</Link>
-								&hellip;
-							</>
-						) : statuses.includes("files:creating-link") ? (
-							<>Creating link.</>
-						) : statuses.includes("files:creating-thumbnail") ? (
-							<>Creating thumbnail.</>
-						) : (
-							<>{progress}% completed.</>
-						)}
-					</small>
+				<Conditional in={files.length > 0}>
+					{status.includes("page:redirecting") 
+						? <><Link variant="reset" href={url || "#"}>Redirecting&hellip;</Link></> 
+						: <FormLabel aria-label="file-upload-progress">Uploading ({completedCount}/{files.length - cancelledCount})</FormLabel>}
 				</Conditional>
-				<Conditional in={!file}>
+				<Stack direction="vertical" gap={3}>
+					{files.map((file, i) => <FileUpload
+						key={`${file.name}-${i}`}
+						link={link.current}
+						file={file}
+						position={i}
+						resume={parallels.shouldRun(file)}
+						onComplete={handleUploadCompleted}
+						onCancel={handleUploadCancelled}
+						onError={handleUploadError}
+					/>)}
+				</Stack>
+				<Conditional in={files.length === 0}>
 					<button
 						{...getRootProps({
 							id: "upload-area",

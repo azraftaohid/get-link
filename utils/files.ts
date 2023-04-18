@@ -76,7 +76,7 @@ const formatIconMapping: Record<string, string> = {
 	"(odt)|(application/vnd.oasis.opendocument.text)": "odt",
 };
 
-export function createFileLink(id: string, absolute = false) {
+export function createViewLink(id: string, absolute = false) {
 	return !absolute ? createUrl("v", id) : createAbsoluteUrl(DOMAIN, "v", id);
 }
 
@@ -195,12 +195,14 @@ export function findFileIcon(extOrMimeType: string): string | undefined {
 
 export type FilesStatus =
 	| "files:unknown-error"
-	| "files:upload-cancelled"
-	| "files:upload-error"
-	| "files:capture-error"
-	| "files:creating-link"
+	| "files:upload-cancelled" // upload to firebase storage
+	| "files:upload-failed"
+	| "files:capture-failed" // capture: upload file, associate with a link
+	| "files:capture-completed"
 	| "files:too-large"
-	| "files:creating-thumbnail";
+	| "files:creating-thumbnail"
+	| "files:creating-doc"
+	| "files:created-doc";
 
 export type FileCustomMetadata = UploadMetadata["customMetadata"] & {
 	[prop in keyof Dimension]?: string;

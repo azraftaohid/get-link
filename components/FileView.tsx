@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getBlob } from "../utils/downloads";
 import { mergeNames } from "../utils/mergeNames";
 import { getSolidStallImage } from "../visuals/stallData";
 import { Audio } from "./Audio";
@@ -42,11 +43,34 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 	type,
 	width,
 	height,
-	placeholderDataUrl,
+	placeholderUrl,
 	...rest
 }) => {
 	const [imageLoaded, setImageLoaded] = useState(false);
 	const [useFallback, setUseFallback] = useState(false);
+
+	const [placeholderDataUrl, setPlaceholderDataUrl] = useState<string>();
+
+	useEffect(() => {
+		if (!placeholderUrl) return;
+
+		console.debug("loading thumbnail");
+		getBlob(placeholderUrl).then((blob) => {
+			const reader = new FileReader();
+			reader.onloadend = () => {
+				console.debug("thumbnail data url loaded");
+				const result = reader.result;
+				if (typeof result !== "string") setPlaceholderDataUrl(undefined);
+				else setPlaceholderDataUrl(result);
+			};
+
+			reader.onerror = () => {
+				console.warn(`thumbnail data url load failed [status: ${reader.error}]`);
+			};
+
+			reader.readAsDataURL(blob);
+		});
+	}, [placeholderUrl]);
 
 	return (
 		<div
@@ -97,5 +121,5 @@ export interface FileViewProps extends React.DetailedHTMLProps<React.HTMLAttribu
 	type?: string | null;
 	width?: number | null;
 	height?: number | null;
-	placeholderDataUrl?: string;
+	placeholderUrl?: string;
 }
