@@ -1,5 +1,5 @@
-import { getStorage, ref as fileRef, StorageReference } from "firebase/storage";
-import { extractDisplayName } from "../utils/strings";
+import { StorageReference, ref as fileRef, getStorage } from "firebase/storage";
+import { compartFid, extractDisplayName } from "../utils/strings";
 
 export function createFID(fileName: string, uid: string) {
 	return `users/${uid}/${fileName}`;
@@ -12,8 +12,15 @@ export function getFileRef(s1: string, s2?: string) {
 }
 
 export function getThumbnailRef(fid: string, size: ThumbnailSize) {
-	const displayName = extractDisplayName(fid);
-	return fileRef(getStorage(), `${displayName}_${size}.jpeg`);
+	const { uid, fileName } = compartFid(fid);
+	const displayName = extractDisplayName(fileName);
+
+	return fileRef(getStorage(), `users/${uid}/thumbs/${displayName}_${size}.jpeg`);
 }
 
 export type ThumbnailSize = "56x56" | "128x128" | "384x384" | "1024x1024";
+
+export interface FIDComponents {
+	uid: string,
+	fileName: string,
+}
