@@ -15,6 +15,7 @@ export const PDFView: React.FunctionComponent<React.PropsWithChildren<PdfViewPro
 	onLoadSuccess,
 	size: initSize,
 	width,
+	height,
 	...rest
 }) => {
 	const [pageCount, setPageCount] = useState(0);
@@ -36,7 +37,7 @@ export const PDFView: React.FunctionComponent<React.PropsWithChildren<PdfViewPro
 				onLoadSuccess?.(pdf);
 			}}
 			loading={
-				<DownloadProgress as="div" label="Loading PDF" size={size} loaded={loadedSize} style={{ width }} />
+				<DownloadProgress as="div" label="Loading PDF" size={size} loaded={loadedSize} style={{ width, height }} />
 			}
 			{...rest}
 		>

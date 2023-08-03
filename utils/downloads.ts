@@ -2,29 +2,29 @@ import { FetchError } from "./errors/FetchError";
 
 export const THRESHOLD_DIRECT_DOWNLOAD = 30 * 1024 * 1024; // 30 MB
 
-export function shouldStepUpDownload() {
+export function shouldStepOutDownload() {
 	return (
 		(typeof Modernizr !== "undefined" && !Modernizr.adownload) ||
 		(typeof window !== "undefined" && window.navigator.userAgent.includes("FB_IAB/"))
 	);
 }
 
-export function downloadBlob(blob: Blob, name: string) {
+export function downloadBlob(blob: Blob, name?: string) {
 	const url = URL.createObjectURL(blob);
 	downloadFromUrl(url, name);
 
 	URL.revokeObjectURL(url);
 }
 
-export async function directDownloadFromUrl(url: string, name: string, onProgress: OnProgress) {
+export async function directDownloadFromUrl(url: string, name: string | undefined, onProgress: OnProgress) {
 	const blob = await getBlob(url, onProgress);
 	return downloadBlob(blob, name);
 }
 
-export function downloadFromUrl(url: string, name: string) {
+export function downloadFromUrl(url: string, defaultName?: string) {
 	const pretender = document.createElement("a");
 
-	pretender.download = name;
+	pretender.download = defaultName || "";
 	pretender.href = url;
 	pretender.target = "_blank"; // for browsers that ignore the download attribute
 

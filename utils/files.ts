@@ -4,7 +4,7 @@ import { Dimension } from "../models/dimension";
 import { MimeType } from "./mimeTypes";
 import { initPdfWorker } from "./pdf";
 import { extractExtension } from "./strings";
-import { createAbsoluteUrl, createUrl, DOMAIN } from "./urls";
+import { DOMAIN, createAbsoluteUrl, createUrl } from "./urls";
 
 export const STORAGE_URL_PREFIX =
 	process.env.NODE_ENV === "development"
@@ -76,7 +76,7 @@ const formatIconMapping: Record<string, string> = {
 	"(odt)|(application/vnd.oasis.opendocument.text)": "odt",
 };
 
-export function createFileLink(id: string, absolute = false) {
+export function createViewLink(id: string, absolute = false) {
 	return !absolute ? createUrl("v", id) : createAbsoluteUrl(DOMAIN, "v", id);
 }
 
@@ -193,14 +193,25 @@ export function findFileIcon(extOrMimeType: string): string | undefined {
 	return match ? `/image/ic/${formatIconMapping[match]}.png` : undefined;
 }
 
+export function prependExt(fullName: string, text: string) {
+	const lastDot = fullName.lastIndexOf(".");
+	if (lastDot === -1) return text + fullName;
+
+	return fullName.slice(0, lastDot) + text + fullName.slice(lastDot);
+}
+
 export type FilesStatus =
 	| "files:unknown-error"
-	| "files:upload-cancelled"
-	| "files:upload-error"
-	| "files:capture-error"
-	| "files:creating-link"
+	| "files:upload-cancelled" // upload to firebase storage
+	| "files:upload-paused"
+	| "files:upload-failed"
+	| "files:upload-completed"
+	| "files:capture-failed" // capture: upload file, associate with a link
+	| "files:capture-completed"
 	| "files:too-large"
-	| "files:creating-thumbnail";
+	| "files:creating-thumbnail"
+	| "files:creating-doc"
+	| "files:doc-created";
 
 export type FileCustomMetadata = UploadMetadata["customMetadata"] & {
 	[prop in keyof Dimension]?: string;

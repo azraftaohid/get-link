@@ -42,7 +42,6 @@ import styles from "../styles/dashboard.module.scss";
 import { logClick } from "../utils/analytics";
 import { hasExpired } from "../utils/dates";
 import { findFileIcon, NON_PREVIEW_SUPPORTING_TYPE } from "../utils/files";
-import { initFirestore } from "../utils/firestore";
 import { mergeNames } from "../utils/mergeNames";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
 import { getSolidStallImage } from "../visuals/stallData";
@@ -79,17 +78,17 @@ const LoadingPreview: React.FunctionComponent<
 	);
 };
 
-const FileListPlaceholder: React.FunctionComponent = () => {
+const LinkListPlaceholder: React.FunctionComponent = () => {
 	return (
 		<Row className="g-4" xs={1} sm={2} md={3} lg={4}>
-			<FilePlaceholderConcat />
+			<LinkPlaceholderConcat />
 		</Row>
 	);
 };
 
-const FileCardPlaceholder: React.FunctionComponent = () => {
+const LinkCardPlaceholder: React.FunctionComponent = () => {
 	return (
-		<Card className={mergeNames(styles.fileCard, "border-feedback")}>
+		<Card className={mergeNames(styles.linkCard, "border-feedback")}>
 			<Card.Header>
 				<Link className="stretched-link text-decoration-none text-reset" href="#">
 					<Shimmer className="w-100 py-1" xs={1} pattern={<Placeholder className="w-75" />} size="lg" />
@@ -113,17 +112,19 @@ const FileCardPlaceholder: React.FunctionComponent = () => {
 	);
 };
 
-const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDocumentSnapshot<LinkData> }>> = ({
-	file,
+const LinkCard: React.FunctionComponent<React.PropsWithChildren<{ link: QueryDocumentSnapshot<LinkData> }>> = ({
+	link,
 }) => {
 	const [thumbnail, setThumbnail] = useState<string | null>();
 
-	const data = file.data({ serverTimestamps: "estimate" });
-	const fid = data[LinkField.FID];
+	const data = link.data({ serverTimestamps: "estimate" });
+	const title = data[LinkField.TITLE];
+	const cover = data[LinkField.COVER];
 	const createTime = data[LinkField.CREATE_TIME];
 	const expireTime = data[LinkField.EXPIRE_TIME];
 
 	useEffect(() => {
+		const fid = cover?.fid;
 		if (!fid) {
 			setThumbnail(null);
 			return;
@@ -152,14 +153,14 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 					setThumbnail(null);
 				}
 			});
-	}, [fid]);
+	}, [cover?.fid]);
 
 	return (
-		<Card className={mergeNames(styles.fileCard, "border-feedback")}>
+		<Card className={mergeNames(styles.linkCard, "border-feedback")}>
 			<Card.Header>
-				<Link className="stretched-link text-decoration-none text-reset" href={createUrl("v", file.id)}>
+				<Link className="stretched-link text-decoration-none text-reset" href={createUrl("v", link.id)}>
 					<span className="d-block text-truncate">
-						{data[LinkField.TITLE] || data[LinkField.NAME] || file.id}
+						{title || link.id}
 					</span>
 				</Link>
 			</Card.Header>
@@ -196,7 +197,7 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 				<CopyButton
 					className={mergeNames(styles.btnShare, "ms-auto")}
 					variant="outline-secondary"
-					content={createAbsoluteUrl(DOMAIN, "v", file.id)}
+					content={createAbsoluteUrl(DOMAIN, "v", link.id)}
 					left={<Icon name="link" size="sm" />}
 					onClick={() => logClick("share_file_card")}
 				/>
@@ -205,26 +206,26 @@ const FileCard: React.FunctionComponent<React.PropsWithChildren<{ file: QueryDoc
 	);
 };
 
-const FilePlaceholderConcat: React.FunctionComponent = () => {
+const LinkPlaceholderConcat: React.FunctionComponent = () => {
 	return (
 		<>
 			{new Array(FETCH_LIMIT).fill(null).map((_v, i) => (
 				<Col key={`col-${i}`}>
-					<FileCardPlaceholder />
+					<LinkCardPlaceholder />
 				</Col>
 			))}
 		</>
 	);
 };
 
-const FileConcat: React.FunctionComponent<React.PropsWithChildren<{ snapshot: QueryDocumentSnapshot<LinkData>[] }>> = ({
+const LinkConcat: React.FunctionComponent<React.PropsWithChildren<{ snapshot: QueryDocumentSnapshot<LinkData>[] }>> = ({
 	snapshot,
 }) => {
 	return (
 		<>
 			{snapshot.map((file) => (
 				<Col key={`col-${file.id}`}>
-					<FileCard file={file} />
+					<LinkCard link={file} />
 				</Col>
 			))}
 		</>
@@ -234,7 +235,7 @@ const FileConcat: React.FunctionComponent<React.PropsWithChildren<{ snapshot: Qu
 const EmptyView: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
 	return (
 		<Alert>
-			<Alert.Heading>No upload history!</Alert.Heading>
+			<Alert.Heading>No links generated yet!</Alert.Heading>
 			Upload your first file{" "}
 			<Link variant="alert" href="/">
 				here
@@ -257,7 +258,7 @@ const ErrorView: React.FunctionComponent<React.PropsWithChildren<unknown>> = () 
 const UserDashboardPlaceholder: React.FunctionComponent = () => {
 	return (
 		<div>
-			<FileListPlaceholder />
+			<LinkListPlaceholder />
 			<Row className="mt-4">
 				<Col className="mx-auto" md={5}>
 					<Shimmer
@@ -294,7 +295,7 @@ const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: stri
 	});
 
 	if (!links.data?.pages[0]?.size) {
-		if (links.isLoading || links.isFetching) return <FileListPlaceholder />;
+		if (links.isLoading || links.isFetching) return <LinkListPlaceholder />;
 		if (links.isError) {
 			console.error(`fetch error: ${links.error}`);
 			return <ErrorView />;
@@ -307,7 +308,7 @@ const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: stri
 		<div>
 			<Row className="g-4" xs={1} sm={2} md={3} lg={4}>
 				{links.data.pages.map((page, i) => (
-					<FileConcat key={`page-${i}`} snapshot={page.docs} />
+					<LinkConcat key={`page-${i}`} snapshot={page.docs} />
 				))}
 			</Row>
 			<ExpandButton
@@ -323,7 +324,6 @@ const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: stri
 };
 
 const Dashboard: NextPage = () => {
-	initFirestore();
 	const { data: user, isLoading } = useAuthUser(["user"], getAuth());
 
 	return (
@@ -331,7 +331,7 @@ const Dashboard: NextPage = () => {
 			<Metadata title="Dashboard - Get Link" description="See your upload history and more." />
 			<Header />
 			<PageContent>
-				<h1 className="mb-4">Recent files</h1>
+				<h1 className="mb-4">Recent links</h1>
 				{user?.uid ? (
 					<UserDashboard uid={user.uid} />
 				) : isLoading ? (

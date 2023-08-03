@@ -1,0 +1,444 @@
+import { useAuthUser } from "@react-query-firebase/auth";
+import { formatDate } from "@thegoodcompany/common-utils-js";
+import { getAuth } from "firebase/auth";
+import { FieldPath, getCountFromServer, getDoc, getDocs, limit, orderBy, query, startAfter } from "firebase/firestore";
+import { getDownloadURL, getMetadata } from "firebase/storage";
+import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import { useRouter } from "next/router";
+import Script from "next/script";
+import { ParsedUrlQuery } from "querystring";
+import { useEffect, useState } from "react";
+import { Col } from "react-bootstrap";
+import Alert from "react-bootstrap/Alert";
+import Row from "react-bootstrap/Row";
+import { AssurePrompt } from "../../components/AssurePrompt";
+import { Button } from "../../components/Button";
+import { Conditional } from "../../components/Conditional";
+import { CopyButton } from "../../components/CopyButton";
+import { ExpandButton } from "../../components/ExpandButton";
+import { FileCard } from "../../components/FileCard";
+import { Footer } from "../../components/Footer";
+import { Header } from "../../components/Header";
+import { Icon } from "../../components/Icon";
+import { Link } from "../../components/Link";
+import { Loading } from "../../components/Loading";
+import { Metadata } from "../../components/Meta";
+import { PageContainer } from "../../components/PageContainer";
+import { PageContent } from "../../components/PageContent";
+import { FileData, FileField, getFileDocs, getFileRef, getThumbnailRef } from "../../models/files";
+import { LinkData, LinkField, Warning, getLinkRef, releaseLink } from "../../models/links";
+import { OrderField } from "../../models/order";
+import { UserSnapshotField } from "../../models/users";
+import { ClickEventContext, logClick } from "../../utils/analytics";
+import { notFound } from "../../utils/common";
+import { hasExpired } from "../../utils/dates";
+import { shouldStepOutDownload } from "../../utils/downloads";
+import { createViewLink, findFileIcon } from "../../utils/files";
+import { initModernizr } from "../../utils/modernizr";
+import { descriptiveNumber } from "../../utils/numbers";
+import { quantityString } from "../../utils/quantityString";
+import { ProcessedFile, makeProcessedFile } from "../../utils/useProcessedFiles";
+import { useToast } from "../../utils/useToast";
+import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
+
+const FETCH_LIMIT = 12;
+
+initModernizr();
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function suppressError(error: any, lid: string, subject: string) {
+	if (error.code === "storage/object-not-found") {
+		console.warn(`${subject} not found [lid: ${lid}]`);
+	} else {
+		console.error(`error getting ${subject} [lid: ${lid}]`);
+	}
+
+	return undefined;
+}
+
+const View: NextPage<Partial<StaticProps>> = ({
+	isDynamic,
+	snapshot,
+	initFiles = [],
+	fileCount = 0,
+	cover,
+	thumbnail,
+	thumbnailSmall,
+}) => {
+	const lid = snapshot?.id;
+
+	const router = useRouter();
+	const { makeToast } = useToast();
+	const { data: user } = useAuthUser(["user"], getAuth());
+
+	const [warns, setWarns] = useState(new Set<Warning>());
+
+	const [showPrompt, setShowPrompt] = useState(true);
+
+	const [isDeleting, setDeleting] = useState(false);
+	const [showDeletePrompt, setShowDeletePrompt] = useState(false);
+
+	const [stepOutDownload, setStepOutDownload] = useState(false);
+
+	const [files, setFiles] = useState(initFiles);
+	const [status, setStatus] = useState<"none" | "fetching" | "end" | "error">("none");
+
+	const title = snapshot?.data?.[LinkField.TITLE];
+
+	useEffect(() => {
+		// stored as state; update client after initial render because
+		// prop value mismatch may cause href to not change on client w/o a re-render.
+		setStepOutDownload(shouldStepOutDownload());
+	}, []);
+
+	useEffect(() => {
+		const newWarns = new Set<Warning>();
+		files?.forEach(file => {
+			file.warnings?.forEach(warn => newWarns.add(warn));
+		});
+
+		setWarns(newWarns);
+	}, [files]);
+
+	if (!lid || !cover || !files[0]) {
+		return (
+			<PageContainer>
+				<Header />
+				<PageContent>
+					<Loading />
+				</PageContent>
+				<Footer />
+			</PageContainer>
+		);
+	}
+
+	const isUser = user && snapshot.data?.[LinkField.USER]?.[UserSnapshotField.UID] === user.uid;
+
+	const createSeconds = snapshot.data?.[LinkField.CREATE_TIME]?.seconds;
+	const strCreateTime = createSeconds && formatDate(new Date(createSeconds * 1000), "short", "year", "month", "day");
+
+	const fetchNext = () => {
+		setStatus("fetching");
+
+		let nextQuery = query(getFileDocs(),
+			orderBy(FileField.FID, "asc"),
+			orderBy(new FieldPath(FileField.LINKS, lid, OrderField.CREATE_ORDER), "asc"),
+			limit(FETCH_LIMIT));
+
+		const lastDoc = files && files[files.length - 1];
+		if (lastDoc) nextQuery = query(nextQuery, startAfter(lastDoc.fid, lastDoc.pos || 0));
+
+		getDocs(nextQuery).then(value => {
+			if (value.empty) {
+				setStatus("end");
+				return [];
+			}
+
+			const processedFilePromises = value.docs.map(doc => {
+				const fileData = doc.data();
+				const fid = fileData[FileField.FID];
+
+				if (!fid) {
+					console.warn(`fid not present on file doc [cfid: ${doc.id}]`);
+					return;
+				}
+
+				return makeProcessedFile(fid, lid, fileData);
+			});
+
+			return Promise.all(processedFilePromises);
+		}).then(value => {
+			const filtered = value.filter(it => it !== undefined) as ProcessedFile[];
+			if (!filtered.length) {
+				setStatus("end");
+				return;
+			}
+
+			setFiles(c => [...c, ...filtered]);
+			if (value.length % FETCH_LIMIT !== 0) setStatus("end");
+			else setStatus("none");
+		}).catch(err => {
+			console.error(`error fetching next files [cause: ${err}]`);
+			setStatus("error");
+		});
+	};
+
+	return (
+		<PageContainer>
+			<Metadata
+				title={title || "Files - Get Link"}
+				description="Create and instantly share link of files and images."
+				image={thumbnail || thumbnailSmall || (cover.type.startsWith("image/") && cover.url) || findFileIcon(cover.type)}
+			/>
+			<Script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"
+				integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D"
+				crossOrigin="anonymous"
+				async
+			/>
+			<Header />
+			<PageContent>
+				<div className="vstack">
+					<h1>{title || "Untitled"}</h1>
+					<div className="d-flex align-items-top">
+						<div>
+							<p className="text-wrap mb-0">{strCreateTime}</p>
+							<small className="text-muted mb-0">{descriptiveNumber(fileCount)} {quantityString("file", "files", fileCount)}</small>
+						</div>
+						<div className="d-flex flex-row ms-auto my-auto ps-2">
+							<CopyButton
+								variant="outline-vivid"
+								content={createViewLink(lid, true)}
+								left={<Icon name="link" size="sm" />}
+								onClick={() => logClick("share")}
+							>
+								<span className="d-none d-md-inline">Share</span>
+							</CopyButton>
+							{isUser && <Button
+								className="ms-2"
+								variant="outline-danger"
+								left={<Icon name="delete" size="sm" />}
+								onClick={() => setShowDeletePrompt(true)}
+							>
+								<span className="d-none d-md-inline">Delete</span>
+							</Button>}
+						</div>
+					</div>
+				</div>
+				<hr className="mb-4" />
+				<Conditional in={warns.has("executable")}>
+					<Alert
+						variant="warning"
+						onClose={() => setWarns((c) => {
+							c.delete("executable");
+							return new Set(c);
+						})}
+						dismissible
+					>
+						This may be an executable file. Open only if you trust the owner.
+					</Alert>
+				</Conditional>
+				<Row className="g-4" xs={1} sm={2} lg={3} data-masonry='{ "percentPosition": true, "itemSelector": ".col" }'>
+					{files.map(({ fid, directLink, smThumbnailUrl, name, size, type, width, height }) => <Col key={fid}><FileCard
+						name={name}
+						directLink={directLink}
+						placeholderUrl={smThumbnailUrl}
+						size={size}
+						type={type}
+						width={width}
+						height={height}
+						isOwner={isUser}
+						stepOutDownload={stepOutDownload}
+					/></Col>)}
+				</Row>
+				{isDynamic && <ExpandButton
+					className="mt-4"
+					state={status === "fetching" ? "loading" : "none"}
+					onClick={fetchNext}
+					disabled={status === "end" || status === "fetching"}
+				>
+					{status === "end" ? "End" : status === "error" ? "Error" : "Load more"}
+				</ExpandButton>}
+				<Conditional in={showPrompt}>
+					<Alert variant="info" className="mt-4" onClose={() => setShowPrompt(false)} dismissible>
+						Need link for a new file? Choose{" "}
+						<Link variant="alert" href="/?open_chooser=true">
+							here
+						</Link>
+						.
+					</Alert>
+				</Conditional>
+				<AssurePrompt
+					title="Link will be deleted permanently"
+					message="Are you sure you want to delete this link. Once deleted, it can not be recovered."
+					show={showDeletePrompt}
+					confirmProps={{ state: isDeleting ? "loading" : "none" }}
+					onConfirm={async () => {
+						setDeleting(true);
+
+						const clickCtx: ClickEventContext = {};
+
+						try {
+							await releaseLink(lid);
+
+							router.push("/");
+							setShowDeletePrompt(false);
+							makeToast("Link deleted successfully. It may take several minutes for updates to propagate.", "info");
+							clickCtx.status = "succeed";
+						} catch (error) {
+							console.error(`error deleting file [cause: ${error}]`);
+							makeToast(
+								"Darn, we couldn't delete the link. Please try again later or file a report below.",
+								"error"
+							);
+							clickCtx.status = "failed";
+						}
+
+						setDeleting(false);
+						logClick("delete", clickCtx);
+					}}
+					onCancel={() => {
+						setShowDeletePrompt(false);
+						setDeleting(false);
+
+						const clickCtx: ClickEventContext = { status: "canceled" };
+						logClick("delete", clickCtx);
+					}}
+				/>
+			</PageContent>
+			<Footer />
+		</PageContainer>
+	);
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+	return {
+		fallback: true,
+		paths: [],
+	};
+};
+
+export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ params }) => {
+	const lid = params?.lid;
+	if (typeof lid !== "string") return notFound;
+
+	console.log(`generating static props [lid: ${lid}]`);
+
+	const tasks: Promise<unknown>[] = [];
+
+	const linkRef = getLinkRef(lid);
+	const snapshot = await getDoc(linkRef);
+	if (!snapshot.exists()) return notFound;
+
+	const staticSnapshot = toStatic(snapshot);
+	const {
+		[LinkField.COVER]: cover,
+		[LinkField.FILES]: files,
+		[LinkField.CREATE_TIME]: createTime,
+		[LinkField.EXPIRE_TIME]: expireTime,
+	} = staticSnapshot.data || {};
+
+	if (hasExpired(expireTime, createTime)) return notFound;
+
+	let isDynamic = false;
+	let fileCount = 0;
+
+	let smThumbnailUrl: string | undefined;
+	let thumbailUrl: string | undefined;
+	let coverUrl: string | undefined;
+	let coverType: string | undefined;
+	if (cover?.fid) {
+		const coverRef = getFileRef(cover.fid);
+		const thumbnailRef = getThumbnailRef(cover.fid, "1024x1024");
+		const smThumbnailRef = getThumbnailRef(cover.fid, "56x56");
+
+		tasks.push(getDownloadURL(thumbnailRef)
+			.then(url => thumbailUrl = url)
+			.catch((err) => suppressError(err, lid, "thumbnail")));
+
+		tasks.push(getDownloadURL(smThumbnailRef)
+			.then()
+			.catch((err) => suppressError(err, lid, "small thumbnail")));
+
+		tasks.push(getDownloadURL(coverRef)
+			.then(url => coverUrl = url)
+			.catch(err => suppressError(err, lid, "cover")));
+
+		tasks.push(getMetadata(coverRef)
+			.then(metadata => coverType = metadata.contentType)
+			.catch(err => suppressError(err, lid, "cover (metadata)")));
+	}
+
+	const initFiles: (ProcessedFile & { pos: number })[] = [];
+	const pushInitFile = (fid: string, pos: number, pushData?: FileData) => {
+		tasks.push(makeProcessedFile(fid, lid, pushData || staticSnapshot.data?.[LinkField.FILES]?.[fid])
+			.then(res => initFiles.push({ ...res, pos }))
+			.catch(err => {
+				if (err.code === "storage/object-not-found") return;
+				throw err;
+			}));
+	};
+
+	if (files) {
+		Object.keys(files).forEach(cfid => {
+			const fileData = files[cfid];
+			const fid = fileData[FileField.FID];
+			const pos = fileData[OrderField.CREATE_ORDER] || 0;
+
+			if (!fid) {
+				console.warn(`skipping init file push [cfid: ${cfid}; cause: ${fid} is undefined]`);
+				return;
+			}
+
+			pushInitFile(fid, pos, fileData);
+		});
+	} else {
+		isDynamic = true;
+
+		const baseQuery = getFileDocs(lid);
+		tasks.push(getCountFromServer(baseQuery).then(value => {
+			fileCount = value.data().count;
+		}).catch(err => {
+			console.error(`error getting file doc count [lid: ${lid}; cause: ${err}]`);
+		}));
+
+		const fileDocs = await getDocs(query(baseQuery, limit(12)));
+		fileDocs.docs.forEach(snapshot => {
+			const {
+				[FileField.FID]: fid,
+				[FileField.LINKS]: links,
+				...rest
+			} = snapshot.data();
+
+			if (!fid) return;
+			pushInitFile(fid, links?.[lid]?.[OrderField.CREATE_ORDER] || 0, rest);
+		});
+	}
+
+	await Promise.all(tasks);
+
+	const baseFile = initFiles[0];
+	if (!baseFile) return notFound;
+
+	if (!coverUrl || !coverType) {
+		coverUrl = baseFile.directLink;
+		coverType = baseFile.type;
+	}
+
+	console.debug(`props  [cover: ${JSON.stringify(cover)}`);
+	return {
+		notFound: false,
+		// revalidation is done via the api route: /api/revalidate
+		props: {
+			isDynamic,
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			initFiles: initFiles.sort((a, b) => a.pos - b.pos).map(({ pos, ...rest }) => ({ ...rest })), // NOSONAR
+			fileCount: fileCount || initFiles.length,
+			cover: {
+				type: coverType,
+				url: coverUrl,
+			},
+			thumbnail: thumbailUrl || null,
+			thumbnailSmall: smThumbnailUrl || null,
+			snapshot: staticSnapshot,
+		},
+	};
+};
+
+export default View;
+
+interface StaticProps {
+	snapshot: StaticSnapshot<LinkData>;
+	isDynamic: boolean, // tells the client that more files may be fetched from the files collection
+	initFiles: ProcessedFile[]; // files to render intially; on first page load
+	cover: {
+		url: string;
+		type: string;
+	};
+	thumbnail?: string | null;
+	thumbnailSmall?: string | null;
+	fileCount: number;
+}
+
+interface Segments extends ParsedUrlQuery {
+	lid: string;
+}

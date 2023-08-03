@@ -1,13 +1,8 @@
-import { WithFieldValue, serverTimestamp } from "firebase/firestore/lite";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useRef, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import Form from "react-bootstrap/Form";
-import FormControl from "react-bootstrap/FormControl";
-import FormGroup from "react-bootstrap/FormGroup";
-import FormLabel from "react-bootstrap/FormLabel";
-import FormText from "react-bootstrap/FormText";
 import Modal, { ModalProps } from "react-bootstrap/Modal";
 import ModalBody from "react-bootstrap/ModalBody";
 import ModalFooter from "react-bootstrap/ModalFooter";
@@ -16,12 +11,12 @@ import ModalTitle from "react-bootstrap/ModalTitle";
 import * as yup from "yup";
 import { NameField } from "../models/name";
 import { ReportData, ReportField, captureReport } from "../models/report";
-import { createTicketId } from "../models/tickets";
 import { KEY_SID } from "../utils/analytics";
 import { Button } from "./Button";
 import { Conditional } from "./Conditional";
 import { Link } from "./Link";
 import { Required } from "./Required";
+import TextField from "./forms/TextField";
 
 const schema = yup.object().shape({
 	name: yup
@@ -48,7 +43,7 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 	});
 
 	const [status, setState] = useState<"none" | "processing" | "submitted">("none");
-	const [ticketId, setTicketId] = useState<string>();
+	const [submitId, setSubmitId] = useState<string>();
 	const [submitError, setSubmitError] = useState(false);
 
 	return (
@@ -71,27 +66,23 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 					setState("processing");
 
 					inputState.current = values;
-
-					const newTicketId = createTicketId();
-					const data: WithFieldValue<ReportData> = {
+					const data: ReportData = {
 						[ReportField.NAME]: { [NameField.SURNAME]: values.name },
 						[ReportField.EMAIL]: values.email,
 						[ReportField.MESSAGE]: values.message,
 						[ReportField.PATH]: asPath,
 						[ReportField.SESSION]: sessionStorage.getItem(KEY_SID) || "",
-						[ReportField.CREATE_TIME]: serverTimestamp(),
-						[ReportField.TICKET]: newTicketId,
 					};
 
 					try {
-						await captureReport(data);
-						setTicketId(newTicketId);
+						const id = await captureReport(data);
+						setSubmitId(id);
 						setSubmitError(false);
 						setState("submitted");
 					} catch (error) {
 						console.error(`error capturing report [cause: ${error}]`);
 						setSubmitError(true);
-						setTicketId(undefined);
+						setSubmitId(undefined);
 						setState("none");
 					}
 
@@ -101,7 +92,7 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 					message: "x",
 				}}
 			>
-				{({ handleSubmit, handleChange, handleBlur, initialValues, touched, errors }) => (
+				{({ handleSubmit, errors }) => (
 					<Form noValidate onSubmit={handleSubmit}>
 						<fieldset disabled={status !== "none"}>
 							<ModalBody>
@@ -123,58 +114,30 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 								<small className="d-block mb-3">
 									<Required /> Required
 								</small>
-								<FormGroup className="mb-3">
-									<FormLabel>Name</FormLabel>
-									<FormControl
-										type="text"
-										name="name"
-										placeholder="Keep it empty to report anonymously"
-										defaultValue={initialValues.name}
-										isInvalid={touched.name && !!errors.name}
-										onChange={handleChange}
-										onBlur={handleBlur}
-									/>
-									<FormControl.Feedback type="invalid">{errors.name}</FormControl.Feedback>
-								</FormGroup>
-								<FormGroup className="mb-3">
-									<FormLabel>Email address</FormLabel>
-									<FormControl
-										type="text"
-										name="email"
-										placeholder="example@provider.com"
-										defaultValue={initialValues.email}
-										isInvalid={touched.email && !!errors.email}
-										onChange={handleChange}
-										onBlur={handleBlur}
-									/>
-									<FormText>
-										We will only use it to get back to you if more information is needed.
-									</FormText>
-									<FormControl.Feedback type="invalid">{errors.email}</FormControl.Feedback>
-								</FormGroup>
-								<FormGroup>
-									<FormLabel>
-										Statement <Required />
-									</FormLabel>
-									<FormControl
-										as="textarea"
-										rows={5}
-										name="message"
-										defaultValue={initialValues.message}
-										isInvalid={touched.message && !!errors.message}
-										onChange={handleChange}
-										onBlur={handleBlur}
-										required
-									/>
-									<FormText>
-										Information about currently visiting page will be included automatically.
-									</FormText>
-									<FormControl.Feedback type="invalid">{errors.message}</FormControl.Feedback>
-								</FormGroup>
-								<Conditional in={!!ticketId}>
+								<TextField 
+									className="mb-3" 
+									name="name"
+									label="Name"
+									placeholder="Keep it empty to report anonymously"
+								/>
+								<TextField
+									className="mb-3"
+									name="email"
+									label="Email address"
+									placeholder="example@provider.com"
+								/>
+								<TextField
+									as="textarea"
+									rows={5}
+									name="message"
+									label={<>Statement <Required /></>}
+									helperText="Information about currently visiting page will be included automatically."
+									required
+								/>
+								<Conditional in={!!submitId}>
 									<Alert className="mt-3" variant="success">
 										Thanks, your report has been captured. Please use this ID for future references:{" "}
-										<span className="fst-italic">{ticketId}</span>.
+										<span className="fst-italic">{submitId}</span>.
 									</Alert>
 								</Conditional>
 								<Conditional in={submitError}>

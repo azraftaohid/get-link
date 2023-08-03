@@ -19,7 +19,7 @@ const NLink = dynamic(() => import("../components/Link"), { ssr: false });
 
 export function makeDownloadParams(
 	directLink: string,
-	fileName: string,
+	fileName: string | "",
 	mechanism: ClickEventContext["mechanism"] = "browser_default"
 ) {
 	try {
