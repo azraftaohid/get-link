@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { mergeNames } from "../../utils/mergeNames";
 import { Conditional } from "../Conditional";
 import Link from "../Link";
-import { BatchUploadContext } from "./BatchUploadWrapper";
+import { BatchUploadContext } from "./BatchUpload";
 
 export const BatchUploadProgress: React.FunctionComponent<BatchUploadProgressProps> = ({
 	className,

@@ -1,28 +1,34 @@
 import { useAuthUser } from "@react-query-firebase/auth";
 import { getAuth } from "firebase/auth";
-import { Formik } from "formik";
+import { Formik, FormikProps } from "formik";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
+import Alert from "react-bootstrap/Alert";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import * as Yup from "yup";
 import { Button } from "../components/Button";
+import { Conditional } from "../components/Conditional";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
-import { BatchUpload } from "../components/batch_upload/BatchUpload";
+import { BatchUpload, BatchUploadContext } from "../components/batch_upload/BatchUpload";
 import { BatchUploadAlert } from "../components/batch_upload/BatchUploadAlert";
 import { BatchUploadProgress } from "../components/batch_upload/BatchUploadProgress";
-import { BatchUploadContext, BatchUploadWrapper } from "../components/batch_upload/BatchUploadWrapper";
+import { DropZone } from "../components/batch_upload/DropZone";
+import { UploadArray } from "../components/batch_upload/UploadArray";
 import TextField from "../components/forms/TextField";
 import { Link as LinkObject, MAX_LEN_LINK_TITLE } from "../models/links";
+import { interpretlimit } from "../models/quotas";
 import {
 	createViewLink
 } from "../utils/files";
+import { mergeNames } from "../utils/mergeNames";
+import { formatSize } from "../utils/strings";
 import { useFeatures } from "../utils/useFeatures";
 
 const schema = Yup.object({
@@ -43,10 +49,14 @@ const Home: NextPage = () => {
 	const { data: user } = useAuthUser(["user"], getAuth());
 	const features = useFeatures(user);
 
+	const [showQuota, setShowQuota] = useState(true);
+
 	const link = useRef(new LinkObject());
 	const [url, setUrl] = useState<string>();
 
-	const initValues = useRef<{ title?: string }>({});
+	const initValues = useRef({ title: "" });
+
+	const formRef = useRef<FormikProps<typeof initValues.current>>(null);
 
 	const [state, setState] = useState<"none" | "uploading" | "processing" | "submitted">("none");
 
@@ -59,9 +69,26 @@ const Home: NextPage = () => {
 			<Metadata title="Get Link" image="https://getlink.vercel.app/image/cover.png" />
 			<Header />
 			<PageContent>
-				<BatchUploadWrapper>
+				<BatchUpload
+					link={link.current}
+					maxFiles={features.isAvailable("storage.documents.write") ? 0 : features.quotas.links?.inline_fids.limit}
+					maxSize={features.quotas.storage?.file_size?.limit}
+					observer={(state) => {
+						if (state === "processing") setState("uploading");
+					}}
+					onCompleted={(files) => {
+						setState("none");
+
+						const leadFile = files[0];
+						if (leadFile && !formRef.current?.values.title) {
+							formRef.current?.setFieldValue("title", extractTitle(leadFile));
+						}
+					}}
+					disabled={state === "submitted" || state === "processing"}
+				>
 					<BatchUploadContext.Consumer>
 						{(ctx) => <Formik
+							innerRef={formRef}
 							validationSchema={schema}
 							initialValues={initValues.current}
 							onSubmit={async (values, actions) => {
@@ -87,7 +114,7 @@ const Home: NextPage = () => {
 
 								actions.setSubmitting(false);
 							}}
-						>{({ values, setFieldValue, handleSubmit, errors }) => <Form noValidate onSubmit={handleSubmit}>
+						>{({ handleSubmit, errors }) => <Form noValidate onSubmit={handleSubmit}>
 							<BatchUploadAlert />
 							<Row className="g-3" xs={1} md={2}>
 								<Col md={10}><TextField
@@ -111,27 +138,31 @@ const Home: NextPage = () => {
 							</Row>
 							<hr />
 							<BatchUploadProgress redirectUrl={url} />
-							<BatchUpload
-								link={link.current}
-								maxFiles={features.isAvailable("storage.documents.write") ? 0 : features.quotas.links?.inline_fids.limit}
-								maxSize={features.quotas.storage?.file_size?.limit}
-								continous
-								observer={(state) => {
-									if (state === "processing") setState("uploading");
-								}}
-								onCompleted={(files) => {
-									setState("none");
-
-									const leadFile = files[0];
-									if (leadFile && !values.title) {
-										setFieldValue("title", extractTitle(leadFile));
-									}
-								}}
-								disabled={state === "submitted" || state === "processing"}
-							/>
+							<Row xs={1} md={2}>
+								<Col>
+									<Conditional in={ctx.files.length > 0}>
+										<UploadArray />
+									</Conditional>
+								</Col>
+								<Col md={ctx.files.length === 0 && 12}>
+									<DropZone
+										className={mergeNames(ctx.files.length > 0 && "mt-3 mt-md-0 h-25 h-md-100 mh-md-unset")}
+										continous
+									/>
+								</Col>
+							</Row>
 						</Form>}</Formik>}
 					</BatchUploadContext.Consumer>
-				</BatchUploadWrapper>
+				</BatchUpload>
+				<Conditional in={showQuota}>
+					<Alert className="mt-3" variant="info" onClose={() => setShowQuota(false)} dismissible>
+						Your current quota:
+						<ul>
+							<li>File size: {interpretlimit(features.quotas.storage?.file_size?.limit, formatSize)}</li>
+							<li>File limit: {interpretlimit(features.quotas.storage?.documents?.write?.limit || features.quotas.links?.inline_fids.limit)}</li>
+						</ul>
+					</Alert>
+				</Conditional>
 			</PageContent>
 			<Footer />
 		</PageContainer>

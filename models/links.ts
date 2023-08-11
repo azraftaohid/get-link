@@ -106,7 +106,7 @@ export class Link {
 	readonly ref: DocumentReference<LinkData>;
 	readonly data: WithFieldValue<LinkData> = { };
 
-	private hasApplied = false;
+	private lock = false;
 
 	constructor(ref?: DocumentReference<LinkData>) {
 		this.ref = ref || getLinkRef();
@@ -150,25 +150,31 @@ export class Link {
 	}
 
 	public update() {
-		if (this.hasApplied) throw new Error("Link instance already applied once.");
-		this.hasApplied = true;
+		if (this.lock) throw new Error("Link instance already applied once or is being applied.");
+		this.lock = true;
 		
 		const updateData: LinkUpdateData = this.extractData(
 			LinkField.TITLE, LinkField.FILES, LinkField.EXPIRE_TIME, LinkField.COVER
 		);
 
-		return updateLink(this.ref, updateData);
+		return updateLink(this.ref, updateData).catch((err) => {
+			this.lock = false;
+			throw err;
+		});
 	}
 
 	public create(title: string) {
-		if (this.hasApplied) throw new Error("Link instance already applied once.");
-		this.hasApplied = true;
+		if (this.lock) throw new Error("Link instance already applied once or is being applied.");
+		this.lock = true;
 
 		const createData: LinkCreateData = this.extractData(
 			LinkField.COVER, LinkField.FILES, LinkField.EXPIRE_TIME, LinkField.COVER,
 		);
 
-		return createLink(title, this.ref, createData);
+		return createLink(title, this.ref, createData).catch((err) => {
+			this.lock = false;
+			throw err;
+		});
 	}
 }
 

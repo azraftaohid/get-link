@@ -14,7 +14,7 @@ import { Link as LinkObj, MAX_LEN_LINK_TITLE, getLinkRef } from "../models/links
 import { useFeatures } from "../utils/useFeatures";
 import { Button } from "./Button";
 import { Conditional } from "./Conditional";
-import { BatchUpload, BatchUploadState } from "./batch_upload/BatchUpload";
+import { BatchUploadState, DropZone } from "./batch_upload/DropZone";
 import TextField from "./forms/TextField";
 
 const LinkEditor: React.FunctionComponent<LinkEditorProps> = ({
@@ -91,7 +91,7 @@ const LinkEditor: React.FunctionComponent<LinkEditorProps> = ({
 							name="title"
 							disabled={status === "processing" || status === "submitted"} 
 						/>
-						<BatchUpload
+						<DropZone
 							link={link.current}
 							method={isDynamic ? "standalone" : "inline"}
 							hint="Add files"

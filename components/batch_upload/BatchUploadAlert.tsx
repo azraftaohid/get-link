@@ -3,7 +3,7 @@ import Alert, { AlertProps } from "react-bootstrap/Alert";
 import { StatusCode } from "../../utils/common";
 import { Conditional } from "../Conditional";
 import Link from "../Link";
-import { BatchUploadContext } from "./BatchUploadWrapper";
+import { BatchUploadContext } from "./BatchUpload";
 
 export const BatchUploadAlert: React.FunctionComponent<BatchUploadAlertProps> = () => {
 	const { status } = useContext(BatchUploadContext);
@@ -14,6 +14,7 @@ export const BatchUploadAlert: React.FunctionComponent<BatchUploadAlertProps> = 
 				[
 					"files:unknown-error",
 					"files:capture-error",
+					"files:capture-failed",
 					"files:upload-error",
 					"auth:sign-in-error",
 					"files:too-large",

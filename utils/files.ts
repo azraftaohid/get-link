@@ -200,6 +200,10 @@ export function prependExt(fullName: string, text: string) {
 	return fullName.slice(0, lastDot) + text + fullName.slice(lastDot);
 }
 
+export function shallowHash(file: File) {
+	return `${file.name};${file.type};${file.size};${file.lastModified}`;
+}
+
 export type FilesStatus =
 	| "files:unknown-error"
 	| "files:upload-cancelled" // upload to firebase storage

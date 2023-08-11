@@ -1,173 +1,109 @@
-import { useAuthUser } from "@react-query-firebase/auth";
-import { getAuth, signInAnonymously } from "firebase/auth";
-import { useRouter } from "next/router";
-import React, { useCallback, useContext, useEffect, useRef } from "react";
-import Stack from "react-bootstrap/Stack";
-import { DropzoneOptions, useDropzone } from "react-dropzone";
+import { createContext, useEffect, useMemo, useRef } from "react";
 import { Link as LinkObj } from "../../models/links";
-import { defaultQuotas } from "../../models/quotas";
-import styles from "../../styles/multi-file-upload.module.scss";
-import { acceptedFileFormats } from "../../utils/files";
-import { mergeNames } from "../../utils/mergeNames";
-import { useToast } from "../../utils/useToast";
-import { Conditional } from "../Conditional";
-import { FileUpload, FileUploadProps } from "../FileUpload";
-import { Icon } from "../Icon";
-import { BatchUploadContext } from "./BatchUploadWrapper";
+import { AuthStatus } from "../../utils/auths";
+import { FilesStatus } from "../../utils/files";
+import { useParallelTracker } from "../../utils/useParallelTracker";
+import { useProgressTracker } from "../../utils/useProgressTracker";
+import { useStatus } from "../../utils/useStatus";
+import { FileUploadProps } from "../FileUpload";
 
+const MAX_CONCURRENT_UPLOAD = 2;
+
+const methodNotImplemented = () => { throw new Error("Method not implemented"); };
+
+export const BatchUploadContext = createContext<BatchUploadContextInterface>({
+	files: [], add: methodNotImplemented, remove: methodNotImplemented, setCancelled: methodNotImplemented,
+	setCompleted: methodNotImplemented, setFailed: methodNotImplemented, resume: methodNotImplemented,
+	completedCount: -1, cancelledCount: -1, failedCount: -1,
+	status: [], appendStatus: methodNotImplemented, removeStatus: methodNotImplemented,
+});
+
+export const BatchUploadConfigContext = createContext<BatchUploadConfig>({
+	link: new LinkObj(),
+});
+
+/** to be BatchUpload */
 export const BatchUpload: React.FunctionComponent<BatchUploadProps> = ({
-	link,
-	method,
-	hint = "Upload files",
-	subtext = "Expires after 14 days",
-	maxFiles = defaultQuotas.links.inline_fids.limit,
-	maxSize = defaultQuotas.storage.file_size.limit,
-	onCompleted,
-	observer,
-	disabled,
-	startPos = 0,
-	continous: continousUpload = false,
+	children,
+	link, disabled, maxFiles, maxSize, method, observer, onCompleted, startOrder
 }) => {
-	const router = useRouter();
-	const { data: user } = useAuthUser(["user"], getAuth());
-	const { makeToast } = useToast();
+
+	const { status, appendStatus, removeStatus } = useStatus<FilesStatus | AuthStatus>();
 
 	const {
-		files, add: addFiles, remove: removeFile,
-		setCompleted, setFailed, appendStatus, removeStatus,
-		completedCount, cancelledCount,
-		shouldResume,
-	} = useContext(BatchUploadContext);
+		keys: files, setKeys: setFiles, removeKey: removeFile,
+		markCompleted, markFailed,
+		completedCount, cancelledCount, failedCount
+	} = useProgressTracker<File>([]);
+	const { markCompleted: markPCompleted, markPaused: markPPaused, runnings } = useParallelTracker(files, MAX_CONCURRENT_UPLOAD);
 
-	const handleUploadCompleted: FileUploadProps["onComplete"] = (file, fid) => {
-		if (!link.getCover()) link.setCover({ fid });
+	const ctx = useMemo<BatchUploadContextInterface>(() => ({
+		files,
+		add: (...files) => setFiles(c => [...c, ...files]),
+		remove: removeFile,
+		setCompleted: (file) => { markCompleted(file); markPCompleted(file); },
+		setCancelled: removeFile,
+		setFailed: (file) => { markFailed(file); markPPaused(file); },
+		resume: (file) => runnings.includes(file),
+		completedCount, cancelledCount, failedCount,
+		status, appendStatus, removeStatus,
+	}), [files, removeFile, completedCount, cancelledCount, failedCount, status, appendStatus, removeStatus, setFiles, markCompleted, markPCompleted, markFailed, markPPaused, runnings]);
 
-		setCompleted(file);
-	};
-	const handleUploadCancelled: FileUploadProps["onCancel"] = removeFile;
-	const handleUploadError: FileUploadProps["onError"] = (file, err) => {
-		console.error(`error uploading file: ${err}`);
-		setFailed(file);
+	const config = useMemo<BatchUploadConfig>(() => ({
+		link, disabled, maxFiles, maxSize, method, startOrder,
+	}), [disabled, link, maxFiles, maxSize, method, startOrder]);
 
-		appendStatus("files:upload-failed");
-	};
-
-	const statelessObjs = { appendStatus, removeStatus, addFiles, onCompleted, observer };
-	const refs = useRef(statelessObjs);
-	refs.current = statelessObjs;
-
-	const handleDrop = useCallback<NonNullable<DropzoneOptions["onDrop"]>>(
-		(dropped, rejects) => {
-			if (rejects.length) {
-				const errMssg = `Upload cancelled for the following files\n${rejects
-					.map((reject) => {
-						return `${reject.file.name}: ${reject.errors.map((err) => err.code).join(", ")}`;
-					})
-					.join("\n")}`;
-
-				makeToast(errMssg, "error");
-				return;
-			}
-
-			refs.current.addFiles(...dropped);
-		},
-		[makeToast]
-	);
-
-	const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
-		accept: acceptedFileFormats,
-		onDrop: handleDrop,
-		maxFiles: maxFiles,
-		maxSize: maxSize,
-		multiple: true,
-		disabled: disabled,
-	});
-
-	const triggerChooser = router.query.open_chooser;
-	useEffect(() => {
-		if (triggerChooser !== "true") return;
-
-		console.debug("manually trigger to open picker");
-		open();
-	}, [triggerChooser, open]);
-
-	const uid = user?.uid;
-	useEffect(() => {
-		if (!files.length) return;
-		if (!uid) {
-			refs.current.appendStatus("auth:signing-in");
-			signInAnonymously(getAuth()).then(() => {
-				refs.current.removeStatus("auth:signing-in");
-			}).catch((err) => {
-				console.error(`error signing in user [cause: ${err}]`);
-				refs.current.removeStatus("auth:signing-in");
-				refs.current.appendStatus("auth:sign-in-error");
-			});
-		}
-	}, [files.length, uid]);
+	const _stateless = { onCompleted, observer };
+	const stateless = useRef(_stateless);
 
 	// trigger completed when file count is equal to complete + cancel count
 	// and some other criteria
 	useEffect(() => {
 		if (files.length === (completedCount + cancelledCount)) {
 			const leadFile = files[0];
-			if (uid && leadFile) refs.current.onCompleted?.(files);
+			if (leadFile) stateless.current.onCompleted?.(files);
 			
-			refs.current.observer?.("none", completedCount, cancelledCount, files.length);
+			stateless.current.observer?.("none", completedCount, cancelledCount, files.length);
 		} else if (files.length) {
-			refs.current.observer?.("processing", completedCount, cancelledCount, files.length);
+			stateless.current.observer?.("processing", completedCount, cancelledCount, files.length);
 		}
-	}, [cancelledCount, completedCount, files, uid]);
+	}, [cancelledCount, completedCount, files]);
 
-	return <>
-		<Stack direction="vertical" gap={3}>
-			{files.map((file, i) => <FileUpload
-				key={`${file.name}-${file.size}`}
-				link={link}
-				file={file}
-				method={method}
-				position={startPos + i}
-				resume={shouldResume(file)}
-				onComplete={handleUploadCompleted}
-				onCancel={handleUploadCancelled}
-				onError={handleUploadError}
-			/>)}
-		</Stack>
-		<Conditional in={continousUpload || files.length === 0}>
-			<button
-				{...getRootProps({
-					id: "upload-area",
-					type: "button",
-					className: mergeNames(
-						styles.uploadArea,
-						"btn btn-outline-secondary",
-						isDragActive && "active",
-						files.length !== 0 && "mt-3 h-25"
-					),
-					disabled: disabled
-				})}
-			>
-				<input {...getInputProps()} />
-				<Icon name="file_upload" size="lg" />
-				<p className="fs-5 mb-0">{!isDragActive ? hint : "Drop to upload"}</p>
-				<small className="text-mute">{subtext}</small>
-			</button>
-		</Conditional>
-	</>;
+	return <BatchUploadContext.Provider value={ctx}>
+		<BatchUploadConfigContext.Provider value={config}>
+			{children}
+		</BatchUploadConfigContext.Provider>
+	</BatchUploadContext.Provider>;
 };
 
 export type BatchUploadState = "none" | "processing" | "error";
 
-export interface BatchUploadProps {
+export type BatchUploadContextInterface = {
+	files: File[],
+	add: (...files: File[]) => unknown,
+	remove: (file: File) => unknown,
+	setCompleted: (file: File) => unknown,
+	setCancelled: (file: File) => unknown,
+	setFailed: (file: File) => unknown,
+	resume: (file: File) => boolean,
+	completedCount: number,
+	cancelledCount: number,
+	failedCount: number,
+	status: (FilesStatus | AuthStatus)[],
+	appendStatus: (status: FilesStatus | AuthStatus) => unknown,
+	removeStatus: (status: FilesStatus | AuthStatus) => unknown
+};
+
+export type BatchUploadConfig = {
 	link: LinkObj,
 	method?: FileUploadProps["method"],
-	hint?: React.ReactNode,
-	subtext?: React.ReactNode,
 	maxFiles?: number, // maximum number of files to be uploaded; enter 0 for no limites
 	maxSize?: number,
+	disabled?: boolean,
+	startOrder?: number,
+}
+
+export type BatchUploadProps = React.PropsWithChildren<BatchUploadConfig> & {
 	onCompleted?: (files: File[]) => unknown, // callback after file uploads are completed successfully
 	observer?: (state: BatchUploadState, uploaded: number, cancelled: number, total: number) => unknown,
-	disabled?: boolean,
-	startPos?: number,
-	continous?: boolean,
 }

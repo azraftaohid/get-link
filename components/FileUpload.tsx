@@ -2,7 +2,7 @@ import { useAuthUser } from "@react-query-firebase/auth";
 import { getAuth } from "firebase/auth";
 import { UploadMetadata, UploadTask, uploadBytes, uploadBytesResumable } from "firebase/storage";
 import { nanoid } from "nanoid";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { Dimension, DimensionField } from "../models/dimension";
 import { FileField, createFID, createFileDoc, deleteFile, getFileRef } from "../models/files";
@@ -13,6 +13,7 @@ import { mergeNames } from "../utils/mergeNames";
 import { generateThumbnailFromVideo } from "../utils/video";
 import { FilePreview, FilePreviewProps } from "./FilePreview";
 import Link from "./Link";
+import { BatchUploadConfigContext, BatchUploadContext } from "./batch_upload/BatchUpload";
 
 const ErrorLink: React.FunctionComponent<{ code: FilesStatus }> = ({ code }) => {
 	return <Link variant="danger" href={`/technical#${encodeURIComponent(code)}`}>
@@ -49,50 +50,59 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 	file,
 	link,
 	method = "inline",
-	position = 0,
-	resume,
+	order = 0,
 	onComplete,
 	onCancel,
 	onError,
 	...rest
 }) => {
+	const { files, add, remove, setCompleted, setCancelled, setFailed, resume } = useContext(BatchUploadContext);
+	const { disabled } = useContext(BatchUploadConfigContext);
+
 	const { data: user } = useAuthUser(["usr"], getAuth());
 	const uid = user?.uid;
 
 	const [status, setStatus] = useState<FilesStatus>();
 	const [fid, setFid] = useState<string>();
-	const [docId, setDocId] = useState<string>();
 
-	const handleComplete = useRef(onComplete);
-	handleComplete.current = onComplete;
+	const handleComplete = (file: File, fid: string, docId?: string) => {
+		setFid(fid);
+		setCompleted(file);
+		
+		onComplete?.(file, fid, docId);
+	};
 
-	const handleCancel = useRef(onCancel);
-	handleCancel.current = onCancel;
+	const handleCancel = (file: File) => {
+		setCancelled(file);
+		onCancel?.(file);
+	};
 
-	const handleError = useRef(onError);
-	handleError.current = onError;
+	const handleError = (file: File, err: unknown) => {
+		setFailed(file);
+		onError?.(file, err);
+	};
 
 	const [control, setControl] = useState<UploadTask>();
 	const pendingCancel = useRef(false);
 
 	const [progress, setProgress] = useState(0);
 
-	// stateless function: assiciateWithLink; binds the uploaded file provided link
-	const _associateWithLink = async (fid: string, file: File) => {
+	// stateless function: assiciateWithLink; binds the uploaded file with provided link
+	const associateWithLink = async (fid: string, file: File) => {
 		if (!link) return;
 
 		if (method === "standalone") {
 			setStatus("files:creating-doc");
 
 			const doc = await createFileDoc(fid, file.name, {
-				[link.ref.id]: { [OrderField.CREATE_ORDER]: position },
+				[link.ref.id]: { [OrderField.CREATE_ORDER]: order },
 			});
 
 			console.debug(`file mirror doc created at ${doc.path}`);
 			setStatus("files:doc-created");
 			return doc.id;
 		} else {
-			link.pushFile(fid, position, {
+			link.pushFile(fid, order, {
 				[FileField.OVERRIDES]: {
 					name: file.name,
 				},
@@ -101,8 +111,9 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			return undefined;
 		}
 	};
-	const associateWithLink = useRef(_associateWithLink);
-	associateWithLink.current = _associateWithLink;
+
+	const _stateless = { files, add, remove, associateWithLink, handleComplete, handleCancel, handleError };
+	const stateless = useRef(_stateless);
 
 	useEffect(() => {
 		pendingCancel.current = false;
@@ -186,24 +197,20 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 				},
 				(err) => {
 					if (err.code === "storage/canceled") {
-						handleCancel.current?.(file);
+						stateless.current.handleCancel(file);
 					} else {
 						setStatus("files:upload-failed");
-						handleError.current?.(file, err);
+						stateless.current.handleError(file, err);
 					}
 				},
-				async () => {
-					try {
-						const docId = await associateWithLink.current(fid, file);
+				() => {
+					stateless.current.associateWithLink(fid, file).then((docId) => {
 						setStatus("files:capture-completed");
-						handleComplete.current?.(file, fid, docId);
-
-						setFid(fid);
-						setDocId(docId);
-					} catch (error) {
+						stateless.current.handleComplete(file, fid, docId);
+					}).catch(error => {
 						setStatus("files:capture-failed");
-						handleError.current?.(file, error);
-					}
+						stateless.current.handleError(file, error);
+					});
 				}
 			);
 
@@ -225,9 +232,18 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 
 	// syncs resume status with upload control
 	useEffect(() => {
-		if (resume) control?.resume();
+		if (file && resume(file)) control?.resume();
 		else control?.pause();
-	}, [control, resume]);
+	}, [control, file, resume]);
+
+	useEffect(() => {
+		if (file) {
+			if (!stateless.current.files.includes(file)) stateless.current.add(file);
+			
+			const remover = stateless.current.remove;
+			return () => { remover(file); };
+		}
+	}, [file]);
 
 	return <div>
 		<FilePreview
@@ -240,14 +256,14 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 						control.cancel();
 						return;
 					case "error":
-						if (file) handleCancel.current?.(file);
+						if (file) stateless.current.handleCancel(file);
 						return;
 					case "success": {
 						if (fid) deleteFile(fid).catch(err => {
-							console.error(`error deleting file from the server [file: ${file?.name}]`);
+							console.error(`error deleting file from the server [file: ${file?.name}; err: ${err}]`);
 						});
 
-						if (file) handleCancel.current?.(file);
+						if (file) stateless.current.handleCancel(file);
 						
 						setStatus("files:upload-cancelled");
 						break;
@@ -257,11 +273,11 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 				}
 
 				pendingCancel.current = true;
-				if (file) handleCancel.current?.(file);
+				if (file) stateless.current.handleCancel(file);
 
 				setStatus("files:upload-cancelled");
 			}}
-			closable
+			closable={!disabled}
 		/>
 		<ProgressBar
 			id="file-upload-progress"
@@ -284,8 +300,7 @@ interface StatusIndicatorProps extends React.PropsWithChildren<React.HTMLAttribu
 export interface FileUploadProps extends FilePreviewProps {
 	file?: File | null,
 	link?: LinkObject,
-	position?: number,
-	resume?: boolean,
+	order?: number,
 	onComplete?: (file: File, fid: string, docId?: string) => unknown, // docId only available when doc write quota is available
 	onCancel?: (file: File) => unknown,
 	onError?: (file: File, err: unknown) => unknown,

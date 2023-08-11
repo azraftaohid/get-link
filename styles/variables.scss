@@ -50,6 +50,27 @@ $utilities: map-merge(
           responsive: true,
         )
       ),
+    "height":
+      map-merge(
+			  map-get($utilities, height),
+			  (
+				  responsive: true,
+			  )
+		  ),
+    "max-height":
+      map-merge(
+        map-get($utilities, max-height),
+        (
+          values:
+            map-merge(
+              map-get(map-get($utilities, max-height), values),
+              (
+                unset: unset,
+              )
+            ),
+          responsive: true,
+        )
+      ),
     "max-width":
       map-merge(
         map-get($utilities, max-width),
