@@ -178,7 +178,7 @@ const View: NextPage<Partial<StaticProps>> = ({
 			<Header />
 			<PageContent>
 				<div className="vstack">
-					<h1>{title || "Untitled"}</h1>
+					<h1 className="text-break">{title || "Untitled"}</h1>
 					<div className="d-flex align-items-top">
 						<div>
 							<p className="text-wrap mb-0">{strCreateTime}</p>

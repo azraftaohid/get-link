@@ -12,13 +12,12 @@ export const BatchUploadProgress: React.FunctionComponent<BatchUploadProgressPro
 	const { status, completedCount, files } = useContext(BatchUploadContext);
 	
 	return <Conditional in={files.length > 0}>
-		<p className={mergeNames("mb-2", className)} {...rest}>
+		<p className={mergeNames("mb-3", className)} {...rest}>
 			{redirectUrl ? <Link variant="reset" href={redirectUrl}>Redirecting&hellip;</Link>
 			: status?.includes("auth:signing-in")
 			? <>Signing in&hellip;</>
 			: `Uploading (${completedCount}/${files.length})`}
 		</p>
-		<hr className="mt-1 mb-3" />
 	</Conditional>;
 };
 
