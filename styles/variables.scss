@@ -3,6 +3,12 @@
 @import "overrides";
 
 @import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/variables-dark";
+
+$toast-background-color: rgba(var(--#{$prefix}body-bg-rgb), 1);
+
+@import "~bootstrap/scss/maps";
+
 @import "~bootstrap/scss/utilities";
 
 $utilities: map-merge(
