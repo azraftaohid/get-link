@@ -4,7 +4,7 @@ import { Formik, FormikProps } from "formik";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
-import Alert from "react-bootstrap/Alert";
+import Accordion from "react-bootstrap/Accordion";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
@@ -16,6 +16,7 @@ import { Header } from "../components/Header";
 import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
+import { QuotaOverview } from "../components/QuotaOverview";
 import { BatchUpload, BatchUploadContext } from "../components/batch_upload/BatchUpload";
 import { BatchUploadAlert } from "../components/batch_upload/BatchUploadAlert";
 import { BatchUploadProgress } from "../components/batch_upload/BatchUploadProgress";
@@ -23,12 +24,10 @@ import { DropZone } from "../components/batch_upload/DropZone";
 import { UploadArray } from "../components/batch_upload/UploadArray";
 import TextField from "../components/forms/TextField";
 import { Link as LinkObject, MAX_LEN_LINK_TITLE } from "../models/links";
-import { interpretlimit } from "../models/quotas";
 import {
 	createViewLink
 } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
-import { formatSize } from "../utils/strings";
 import { useFeatures } from "../utils/useFeatures";
 
 const schema = Yup.object({
@@ -48,8 +47,6 @@ const Home: NextPage = () => {
 
 	const { data: user } = useAuthUser(["user"], getAuth());
 	const features = useFeatures(user);
-
-	const [showQuota, setShowQuota] = useState(true);
 
 	const link = useRef(new LinkObject());
 	const [url, setUrl] = useState<string>();
@@ -154,15 +151,14 @@ const Home: NextPage = () => {
 						</Form>}</Formik>}
 					</BatchUploadContext.Consumer>
 				</BatchUpload>
-				<Conditional in={showQuota}>
-					<Alert className="mt-3" variant="info" onClose={() => setShowQuota(false)} dismissible>
-						Your current quota:
-						<ul>
-							<li>File size: {interpretlimit(features.quotas.storage?.file_size?.limit, formatSize)}</li>
-							<li>File limit: {interpretlimit(features.quotas.storage?.documents?.write?.limit || features.quotas.links?.inline_fids.limit)}</li>
-						</ul>
-					</Alert>
-				</Conditional>
+				<Accordion className="mt-3">
+					<Accordion.Item eventKey="quota">
+						<Accordion.Header>View usage quota</Accordion.Header>
+						<Accordion.Body>
+							<QuotaOverview quotas={features.quotas} />
+						</Accordion.Body>
+					</Accordion.Item>
+				</Accordion>
 			</PageContent>
 			<Footer />
 		</PageContainer>
