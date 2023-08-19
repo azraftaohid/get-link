@@ -14,19 +14,3 @@
 .btnShare {
   z-index: 100;
 }
-
-@include app-theme(dark) {
-  .noPreview,
-  .loadingPreview,
-  .cardImg {
-    background-color: $gray-900;
-  }
-}
-
-@include app-theme(light) {
-  .noPreview,
-  .loadingPreview,
-  .cardImg {
-    background-color: $gray-100;
-  }
-}
