@@ -29,7 +29,7 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 	} = useContext(BatchUploadContext);
 	const { disabled: inheritedDisabled, maxFiles, maxSize } = useContext(BatchUploadConfigContext);
 
-	const disabled = _disabled !== undefined ? _disabled : inheritedDisabled;
+	const disabled = _disabled !== undefined ? _disabled : inheritedDisabled || (maxFiles === files.length);
 
 	const statelessObjs = { appendStatus, removeStatus, addFiles };
 	const refs = useRef(statelessObjs);
@@ -67,7 +67,7 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 	const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
 		accept: acceptedFileFormats,
 		onDrop: handleDrop,
-		maxFiles: maxFiles,
+		maxFiles: maxFiles ? maxFiles - files.length : 0,
 		maxSize: maxSize,
 		multiple: true,
 		disabled: disabled,
