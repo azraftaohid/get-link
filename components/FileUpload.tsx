@@ -259,9 +259,12 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 						if (file) stateless.current.handleCancel(file);
 						return;
 					case "success": {
-						if (fid) deleteFile(fid).catch(err => {
-							console.error(`error deleting file from the server [file: ${file?.name}; err: ${err}]`);
-						});
+						if (fid) {
+							deleteFile(fid).catch(err => {
+								console.error(`error deleting file from the server [file: ${file?.name}; err: ${err}]`);
+							});
+							link?.removeFile(fid);
+						}
 
 						if (file) stateless.current.handleCancel(file);
 						
