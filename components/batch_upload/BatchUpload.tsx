@@ -19,7 +19,7 @@ export const BatchUploadContext = createContext<BatchUploadContextInterface>({
 });
 
 export const BatchUploadConfigContext = createContext<BatchUploadConfig>({
-	link: new LinkObj(),
+	link: LinkObj.mock(),
 });
 
 /** to be BatchUpload */

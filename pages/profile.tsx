@@ -1,7 +1,7 @@
-import { useAuthUser } from "@react-query-firebase/auth";
 import { getAuth, signOut } from "firebase/auth";
 import { NextPage } from "next";
 import Alert from "react-bootstrap/Alert";
+import { useUser } from "reactfire";
 import { ExpandButton } from "../components/ExpandButton";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
@@ -11,7 +11,7 @@ import { useToast } from "../utils/useToast";
 
 const Profile: NextPage = () => {
 	const { makeToast } = useToast();
-	const { data: user } = useAuthUser(["auth"], getAuth());
+	const { data: user } = useUser();
 
 	return <PageContainer>
 		<Header />

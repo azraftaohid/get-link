@@ -1,5 +1,3 @@
-import { useAuthUser } from "@react-query-firebase/auth";
-import { getAuth } from "firebase/auth";
 import { Formik, FormikProps } from "formik";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
@@ -8,6 +6,7 @@ import Accordion from "react-bootstrap/Accordion";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
+import { useUser } from "reactfire";
 import * as Yup from "yup";
 import { Button } from "../components/Button";
 import { Conditional } from "../components/Conditional";
@@ -45,7 +44,7 @@ function extractTitle(file: File) {
 const Home: NextPage = () => {
 	const router = useRouter();
 
-	const { data: user } = useAuthUser(["user"], getAuth());
+	const { data: user } = useUser();
 	const features = useFeatures(user);
 
 	const link = useRef(new LinkObject());
@@ -61,6 +60,7 @@ const Home: NextPage = () => {
 		if (url) router.push(url);
 	}, [router, url]);
 
+	// todo: follow up on deleteField() cannot be used with set() unless you pass {merge:true}
 	return (
 		<PageContainer>
 			<Metadata title="Get Link" image="https://getlink.vercel.app/image/cover.png" />

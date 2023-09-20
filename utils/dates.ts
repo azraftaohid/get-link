@@ -1,5 +1,5 @@
 import { Days } from "@thegoodcompany/common-utils-js";
-import { Timestamp } from "firebase/firestore/lite";
+import { Timestamp } from "firebase/firestore";
 import { EXPIRE_DAYS } from "./configs";
 
 export function now() {

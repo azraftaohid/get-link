@@ -1,5 +1,3 @@
-import { useAuthUser } from "@react-query-firebase/auth";
-import { getAuth } from "firebase/auth";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -11,6 +9,7 @@ import Navbar from "react-bootstrap/Navbar";
 import NavbarBrand from "react-bootstrap/NavbarBrand";
 import NavbarCollapse from "react-bootstrap/NavbarCollapse";
 import NavbarToggle from "react-bootstrap/NavbarToggle";
+import { useUser } from "reactfire";
 import styles from "../styles/header.module.scss";
 import { logClick } from "../utils/analytics";
 import { mergeNames } from "../utils/mergeNames";
@@ -37,7 +36,7 @@ const navs: { title: string; pathname: string }[] = [
 
 export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
 	const router = useRouter();
-	const { data: user } = useAuthUser(["auth"], getAuth());
+	const { data: user } = useUser();
 	const { current: theme, setTheme } = useTheme();
 
 	const [showSignIn, setSignIn] = useState(false);

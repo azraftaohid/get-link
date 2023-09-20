@@ -4,8 +4,9 @@ import {
 	setAnalyticsCollectionEnabled,
 	setUserId,
 } from "firebase/analytics";
-import { getApps, initializeApp } from "firebase/app";
+import { FirebaseApp, getApps, initializeApp } from "firebase/app";
 import {
+	Auth,
 	browserLocalPersistence,
 	browserSessionPersistence,
 	connectAuthEmulator,
@@ -13,10 +14,11 @@ import {
 	initializeAuth,
 } from "firebase/auth";
 import {
-	connectFirestoreEmulator as connectFirestoreLiteEmulator,
-	getFirestore as getFirestoreLite,
-} from "firebase/firestore/lite";
-import { connectStorageEmulator, getStorage } from "firebase/storage";
+	Firestore,
+	connectFirestoreEmulator,
+	getFirestore
+} from "firebase/firestore";
+import { FirebaseStorage, connectStorageEmulator, getStorage } from "firebase/storage";
 import { acquireExperienceOptions } from "./analytics";
 import { firebaseConfig } from "./configs";
 import { FIREBASE_APP_NAME } from "./firebase";
@@ -30,21 +32,27 @@ export function init() {
 	initFirebase();
 }
 
-function initFirebase() {
+export function initFirebase() {
 	const apps = getApps();
 	const currentApp = apps.find((v) => v.name === FIREBASE_APP_NAME);
 	if (currentApp) return currentApp;
 
 	const app = initializeApp(firebaseConfig);
+	initFirebaseComponents(app);
 
-	const firestore = getFirestoreLite(app);
+	return app;
+}
+
+export function initFirebaseComponents(app: FirebaseApp): [Auth, Firestore, FirebaseStorage] {
+
+	const firestore = getFirestore(app);
 	const storage = getStorage(app);
 	const auth = initializeAuth(app, {
 		persistence: [browserLocalPersistence, browserSessionPersistence, indexedDBLocalPersistence],
 	});
 
 	if (process.env.NODE_ENV === "development") {
-		connectFirestoreLiteEmulator(firestore, "localhost", 8080);
+		connectFirestoreEmulator(firestore, "localhost", 8080);
 		connectStorageEmulator(storage, "localhost", 9199);
 		connectAuthEmulator(auth, "http://localhost:9099", {
 			disableWarnings: true,
@@ -67,5 +75,5 @@ function initFirebase() {
 		setUserId(instance, eid, { global: true });
 	});
 
-	return app;
+	return [auth, firestore, storage];
 }

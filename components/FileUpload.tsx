@@ -1,9 +1,8 @@
-import { useAuthUser } from "@react-query-firebase/auth";
-import { getAuth } from "firebase/auth";
 import { UploadMetadata, UploadTask, uploadBytes, uploadBytesResumable } from "firebase/storage";
 import { nanoid } from "nanoid";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import ProgressBar from "react-bootstrap/ProgressBar";
+import { useUser } from "reactfire";
 import { Dimension, DimensionField } from "../models/dimension";
 import { FileField, createFID, createFileDoc, deleteFile, getFileRef } from "../models/files";
 import { Link as LinkObject } from "../models/links";
@@ -59,7 +58,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 	const { files, add, remove, setCompleted, setCancelled, setFailed, resume } = useContext(BatchUploadContext);
 	const { disabled } = useContext(BatchUploadConfigContext);
 
-	const { data: user } = useAuthUser(["usr"], getAuth());
+	const { data: user } = useUser();
 	const uid = user?.uid;
 
 	const [status, setStatus] = useState<FilesStatus>();

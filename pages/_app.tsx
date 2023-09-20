@@ -1,4 +1,5 @@
 import { getAnalytics, logEvent } from "firebase/analytics";
+import { getApp } from "firebase/app";
 import type { AppProps, NextWebVitalsMetric } from "next/app";
 import Head from "next/head";
 import Image from "next/image";
@@ -8,13 +9,13 @@ import Toast from "react-bootstrap/Toast";
 import ToastBody from "react-bootstrap/ToastBody";
 import ToastContainer from "react-bootstrap/ToastContainer";
 import ToastHeader from "react-bootstrap/ToastHeader";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { FirebaseAppProvider } from "reactfire";
+import { FirebaseComponents } from "../components/FirebaseComponents";
 import "../styles/global.scss";
 import { acquireExperienceOptions } from "../utils/analytics";
 import { init } from "../utils/init";
 
 init();
-const queryClient = new QueryClient();
 
 export const ToastContext = React.createContext<ToastContextInterface>({
 	makeToast: () => console.warn("toast failed [cause: context not provided]"),
@@ -47,7 +48,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
 	return (
 		<>
-			<QueryClientProvider client={queryClient}>
+			<FirebaseAppProvider firebaseApp={getApp()}>
 				<ToastContext.Provider value={{ makeToast }}>{/* NOSONAR */}
 					<Head>
 						<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -74,9 +75,11 @@ function MyApp({ Component, pageProps }: AppProps) {
 							<ToastBody className="pre-break">{toast}</ToastBody>
 						</Toast>
 					</ToastContainer>
-					<Component {...pageProps} />
+					<FirebaseComponents>
+						<Component {...pageProps} />
+					</FirebaseComponents>
 				</ToastContext.Provider>
-			</QueryClientProvider>
+			</FirebaseAppProvider>
 		</>
 	);
 }

@@ -1,7 +1,5 @@
-import { useAuthUser } from "@react-query-firebase/auth";
 import { formatDate } from "@thegoodcompany/common-utils-js";
-import { getAuth } from "firebase/auth";
-import { FieldPath, getCount, getDoc, getDocs, limit, orderBy, query, startAfter } from "firebase/firestore/lite";
+import { FieldPath, getCountFromServer, getDoc, getDocs, limit, orderBy, query, startAfter } from "firebase/firestore";
 import { getDownloadURL, getMetadata } from "firebase/storage";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { useRouter } from "next/router";
@@ -11,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Col } from "react-bootstrap";
 import Alert from "react-bootstrap/Alert";
 import Row from "react-bootstrap/Row";
+import { useUser } from "reactfire";
 import { AssurePrompt } from "../../components/AssurePrompt";
 import { Button } from "../../components/Button";
 import { Conditional } from "../../components/Conditional";
@@ -69,7 +68,7 @@ const View: NextPage<Partial<StaticProps>> = ({
 
 	const router = useRouter();
 	const { makeToast } = useToast();
-	const { data: user } = useAuthUser(["user"], getAuth());
+	const { data: user } = useUser();
 
 	const [warns, setWarns] = useState(new Set<Warning>());
 
@@ -375,7 +374,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 		isDynamic = true;
 
 		const baseQuery = getFileDocs(lid);
-		tasks.push(getCount(baseQuery).then(value => {
+		tasks.push(getCountFromServer(baseQuery).then(value => {
 			fileCount = value.data().count;
 		}).catch(err => {
 			console.error(`error getting file doc count [lid: ${lid}; cause: ${err}]`);

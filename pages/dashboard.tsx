@@ -1,7 +1,4 @@
-import { useAuthUser } from "@react-query-firebase/auth";
-import { useFirestoreInfiniteQuery } from "@react-query-firebase/firestore";
 import { formatDate } from "@thegoodcompany/common-utils-js";
-import { getAuth } from "firebase/auth";
 import {
 	collection,
 	FieldPath,
@@ -11,8 +8,7 @@ import {
 	Query,
 	query,
 	QueryDocumentSnapshot,
-	startAfter,
-	where,
+	where
 } from "firebase/firestore";
 import { getDownloadURL, getMetadata } from "firebase/storage";
 import { NextPage } from "next";
@@ -23,6 +19,7 @@ import Card from "react-bootstrap/Card";
 import Col from "react-bootstrap/Col";
 import Placeholder from "react-bootstrap/Placeholder";
 import Row from "react-bootstrap/Row";
+import { useUser } from "reactfire";
 import { Button } from "../components/Button";
 import { CopyButton } from "../components/CopyButton";
 import { ExpandButton } from "../components/ExpandButton";
@@ -42,12 +39,12 @@ import styles from "../styles/dashboard.module.scss";
 import { logClick } from "../utils/analytics";
 import { hasExpired } from "../utils/dates";
 import { findFileIcon, NON_PREVIEW_SUPPORTING_TYPE } from "../utils/files";
-import { initFirestore } from "../utils/firestore";
 import { mergeNames } from "../utils/mergeNames";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
+import { useFirestoreCollectionStream } from "../utils/useFirestoreCollectionStream";
 import { getSolidStallImage } from "../visuals/stallData";
 
-const FETCH_LIMIT = 12;
+const FETCH_LIMIT = 3;
 
 const NoPreview: React.FunctionComponent<
 	React.PropsWithChildren<
@@ -288,45 +285,35 @@ const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: stri
 		);
 	}, [uid]);
 
-	const links = useFirestoreInfiniteQuery(uid, baseQuery, (snapshot) => {
-		if (snapshot.size === 0 || snapshot.size % FETCH_LIMIT > 0) return undefined;
+	const { isComplete, status, next, error, isEmpty, data: links } = useFirestoreCollectionStream(baseQuery);
 
-		const endDoc = snapshot.docs[snapshot.size - 1];
-		return query(baseQuery, startAfter(endDoc));
-	});
-
-	if (!links.data?.pages[0]?.size) {
-		if (links.isLoading || links.isFetching) return <LinkListPlaceholder />;
-		if (links.isError) {
-			console.error(`fetch error: ${links.error}`);
-			return <ErrorView />;
-		}
-
+	if (isEmpty()) {
+		if (status === "loading") return <LinkListPlaceholder />;
+		if (error) return <ErrorView />;
 		return <EmptyView />;
 	}
 
 	return (
 		<div>
 			<Row className="g-4" xs={1} sm={2} md={3} lg={4}>
-				{links.data.pages.map((page, i) => (
+				{links.map((page, i) => (
 					<LinkConcat key={`page-${i}`} snapshot={page.docs} />
 				))}
 			</Row>
 			<ExpandButton
 				className="mt-4"
-				state={links.isLoading || links.isFetching ? "loading" : "none"}
-				onClick={() => links.fetchNextPage()}
-				disabled={!links.hasNextPage || !links.isSuccess}
+				state={status === "loading" ? "loading" : "none"}
+				onClick={next}
+				disabled={isComplete || status !== "success"}
 			>
-				{links.hasNextPage ? "Load more" : "End"}
+				{isComplete ? "End" : "Load more"}
 			</ExpandButton>
 		</div>
 	);
 };
 
 const Dashboard: NextPage = () => {
-	initFirestore();
-	const { data: user, isLoading } = useAuthUser(["user"], getAuth());
+	const { status, data: user } = useUser();
 
 	return (
 		<PageContainer>
@@ -336,7 +323,7 @@ const Dashboard: NextPage = () => {
 				<h1 className="mb-4">Recent links</h1>
 				{user?.uid ? (
 					<UserDashboard uid={user.uid} />
-				) : isLoading ? (
+				) : status === "loading" ? (
 					<UserDashboardPlaceholder />
 				) : (
 					<EmptyView />

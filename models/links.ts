@@ -1,23 +1,23 @@
 import { getAuth } from "firebase/auth";
 import {
-	collection,
-	CollectionReference,
-	deleteDoc,
-	deleteField,
-	doc,
-	DocumentReference,
-	FieldPath,
-	FieldValue,
-	getFirestore,
-	orderBy,
-	Query,
-	query, serverTimestamp,
-	setDoc,
-	Timestamp,
-	Transaction,
-	where,
-	WithFieldValue
-} from "firebase/firestore/lite";
+    collection,
+    CollectionReference,
+    deleteDoc,
+    deleteField,
+    doc,
+    DocumentReference,
+    FieldPath,
+    FieldValue,
+    getFirestore,
+    orderBy,
+    Query,
+    query, serverTimestamp,
+    setDoc,
+    Timestamp,
+    Transaction,
+    where,
+    WithFieldValue
+} from "firebase/firestore";
 import { v4 as uuidV4 } from "uuid";
 import { ensureProperty } from "../utils/objects";
 import { createCFID, FileData, FileField } from "./files";
@@ -110,6 +110,10 @@ export class Link {
 
 	constructor(ref?: DocumentReference<LinkData>) {
 		this.ref = ref || getLinkRef();
+	}
+
+	public static mock() {
+		return new Link(DocumentReference.prototype);
 	}
 
 	private extractData<K extends keyof WithFieldValue<LinkData>>(...fields: K[]): { [KEY in K]: WithFieldValue<LinkData>[KEY] } {
