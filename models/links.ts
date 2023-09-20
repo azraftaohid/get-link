@@ -75,8 +75,8 @@ export function createLink(title: string, ref: DocumentReference<LinkData> = get
 		[LinkField.CREATE_TIME]: serverTimestamp(),
 	};
 
-	if (transaction) transaction.set(ref, d);
-	else return setDoc(ref, d).then(() => ref);
+	if (transaction) transaction.set(ref, d, { merge: true });
+	else return setDoc(ref, d, { merge: true }).then(() => ref);
 
 	return ref;
 }
