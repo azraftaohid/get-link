@@ -45,7 +45,7 @@ function extractTitle(file: File) {
 const Home: NextPage = () => {
 	const router = useRouter();
 
-	const { data: user } = useAuthUser(["user"], getAuth());
+	const { data: user } = useAuthUser(["usr"], getAuth());
 	const features = useFeatures(user);
 
 	const link = useRef(new LinkObject());

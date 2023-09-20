@@ -11,7 +11,7 @@ import { useToast } from "../utils/useToast";
 
 const Profile: NextPage = () => {
 	const { makeToast } = useToast();
-	const { data: user } = useAuthUser(["auth"], getAuth());
+	const { data: user } = useAuthUser(["usr"], getAuth());
 
 	return <PageContainer>
 		<Header />

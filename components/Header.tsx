@@ -37,7 +37,15 @@ const navs: { title: string; pathname: string }[] = [
 
 export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
 	const router = useRouter();
-	const { data: user } = useAuthUser(["auth"], getAuth());
+	const { data: user } = useAuthUser(["usr"], getAuth(), {
+		onSuccess: (usr) => {
+			if (usr) console.log("user signed in");
+			else console.log("user signed out");
+		},
+		onError: (err) => {
+			console.error(`error listening to auth state [cause: ${err}]`);
+		}
+	});
 	const { current: theme, setTheme } = useTheme();
 
 	const [showSignIn, setSignIn] = useState(false);

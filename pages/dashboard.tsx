@@ -288,7 +288,7 @@ const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: stri
 		);
 	}, [uid]);
 
-	const links = useFirestoreInfiniteQuery(uid, baseQuery, (snapshot) => {
+	const links = useFirestoreInfiniteQuery(`links-${uid}`, baseQuery, (snapshot) => {
 		if (snapshot.size === 0 || snapshot.size % FETCH_LIMIT > 0) return undefined;
 
 		const endDoc = snapshot.docs[snapshot.size - 1];
@@ -326,7 +326,7 @@ const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: stri
 
 const Dashboard: NextPage = () => {
 	initFirestore();
-	const { data: user, isLoading } = useAuthUser(["user"], getAuth());
+	const { data: user, isLoading } = useAuthUser(["usr"], getAuth());
 
 	return (
 		<PageContainer>

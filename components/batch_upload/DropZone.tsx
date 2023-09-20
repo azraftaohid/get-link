@@ -20,7 +20,7 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 	...rest
 }) => {
 	const router = useRouter();
-	const { data: user } = useAuthUser(["user"], getAuth());
+	const { data: user } = useAuthUser(["usr"], getAuth());
 	const { makeToast } = useToast();
 
 	const {

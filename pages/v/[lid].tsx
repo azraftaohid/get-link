@@ -69,7 +69,7 @@ const View: NextPage<Partial<StaticProps>> = ({
 
 	const router = useRouter();
 	const { makeToast } = useToast();
-	const { data: user } = useAuthUser(["user"], getAuth());
+	const { data: user } = useAuthUser(["usr"], getAuth());
 
 	const [warns, setWarns] = useState(new Set<Warning>());
 
