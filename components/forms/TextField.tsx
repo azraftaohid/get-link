@@ -1,4 +1,4 @@
-import { useField } from "formik";
+import { FieldHookConfig, useField } from "formik";
 import React from "react";
 import FormControl, { FormControlProps } from "react-bootstrap/FormControl";
 import FormGroup from "react-bootstrap/FormGroup";
@@ -12,7 +12,7 @@ const TextField: BsPrefixRefForwardingComponent<"input", TextFieldProps> = ({
 	helperText,
 	...rest
 }) => {
-	const [ fieldProps, meta ] = useField(rest);
+	const [ fieldProps, meta ] = useField(rest as unknown as FieldHookConfig<unknown>);
 
 	return <FormGroup className={className} controlId={fieldProps.name}>
 		{label && <FormLabel>{label}</FormLabel>}

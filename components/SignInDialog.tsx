@@ -63,6 +63,7 @@ export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) 
 
 				try {
 					await sendSignInLinkToEmail(getAuth(), values.email, actionCodeSettings);
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				} catch (error: any) {
 					console.error(`error sending sign in link to email [code: ${error.code}; message: ${error.message}]`);
 					appendStatus("err:send-link-to-email");
