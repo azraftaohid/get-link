@@ -1,4 +1,4 @@
-import { collection, CollectionReference, doc, getFirestore, setDoc, Timestamp, WithFieldValue } from "firebase/firestore";
+import { collection, CollectionReference, doc, getFirestore, setDoc, Timestamp, WithFieldValue } from "firebase/firestore/lite";
 import { Name } from "./name";
 
 /**

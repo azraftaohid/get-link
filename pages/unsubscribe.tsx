@@ -1,4 +1,4 @@
-import { deleteField, updateDoc } from "firebase/firestore";
+import { deleteField, updateDoc } from "firebase/firestore/lite";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";

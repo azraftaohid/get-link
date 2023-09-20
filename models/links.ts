@@ -17,7 +17,7 @@ import {
 	Transaction,
 	where,
 	WithFieldValue
-} from "firebase/firestore";
+} from "firebase/firestore/lite";
 import { v4 as uuidV4 } from "uuid";
 import { ensureProperty } from "../utils/objects";
 import { createCFID, FileData, FileField } from "./files";

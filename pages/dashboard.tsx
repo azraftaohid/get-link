@@ -42,6 +42,7 @@ import styles from "../styles/dashboard.module.scss";
 import { logClick } from "../utils/analytics";
 import { hasExpired } from "../utils/dates";
 import { findFileIcon, NON_PREVIEW_SUPPORTING_TYPE } from "../utils/files";
+import { initFirestore } from "../utils/firestore";
 import { mergeNames } from "../utils/mergeNames";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
 import { getSolidStallImage } from "../visuals/stallData";
@@ -324,6 +325,7 @@ const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: stri
 };
 
 const Dashboard: NextPage = () => {
+	initFirestore();
 	const { data: user, isLoading } = useAuthUser(["user"], getAuth());
 
 	return (

@@ -1,4 +1,4 @@
-import { Bytes, DocumentReference, FieldValue, GeoPoint, Primitive, Timestamp, WithFieldValue } from "firebase/firestore";
+import { Bytes, DocumentReference, FieldValue, GeoPoint, Primitive, Timestamp, WithFieldValue } from "firebase/firestore/lite";
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function ensureProperty<T extends {}, K extends keyof WithFieldValue<T>>(

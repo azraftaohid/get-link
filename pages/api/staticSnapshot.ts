@@ -1,4 +1,4 @@
-import { DocumentData, DocumentReference, DocumentSnapshot, GeoPoint, Timestamp } from "firebase/firestore";
+import { DocumentData, DocumentReference, DocumentSnapshot, GeoPoint, Timestamp } from "firebase/firestore/lite";
 
 /**
  * @param snapshot document snapshot received from firestore query result

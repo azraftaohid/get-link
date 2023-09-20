@@ -1,7 +1,7 @@
 import { useAuthUser } from "@react-query-firebase/auth";
 import { formatDate } from "@thegoodcompany/common-utils-js";
 import { getAuth } from "firebase/auth";
-import { FieldPath, getCountFromServer, getDoc, getDocs, limit, orderBy, query, startAfter } from "firebase/firestore";
+import { FieldPath, getCount, getDoc, getDocs, limit, orderBy, query, startAfter } from "firebase/firestore/lite";
 import { getDownloadURL, getMetadata } from "firebase/storage";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { useRouter } from "next/router";
@@ -375,7 +375,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 		isDynamic = true;
 
 		const baseQuery = getFileDocs(lid);
-		tasks.push(getCountFromServer(baseQuery).then(value => {
+		tasks.push(getCount(baseQuery).then(value => {
 			fileCount = value.data().count;
 		}).catch(err => {
 			console.error(`error getting file doc count [lid: ${lid}; cause: ${err}]`);
