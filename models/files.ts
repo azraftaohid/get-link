@@ -1,5 +1,5 @@
 import { getAuth } from "firebase/auth";
-import { CollectionReference, DocumentReference, FieldPath, Query, Transaction, WithFieldValue, collection, deleteDoc, deleteField, doc, getDocs, getFirestore, limit, orderBy, query, setDoc, where } from "firebase/firestore/lite";
+import { CollectionReference, DocumentReference, FieldPath, Query, Transaction, WithFieldValue, collection, deleteDoc, deleteField, doc, getDocs, getFirestore, limit, orderBy, query, setDoc, where } from "firebase/firestore";
 import { FullMetadata, StorageReference, deleteObject, ref as fileRef, getStorage } from "firebase/storage";
 import { v5 as uuidV5 } from "uuid";
 import { FileCustomMetadata } from "../utils/files";

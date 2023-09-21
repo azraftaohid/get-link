@@ -1,4 +1,4 @@
-import { DocumentReference } from "firebase/firestore/lite";
+import { DocumentReference } from "firebase/firestore";
 import { createContext, useEffect, useMemo, useRef } from "react";
 import { Link as LinkObj } from "../../models/links";
 import { AuthStatus } from "../../utils/auths";

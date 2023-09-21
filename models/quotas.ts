@@ -7,6 +7,8 @@ import { QuotaMetric } from "./quotaMetric";
  * 	- Other integers: exact amount of available
  */
 
+export const QUOTA_COLLECTION_ID = "quotas";
+
 export const defaultQuotas = {
 	storage: {
 		space: { limit: 1 * 1024 * 1024 * 1024 },

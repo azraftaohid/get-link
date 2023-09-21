@@ -13,9 +13,9 @@ import {
 	initializeAuth,
 } from "firebase/auth";
 import {
-	connectFirestoreEmulator as connectFirestoreLiteEmulator,
-	getFirestore as getFirestoreLite,
-} from "firebase/firestore/lite";
+	connectFirestoreEmulator,
+	getFirestore,
+} from "firebase/firestore";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
 import { acquireExperienceOptions } from "./analytics";
 import { firebaseConfig } from "./configs";
@@ -29,14 +29,14 @@ export function initFirebase() {
 
 	const app = initializeApp(firebaseConfig);
 
-	const firestore = getFirestoreLite(app);
+	const firestore = getFirestore(app);
 	const storage = getStorage(app);
 	const auth = initializeAuth(app, {
 		persistence: [browserLocalPersistence, browserSessionPersistence, indexedDBLocalPersistence],
 	});
 
 	if (process.env.NODE_ENV === "development") {
-		connectFirestoreLiteEmulator(firestore, "localhost", 8080);
+		connectFirestoreEmulator(firestore, "localhost", 8080);
 		connectStorageEmulator(storage, "localhost", 9199);
 		connectAuthEmulator(auth, "http://localhost:9099", {
 			disableWarnings: true,
