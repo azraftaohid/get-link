@@ -34,6 +34,7 @@ import { notFound } from "../../utils/common";
 import { hasExpired } from "../../utils/dates";
 import { shouldStepOutDownload } from "../../utils/downloads";
 import { createViewLink, findFileIcon } from "../../utils/files";
+import { initFirebase } from "../../utils/firebase";
 import { initModernizr } from "../../utils/modernizr";
 import { descriptiveNumber } from "../../utils/numbers";
 import { quantityString } from "../../utils/quantityString";
@@ -298,6 +299,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ params }) => {
+	initFirebase();
+	
 	const lid = params?.lid;
 	if (typeof lid !== "string") return notFound;
 

@@ -3,7 +3,7 @@ import type { AppProps, NextWebVitalsMetric } from "next/app";
 import Head from "next/head";
 import Image from "next/image";
 import Script from "next/script";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Toast from "react-bootstrap/Toast";
 import ToastBody from "react-bootstrap/ToastBody";
 import ToastContainer from "react-bootstrap/ToastContainer";
@@ -11,10 +11,10 @@ import ToastHeader from "react-bootstrap/ToastHeader";
 import { QueryClient, QueryClientProvider } from "react-query";
 import "../styles/global.scss";
 import { acquireExperienceOptions } from "../utils/analytics";
+import { initFirebase } from "../utils/firebase";
 import { init } from "../utils/init";
 
 init();
-const queryClient = new QueryClient();
 
 export const ToastContext = React.createContext<ToastContextInterface>({
 	makeToast: () => console.warn("toast failed [cause: context not provided]"),
@@ -27,6 +27,9 @@ const toastBgMapping: Record<ToastType, string | undefined> = {
 };
 
 function MyApp({ Component, pageProps }: AppProps) {
+	initFirebase();
+	const queryClient = useMemo(() => new QueryClient(), []);
+	
 	const [toast, setToast] = useState<React.ReactNode>();
 	const [toastType, setToastType] = useState<ToastType>("info");
 

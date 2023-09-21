@@ -1,3 +1,4 @@
+import { DocumentReference } from "firebase/firestore/lite";
 import { createContext, useEffect, useMemo, useRef } from "react";
 import { Link as LinkObj } from "../../models/links";
 import { AuthStatus } from "../../utils/auths";
@@ -19,7 +20,7 @@ export const BatchUploadContext = createContext<BatchUploadContextInterface>({
 });
 
 export const BatchUploadConfigContext = createContext<BatchUploadConfig>({
-	link: new LinkObj(),
+	link: new LinkObj(DocumentReference.prototype),
 });
 
 /** to be BatchUpload */
