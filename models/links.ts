@@ -36,7 +36,7 @@ import { UserSnapshot, UserSnapshotField } from "./users";
  * 
  */
 
-export const COLLECTION_LINKS = "links";
+export const COLLECTION_LINKS = "links_future";
 
 export const MAX_LEN_LINK_TITLE = 255;
 
@@ -62,8 +62,8 @@ export function getLinkRef(linkId?: string) {
 	return doc(getLinks(), linkId || uuidV4());
 }
 
-export function createLink(title: string, ref?: DocumentReference<LinkData>, data?: LinkCreateData): Promise<DocumentReference<LinkData>>;
-export function createLink(title: string, ref?: DocumentReference<LinkData>, data?: LinkCreateData, transaction?: Transaction): DocumentReference<LinkData>;
+export function createLink(title: string, ref?: DocumentReference<LinkData>, data?: LinkCreateData): Promise<void>;
+export function createLink(title: string, ref?: DocumentReference<LinkData>, data?: LinkCreateData, transaction?: Transaction): void;
 export function createLink(title: string, ref: DocumentReference<LinkData> = getLinkRef(), data?: LinkCreateData, transaction?: Transaction) {
 	const uid = getAuth().currentUser?.uid;
 	if (!uid) throw new Error("User must be signed in before attempting to create new links");
@@ -75,10 +75,10 @@ export function createLink(title: string, ref: DocumentReference<LinkData> = get
 		[LinkField.CREATE_TIME]: serverTimestamp(),
 	};
 
-	if (transaction) transaction.set(ref, d, { merge: true });
-	else return setDoc(ref, d, { merge: true }).then(() => ref);
+	console.debug(`creating link with data: ${JSON.stringify(d)}`);
 
-	return ref;
+	if (transaction) transaction.set(ref, d, { merge: true });
+	else return setDoc(ref, d, { merge: true });
 }
 
 export function updateLink(ref: DocumentReference<LinkData>, data: LinkUpdateData): Promise<void>;
@@ -149,6 +149,10 @@ export class Link {
 		files[createCFID(fid)] = deleteField();
 	}
 
+	public releaseLock() {
+		this.lock = false;
+	}
+
 	public update() {
 		if (this.lock) throw new Error("Link instance already applied once or is being applied.");
 		this.lock = true;
@@ -163,7 +167,9 @@ export class Link {
 		});
 	}
 
-	public create(title: string) {
+	public create(title: string): Promise<DocumentReference<LinkData>>;
+	public create(title: string, transaction: Transaction): DocumentReference<LinkData>;
+	public create(title: string, transaction?: Transaction) {
 		if (this.lock) throw new Error("Link instance already applied once or is being applied.");
 		this.lock = true;
 
@@ -171,10 +177,13 @@ export class Link {
 			LinkField.COVER, LinkField.FILES, LinkField.EXPIRE_TIME, LinkField.COVER,
 		);
 
-		return createLink(title, this.ref, createData).catch((err) => {
+		if (transaction) createLink(title, this.ref, createData, transaction);
+		else return createLink(title, this.ref, createData).then(() => this.ref).catch(error => {
 			this.lock = false;
-			throw err;
+			throw error;
 		});
+
+		return this.ref;
 	}
 }
 

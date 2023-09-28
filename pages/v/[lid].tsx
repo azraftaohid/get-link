@@ -1,11 +1,20 @@
 import { useAuthUser } from "@react-query-firebase/auth";
 import { formatDate } from "@thegoodcompany/common-utils-js";
 import { getAuth } from "firebase/auth";
-import { FieldPath, getCountFromServer, getDoc, getDocs, limit, orderBy, query, startAfter } from "firebase/firestore";
+import {
+	FieldPath,
+	getCountFromServer,
+	getDoc,
+	getDocs,
+	limit,
+	orderBy,
+	Query,
+	query,
+	startAfter,
+} from "firebase/firestore";
 import { getDownloadURL, getMetadata } from "firebase/storage";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { useRouter } from "next/router";
-import Script from "next/script";
 import { ParsedUrlQuery } from "querystring";
 import { useEffect, useState } from "react";
 import { Col } from "react-bootstrap";
@@ -26,7 +35,7 @@ import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
 import { PageContent } from "../../components/PageContent";
 import { FileData, FileField, getFileDocs, getFileRef, getThumbnailRef } from "../../models/files";
-import { LinkData, LinkField, Warning, getLinkRef, releaseLink } from "../../models/links";
+import { getLinkRef, LinkData, LinkField, releaseLink, Warning } from "../../models/links";
 import { OrderField } from "../../models/order";
 import { UserSnapshotField } from "../../models/users";
 import { ClickEventContext, logClick } from "../../utils/analytics";
@@ -38,11 +47,11 @@ import { initFirebase } from "../../utils/firebase";
 import { initModernizr } from "../../utils/modernizr";
 import { descriptiveNumber } from "../../utils/numbers";
 import { quantityString } from "../../utils/quantityString";
-import { ProcessedFile, makeProcessedFile } from "../../utils/useProcessedFiles";
+import { makeProcessedFile, ProcessedFileData } from "../../utils/useProcessedFiles";
 import { useToast } from "../../utils/useToast";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
 
-const FETCH_LIMIT = 12;
+const FETCH_LIMIT = 3;
 
 initModernizr();
 
@@ -55,6 +64,15 @@ function suppressError(error: any, lid: string, subject: string) {
 	}
 
 	return undefined;
+}
+
+function makeFilesQuery(lid: string, afterPos?: number, afterFid?: string) {
+	const baseQuery = query(getFileDocs(),
+		orderBy(new FieldPath(FileField.LINKS, lid, OrderField.CREATE_ORDER), "asc"),
+		orderBy(FileField.FID, "asc"));
+	
+	if (afterPos !== undefined && afterFid !== undefined) return query(baseQuery, startAfter(afterPos, afterFid));
+	return baseQuery;
 }
 
 const View: NextPage<Partial<StaticProps>> = ({
@@ -82,9 +100,10 @@ const View: NextPage<Partial<StaticProps>> = ({
 	const [stepOutDownload, setStepOutDownload] = useState(false);
 
 	const [files, setFiles] = useState(initFiles);
-	const [status, setStatus] = useState<"none" | "fetching" | "end" | "error">("none");
+	const [status, setStatus] = useState<"none" | "fetching" | "end" | "error">(files.length === fileCount ? "end" : "none");
 
 	const title = snapshot?.data?.[LinkField.TITLE];
+	const isUser = user && snapshot?.data?.[LinkField.USER]?.[UserSnapshotField.UID] === user.uid;
 
 	useEffect(() => {
 		// stored as state; update client after initial render because
@@ -113,28 +132,31 @@ const View: NextPage<Partial<StaticProps>> = ({
 		);
 	}
 
-	const isUser = user && snapshot.data?.[LinkField.USER]?.[UserSnapshotField.UID] === user.uid;
-
 	const createSeconds = snapshot.data?.[LinkField.CREATE_TIME]?.seconds;
 	const strCreateTime = createSeconds && formatDate(new Date(createSeconds * 1000), "short", "year", "month", "day");
 
+	const makeFileComp = ({ fid, directLink, smThumbnailUrl, name, size, type, width, height }: ProcessedFileData) =>
+		<Col key={fid}><FileCard
+			name={name}
+			directLink={directLink}
+			placeholderUrl={smThumbnailUrl}
+			size={size}
+			type={type}
+			width={width}
+			height={height}
+			isOwner={isUser}
+			stepOutDownload={stepOutDownload}
+		/></Col>;
+
 	const fetchNext = () => {
 		setStatus("fetching");
-
-		let nextQuery = query(getFileDocs(),
-			orderBy(FileField.FID, "asc"),
-			orderBy(new FieldPath(FileField.LINKS, lid, OrderField.CREATE_ORDER), "asc"),
-			limit(FETCH_LIMIT));
-
+		console.log("fetching next filedocs");
+		
 		const lastDoc = files && files[files.length - 1];
-		if (lastDoc) nextQuery = query(nextQuery, startAfter(lastDoc.fid, lastDoc.pos || 0));
+		const nextQuery: Query<FileData> = makeFilesQuery(lid, lastDoc?.pos, lastDoc?.fid);
+		console.log(`lastdoc: ${lastDoc?.fid}`);
 
-		getDocs(nextQuery).then(value => {
-			if (value.empty) {
-				setStatus("end");
-				return [];
-			}
-
+		getDocs(query(nextQuery, limit(FETCH_LIMIT))).then(value => {
 			const processedFilePromises = value.docs.map(doc => {
 				const fileData = doc.data();
 				const fid = fileData[FileField.FID];
@@ -149,13 +171,14 @@ const View: NextPage<Partial<StaticProps>> = ({
 
 			return Promise.all(processedFilePromises);
 		}).then(value => {
-			const filtered = value.filter(it => it !== undefined) as ProcessedFile[];
+			const filtered = value.filter(it => it !== undefined) as ProcessedFileData[];
 			if (!filtered.length) {
 				setStatus("end");
 				return;
 			}
 
 			setFiles(c => [...c, ...filtered]);
+
 			if (value.length % FETCH_LIMIT !== 0) setStatus("end");
 			else setStatus("none");
 		}).catch(err => {
@@ -170,11 +193,6 @@ const View: NextPage<Partial<StaticProps>> = ({
 				title={title || "Files - Get Link"}
 				description="Create and instantly share link of files and images."
 				image={thumbnail || thumbnailSmall || (cover.type.startsWith("image/") && cover.url) || findFileIcon(cover.type)}
-			/>
-			<Script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"
-				integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D"
-				crossOrigin="anonymous"
-				async
 			/>
 			<Header />
 			<PageContent>
@@ -218,18 +236,8 @@ const View: NextPage<Partial<StaticProps>> = ({
 						This may be an executable file. Open only if you trust the owner.
 					</Alert>
 				</Conditional>
-				<Row className="g-4" xs={1} sm={2} lg={3} data-masonry='{ "percentPosition": true, "itemSelector": ".col" }'>
-					{files.map(({ fid, directLink, smThumbnailUrl, name, size, type, width, height }) => <Col key={fid}><FileCard
-						name={name}
-						directLink={directLink}
-						placeholderUrl={smThumbnailUrl}
-						size={size}
-						type={type}
-						width={width}
-						height={height}
-						isOwner={isUser}
-						stepOutDownload={stepOutDownload}
-					/></Col>)}
+				<Row className="file-masonry g-4" xs={1} sm={2} lg={3} data-masonry='{ "percentPosition": true, "itemSelector": ".col", "horizontalOrder": true }'>
+					{initFiles.map(makeFileComp)}
 				</Row>
 				{isDynamic && <ExpandButton
 					className="mt-4"
@@ -300,7 +308,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ params }) => {
 	initFirebase();
-	
+
 	const lid = params?.lid;
 	if (typeof lid !== "string") return notFound;
 
@@ -351,7 +359,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 			.catch(err => suppressError(err, lid, "cover (metadata)")));
 	}
 
-	const initFiles: (ProcessedFile & { pos: number })[] = [];
+	const initFiles: (ProcessedFileData & { pos: number })[] = [];
 	const pushInitFile = (fid: string, pos: number, pushData?: FileData) => {
 		tasks.push(makeProcessedFile(fid, lid, pushData || staticSnapshot.data?.[LinkField.FILES]?.[fid])
 			.then(res => initFiles.push({ ...res, pos }))
@@ -377,14 +385,14 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	} else {
 		isDynamic = true;
 
-		const baseQuery = getFileDocs(lid);
-		tasks.push(getCountFromServer(baseQuery).then(value => {
+		const filesQuery = makeFilesQuery(lid);
+		tasks.push(getCountFromServer(filesQuery).then(value => {
 			fileCount = value.data().count;
 		}).catch(err => {
 			console.error(`error getting file doc count [lid: ${lid}; cause: ${err}]`);
 		}));
 
-		const fileDocs = await getDocs(query(baseQuery, limit(12)));
+		const fileDocs = await getDocs(query(filesQuery, limit(FETCH_LIMIT)));
 		fileDocs.docs.forEach(snapshot => {
 			const {
 				[FileField.FID]: fid,
@@ -392,8 +400,10 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 				...rest
 			} = snapshot.data();
 
-			if (!fid) return;
-			pushInitFile(fid, links?.[lid]?.[OrderField.CREATE_ORDER] || 0, rest);
+			const pos = links?.[lid]?.[OrderField.CREATE_ORDER];
+			if (!fid || pos === undefined) return;
+
+			pushInitFile(fid, pos, rest);
 		});
 	}
 
@@ -407,14 +417,12 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 		coverType = baseFile.type;
 	}
 
-	console.debug(`props  [cover: ${JSON.stringify(cover)}`);
 	return {
 		notFound: false,
 		// revalidation is done via the api route: /api/revalidate
 		props: {
 			isDynamic,
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			initFiles: initFiles.sort((a, b) => a.pos - b.pos).map(({ pos, ...rest }) => ({ ...rest })), // NOSONAR
+			initFiles: initFiles.sort((a, b) => a.pos - b.pos), // NOSONAR
 			fileCount: fileCount || initFiles.length,
 			cover: {
 				type: coverType,
@@ -432,7 +440,7 @@ export default View;
 interface StaticProps {
 	snapshot: StaticSnapshot<LinkData>;
 	isDynamic: boolean, // tells the client that more files may be fetched from the files collection
-	initFiles: ProcessedFile[]; // files to render intially; on first page load
+	initFiles: ProcessedFileData[]; // files to render intially; on first page load
 	cover: {
 		url: string;
 		type: string;

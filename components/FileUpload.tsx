@@ -5,9 +5,8 @@ import { nanoid } from "nanoid";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { Dimension, DimensionField } from "../models/dimension";
-import { FileField, createFID, createFileDoc, deleteFile, getFileRef } from "../models/files";
+import { FileField, createFID, deleteFile, getFileRef } from "../models/files";
 import { Link as LinkObject } from "../models/links";
-import { OrderField } from "../models/order";
 import { FileCustomMetadata, FilesStatus, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
 import { generateThumbnailFromVideo } from "../utils/video";
@@ -56,7 +55,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 	onError,
 	...rest
 }) => {
-	const { files, add, remove, setCompleted, setCancelled, setFailed, resume } = useContext(BatchUploadContext);
+	const { fileDocs, files, add, remove, setCompleted, setCancelled, setFailed, resume } = useContext(BatchUploadContext);
 	const { disabled } = useContext(BatchUploadConfigContext);
 
 	const { data: user } = useAuthUser(["usr"], getAuth());
@@ -65,11 +64,11 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 	const [status, setStatus] = useState<FilesStatus>();
 	const [fid, setFid] = useState<string>();
 
-	const handleComplete = (file: File, fid: string, docId?: string) => {
+	const handleComplete = (file: File, fid: string) => {
 		setFid(fid);
 		setCompleted(file);
 		
-		onComplete?.(file, fid, docId);
+		onComplete?.(file, fid);
 	};
 
 	const handleCancel = (file: File) => {
@@ -92,28 +91,19 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 		if (!link) return;
 
 		if (method === "standalone") {
-			setStatus("files:creating-doc");
-
-			const doc = await createFileDoc(fid, file.name, {
-				[link.ref.id]: { [OrderField.CREATE_ORDER]: order },
-			});
-
-			console.debug(`file mirror doc created at ${doc.path}`);
-			setStatus("files:doc-created");
-			return doc.id;
+			fileDocs.set(fid, { name: file.name, order });
 		} else {
 			link.pushFile(fid, order, {
 				[FileField.OVERRIDES]: {
 					name: file.name,
 				},
 			});
-
-			return undefined;
 		}
 	};
 
 	const _stateless = { files, add, remove, associateWithLink, handleComplete, handleCancel, handleError };
 	const stateless = useRef(_stateless);
+	stateless.current = _stateless;
 
 	useEffect(() => {
 		pendingCancel.current = false;
@@ -204,12 +194,17 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 					}
 				},
 				() => {
-					stateless.current.associateWithLink(fid, file).then((docId) => {
+					stateless.current.associateWithLink(fid, file).then(() => {
 						setStatus("files:capture-completed");
-						stateless.current.handleComplete(file, fid, docId);
+						stateless.current.handleComplete(file, fid);
 					}).catch(error => {
 						setStatus("files:capture-failed");
 						stateless.current.handleError(file, error);
+
+						deleteFile(fid).catch(err => {
+							if (err.code === "not-found" || err.code === "storage/object-not-found") return;
+							console.error(`error deleting file after failed to associate with link [cause: ${err}]`);
+						});
 					});
 				}
 			);
@@ -263,7 +258,9 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 							deleteFile(fid).catch(err => {
 								console.error(`error deleting file from the server [file: ${file?.name}; err: ${err}]`);
 							});
+							
 							link?.removeFile(fid);
+							fileDocs.delete(fid);
 						}
 
 						if (file) stateless.current.handleCancel(file);
@@ -304,7 +301,7 @@ export interface FileUploadProps extends FilePreviewProps {
 	file?: File | null,
 	link?: LinkObject,
 	order?: number,
-	onComplete?: (file: File, fid: string, docId?: string) => unknown, // docId only available when doc write quota is available
+	onComplete?: (file: File, fid: string) => unknown,
 	onCancel?: (file: File) => unknown,
 	onError?: (file: File, err: unknown) => unknown,
 	method?: "inline" | "standalone",

@@ -12,12 +12,12 @@ export const QuotaOverview: React.FunctionComponent<QuotaOverviewProps> = ({
 
 	return <div {...rest}>
 		<p className="fs-5 fw-bold">Space</p>
-		<ProgressBar now={storageCurrent / (storageLimit || 1)} />
-		<small>{formatSize(storageCurrent)} of {storageLimit === -1 ? "unlimited" : formatSize(storageLimit)} used</small>
+		<ProgressBar now={(storageCurrent / (storageLimit || 1)) * 100} />
+		<small>{formatSize(storageCurrent)} of {formatSize(storageLimit)} used</small>
 		<hr />
 		<p className="fs-5 fw-bold">Limits</p>
-		<p className="mb-0">File size: {interpretlimit(quotas.storage?.file_size?.limit, formatSize)}</p>
-		<p>File limit: {interpretlimit(quotas.storage?.documents?.write?.limit || quotas.links?.inline_fids.limit)}</p>
+		<p className="mb-0">File size: {interpretlimit(quotas.storage?.filesize?.limit, n => `${formatSize(n)} per file`)}</p>
+		<p>File limit: {quotas.filedocs?.write?.limit ? "no limits" : interpretlimit(quotas.links?.inlinefids?.limit, n => `${n} files per link`)}</p>
 	</div>;
 };
 

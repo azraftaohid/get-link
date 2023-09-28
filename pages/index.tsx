@@ -1,5 +1,4 @@
-import { useAuthUser } from "@react-query-firebase/auth";
-import { getAuth } from "firebase/auth";
+import { getFirestore, runTransaction } from "firebase/firestore";
 import { Formik, FormikProps } from "formik";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
@@ -23,7 +22,9 @@ import { BatchUploadProgress } from "../components/batch_upload/BatchUploadProgr
 import { DropZone } from "../components/batch_upload/DropZone";
 import { UploadArray } from "../components/batch_upload/UploadArray";
 import TextField from "../components/forms/TextField";
+import { createFileDoc } from "../models/files";
 import { Link as LinkObject, MAX_LEN_LINK_TITLE } from "../models/links";
+import { OrderField } from "../models/order";
 import {
 	createViewLink
 } from "../utils/files";
@@ -44,9 +45,7 @@ function extractTitle(file: File) {
 
 const Home: NextPage = () => {
 	const router = useRouter();
-
-	const { data: user } = useAuthUser(["usr"], getAuth());
-	const features = useFeatures(user);
+	const features = useFeatures();
 
 	const link = useRef(new LinkObject());
 	const [url, setUrl] = useState<string>();
@@ -68,8 +67,9 @@ const Home: NextPage = () => {
 			<PageContent>
 				<BatchUpload
 					link={link.current}
-					maxFiles={features.isAvailable("storage.documents.write") ? 0 : features.quotas.links?.inline_fids.limit}
-					maxSize={features.quotas.storage?.file_size?.limit}
+					maxFiles={features.isAvailable("filedocs.write") ? undefined : features.quotas.links?.inlinefids?.limit}
+					maxSize={features.quotas.storage?.filesize?.limit}
+					method={features.isAvailable("filedocs.write") ? "standalone" : "inline"}
 					observer={(state) => {
 						if (state === "processing") setState("uploading");
 					}}
@@ -99,17 +99,28 @@ const Home: NextPage = () => {
 									actions.setFieldValue("title", title, false);
 								}
 
-								link.current.create(title).then(value => {
+								try {
+									const value = await runTransaction(getFirestore(), async transaction => {
+										const ref = link.current.create(title, transaction);
+	
+										ctx.fileDocs.forEach((options, fid) => {
+											createFileDoc(fid, options.name, {
+												[link.current.ref.id]: { [OrderField.CREATE_ORDER]: options.order } 
+											}, options.extras, transaction);
+										});
+
+										return ref;
+									});
+
 									setUrl(createViewLink(value.id));
-									setState("submitted");
-								}).catch(err => {
-									console.error(`capture failed [cause: ${err}]`);
+									setState("submitted");	
+								} catch (error) {
+									console.error(`capture failed [cause: ${error}]`);
 									ctx.status.push("files:capture-failed");
 
+									link.current.releaseLock();
 									setState("none");
-								});
-
-								actions.setSubmitting(false);
+								}
 							}}
 						>{({ handleSubmit, errors }) => <Form noValidate onSubmit={handleSubmit}>
 							<BatchUploadAlert />

@@ -5,7 +5,7 @@ import { FileData, FileField, getFileRef } from "../models/files";
 import { Warning } from "../models/links";
 import { OrderField } from "../models/order";
 
-export async function makeProcessedFile(fid: string, lid: string, data?: FileData): Promise<ProcessedFile> {
+export async function makeProcessedFile(fid: string, lid: string, data?: FileData): Promise<ProcessedFileData> {
 	console.debug(`making processed file [fid: ${fid}]`);
 	const ref = getFileRef(fid);
 
@@ -30,7 +30,7 @@ export async function makeProcessedFile(fid: string, lid: string, data?: FileDat
 	});
 }
 
-export function isProcessedFile(obj: unknown): obj is ProcessedFile {
+export function isProcessedFile(obj: unknown): obj is ProcessedFileData {
 	return typeof obj === "object" &&
 		obj !== null &&
 		"fid" in obj &&
@@ -43,7 +43,7 @@ export function isProcessedFile(obj: unknown): obj is ProcessedFile {
 export const useProcessedFiles = (docs: FileData[], lid: string): UseProcessedFiles => {
 	const [status, setStatus] = useState<UseProcessedFiles["status"]>("none");
 
-	const [mapping, setMapping] = useState<Record<string, ProcessedFile>>({ });
+	const [mapping, setMapping] = useState<Record<string, ProcessedFileData>>({ });
 	const mappingRef = useRef(mapping);
 	mappingRef.current = mapping;
 
@@ -53,7 +53,7 @@ export const useProcessedFiles = (docs: FileData[], lid: string): UseProcessedFi
 		let hasInturrputed = false;
 		const tasks: Promise<unknown>[] = [];
 
-		const newMapping: Record<string, ProcessedFile> = { };
+		const newMapping: Record<string, ProcessedFileData> = { };
 		docs.forEach(doc => {
 			const fid = doc[FileField.FID];
 			if (!fid) {
@@ -98,11 +98,11 @@ export const useProcessedFiles = (docs: FileData[], lid: string): UseProcessedFi
 };
 
 export interface UseProcessedFiles {
-	files: ProcessedFile[],
+	files: ProcessedFileData[],
 	status: "none" | "success" | "error" | "loading",
 }
 
-export interface ProcessedFile {
+export interface ProcessedFileData {
 	fid: string,
 	directLink: string,
 	type: string,

@@ -85,6 +85,8 @@ function MyApp({ Component, pageProps }: AppProps) {
 }
 
 export function reportWebVitals({ id, name, label, value }: NextWebVitalsMetric) {
+	initFirebase();
+	
 	logEvent(getAnalytics(), name, {
 		event_category: label === "web-vital" ? "Web Vitals" : "Next.js custom metric",
 		value: Math.round(name === "CLS" ? value * 1000 : value), // values must be integers

@@ -1,5 +1,6 @@
 import { DocumentReference } from "firebase/firestore";
 import { createContext, useEffect, useMemo, useRef } from "react";
+import { createFileDoc } from "../../models/files";
 import { Link as LinkObj } from "../../models/links";
 import { AuthStatus } from "../../utils/auths";
 import { FilesStatus } from "../../utils/files";
@@ -13,6 +14,7 @@ const MAX_CONCURRENT_UPLOAD = 2;
 const methodNotImplemented = () => { throw new Error("Method not implemented"); };
 
 export const BatchUploadContext = createContext<BatchUploadContextInterface>({
+	fileDocs: new Map(),
 	files: [], add: methodNotImplemented, remove: methodNotImplemented, setCancelled: methodNotImplemented,
 	setCompleted: methodNotImplemented, setFailed: methodNotImplemented, resume: methodNotImplemented,
 	completedCount: -1, cancelledCount: -1, failedCount: -1,
@@ -23,13 +25,12 @@ export const BatchUploadConfigContext = createContext<BatchUploadConfig>({
 	link: new LinkObj(DocumentReference.prototype),
 });
 
-/** to be BatchUpload */
 export const BatchUpload: React.FunctionComponent<BatchUploadProps> = ({
 	children,
 	link, disabled, maxFiles, maxSize, method, observer, onCompleted, startOrder
 }) => {
-
 	const { status, appendStatus, removeStatus } = useStatus<FilesStatus | AuthStatus>();
+	const fileDocs = useRef<BatchUploadContextInterface["fileDocs"]>(new Map);
 
 	const {
 		keys: files, setKeys: setFiles, removeKey: removeFile,
@@ -39,6 +40,7 @@ export const BatchUpload: React.FunctionComponent<BatchUploadProps> = ({
 	const { markCompleted: markPCompleted, markPaused: markPPaused, runnings } = useParallelTracker(files, MAX_CONCURRENT_UPLOAD);
 
 	const ctx = useMemo<BatchUploadContextInterface>(() => ({
+		fileDocs: fileDocs.current,
 		files,
 		add: (...files) => setFiles(c => [...c, ...files]),
 		remove: removeFile,
@@ -80,6 +82,7 @@ export const BatchUpload: React.FunctionComponent<BatchUploadProps> = ({
 export type BatchUploadState = "none" | "processing" | "error";
 
 export type BatchUploadContextInterface = {
+	fileDocs: Map<string, { name: string, order: number, extras?: Parameters<typeof createFileDoc>["3"] }>,
 	files: File[],
 	add: (...files: File[]) => unknown,
 	remove: (file: File) => unknown,

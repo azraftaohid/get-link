@@ -23,12 +23,12 @@ import { UserSnapshot, UserSnapshotField } from "./users";
  * user/uid/file_name
  */
 
-export const COLLECTION_FILES = "files";
+export const COLLECTION_FILES = "files_future";
 
 export const NAMESPACE_FILES = "3b436020-ef99-49fe-9b8a-a96554172278";
 
 export function createFID(fileName: string, uid: string) {
-	return `users/${uid}/${fileName}`;
+	return `users_future/${uid}/${fileName}`;
 }
 
 export function getFileRef(fid: string): StorageReference;
@@ -41,7 +41,7 @@ export function getThumbnailRef(fid: string, size: ThumbnailSize) {
 	const { uid, fileName } = compartFid(fid);
 	const displayName = extractDisplayName(fileName);
 
-	return fileRef(getStorage(), `users/${uid}/thumbs/${displayName}_${size}.jpeg`);
+	return fileRef(getStorage(), `users_future/${uid}/thumbs/${displayName}_${size}.jpeg`);
 }
 
 export function createCFID(fid: string) {
@@ -85,10 +85,26 @@ export async function detachLinkFromFile(fid: string, lid: string) {
 	return Promise.all(promises);
 }
 
-export async function createFileDoc(fid: string,
+export type CreateFileDocExtras = Omit<FileDocCreateData, "fid" | "overrides" | "links">;
+
+export function createFileDoc(fid: string,
 	name: string,
 	links: Record<string, InlineLinkData>,
-	extras?: Omit<FileDocCreateData, "fid" | "overrides" | "links">
+	extras?: CreateFileDocExtras
+): Promise<DocumentReference<FileData>>;
+
+export function createFileDoc(fid: string,
+	name: string,
+	links: Record<string, InlineLinkData>,
+	extras: CreateFileDocExtras | undefined,
+	transaction: Transaction
+): DocumentReference<FileData>;
+
+export function createFileDoc(fid: string,
+	name: string,
+	links: Record<string, InlineLinkData>,
+	extras?: CreateFileDocExtras,
+	transaction?: Transaction
 ) {
 	const uid = getAuth().currentUser?.uid;
 	if (!uid) throw new Error("User must be signed in before attempting to create new links");
@@ -102,7 +118,9 @@ export async function createFileDoc(fid: string,
 		[FileField.LINKS]: links,
 	};
 
-	await setDoc(docRef, data, { merge: true });
+	if (transaction) transaction.set(docRef, data, { merge: true });
+	else return setDoc(docRef, data, { merge: true }).then(() => docRef);
+
 	return docRef;
 }
 
