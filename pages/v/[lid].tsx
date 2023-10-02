@@ -17,9 +17,8 @@ import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { useRouter } from "next/router";
 import { ParsedUrlQuery } from "querystring";
 import { useEffect, useState } from "react";
-import { Col } from "react-bootstrap";
 import Alert from "react-bootstrap/Alert";
-import Row from "react-bootstrap/Row";
+import Masonry, { MasonryProps } from "react-masonry-css";
 import { AssurePrompt } from "../../components/AssurePrompt";
 import { Button } from "../../components/Button";
 import { Conditional } from "../../components/Conditional";
@@ -51,9 +50,15 @@ import { makeProcessedFile, ProcessedFileData } from "../../utils/useProcessedFi
 import { useToast } from "../../utils/useToast";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
 
-const FETCH_LIMIT = 3;
+const FETCH_LIMIT = 12;
 
 initModernizr();
+
+const msnryBreakpoitns: MasonryProps["breakpointCols"] = {
+	default: 3,
+	992: 2,
+	576: 1,
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function suppressError(error: any, lid: string, subject: string) {
@@ -70,7 +75,7 @@ function makeFilesQuery(lid: string, afterPos?: number, afterFid?: string) {
 	const baseQuery = query(getFileDocs(),
 		orderBy(new FieldPath(FileField.LINKS, lid, OrderField.CREATE_ORDER), "asc"),
 		orderBy(FileField.FID, "asc"));
-	
+
 	if (afterPos !== undefined && afterFid !== undefined) return query(baseQuery, startAfter(afterPos, afterFid));
 	return baseQuery;
 }
@@ -135,23 +140,10 @@ const View: NextPage<Partial<StaticProps>> = ({
 	const createSeconds = snapshot.data?.[LinkField.CREATE_TIME]?.seconds;
 	const strCreateTime = createSeconds && formatDate(new Date(createSeconds * 1000), "short", "year", "month", "day");
 
-	const makeFileComp = ({ fid, directLink, smThumbnailUrl, name, size, type, width, height }: ProcessedFileData) =>
-		<Col key={fid}><FileCard
-			name={name}
-			directLink={directLink}
-			placeholderUrl={smThumbnailUrl}
-			size={size}
-			type={type}
-			width={width}
-			height={height}
-			isOwner={isUser}
-			stepOutDownload={stepOutDownload}
-		/></Col>;
-
 	const fetchNext = () => {
 		setStatus("fetching");
 		console.log("fetching next filedocs");
-		
+
 		const lastDoc = files && files[files.length - 1];
 		const nextQuery: Query<FileData> = makeFilesQuery(lid, lastDoc?.pos, lastDoc?.fid);
 		console.log(`lastdoc: ${lastDoc?.fid}`);
@@ -236,9 +228,26 @@ const View: NextPage<Partial<StaticProps>> = ({
 						This may be an executable file. Open only if you trust the owner.
 					</Alert>
 				</Conditional>
-				<Row className="file-masonry g-4" xs={1} sm={2} lg={3} data-masonry='{ "percentPosition": true, "itemSelector": ".col", "horizontalOrder": true }'>
-					{initFiles.map(makeFileComp)}
-				</Row>
+				<Masonry
+					className="row g-4"
+					columnClassName="vstack gap-4"
+					breakpointCols={msnryBreakpoitns}
+				>
+					{files.map(({ fid, directLink, smThumbnailUrl, name, size, type, width, height }) => (
+						<FileCard
+							key={fid}
+							name={name}
+							directLink={directLink}
+							placeholderUrl={smThumbnailUrl}
+							size={size}
+							type={type}
+							width={width}
+							height={height}
+							isOwner={isUser}
+							stepOutDownload={stepOutDownload}
+						/>
+					))}
+				</Masonry>
 				{isDynamic && <ExpandButton
 					className="mt-4"
 					state={status === "fetching" ? "loading" : "none"}

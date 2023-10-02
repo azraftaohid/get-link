@@ -11,7 +11,7 @@
     "lint": "next lint",
     "test": "jest --watch",
     "cypress": "cypress open",
-    "emulator": "cd ../project-hubble && firebase emulators:start --only \"firestore\",\"auth\",\"storage\",\"functions\",\"extensions\"",
+    "emulator": "cd ../project-hubble && firebase emulators:start --import=/.saved-data --export-on-exit --only \"firestore\",\"auth\",\"storage\",\"functions\",\"extensions\"",
     "d-emulator": "firebase emulators:start --project demo-getlink --only \"firestore\",\"auth\",\"storage\""
   },
   "resolutions": {
@@ -30,13 +30,13 @@
     "file-type": "16.5.4",
     "firebase": "10.4.0",
     "formik": "^2.2.9",
-    "masonry-layout": "^4.2.2",
     "nanoid": "^3.3.1",
     "next": "12.3.1",
     "react": "17.0.2",
     "react-bootstrap": "v2.9.0-beta.1",
     "react-dom": "17.0.2",
     "react-dropzone": "^12.0.4",
+    "react-masonry-css": "^1.0.16",
     "react-pdf": "5.7.1",
     "react-query": "^3.34.14",
     "sharp": "^0.30.5",
