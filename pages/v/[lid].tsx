@@ -2,6 +2,7 @@ import { useAuthUser } from "@react-query-firebase/auth";
 import { formatDate } from "@thegoodcompany/common-utils-js";
 import { getAuth } from "firebase/auth";
 import {
+	documentId,
 	FieldPath,
 	getCountFromServer,
 	getDoc,
@@ -33,7 +34,7 @@ import { Loading } from "../../components/Loading";
 import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
 import { PageContent } from "../../components/PageContent";
-import { FileData, FileField, getFileDocs, getFileRef, getThumbnailRef } from "../../models/files";
+import { createCFID, FileData, FileField, getFileDocs, getFileRef, getThumbnailRef } from "../../models/files";
 import { getLinkRef, LinkData, LinkField, releaseLink, Warning } from "../../models/links";
 import { OrderField } from "../../models/order";
 import { UserSnapshotField } from "../../models/users";
@@ -71,12 +72,12 @@ function suppressError(error: any, lid: string, subject: string) {
 	return undefined;
 }
 
-function makeFilesQuery(lid: string, afterPos?: number, afterFid?: string) {
+function makeFilesQuery(lid: string, afterPos?: number, afterDocId?: string) {
 	const baseQuery = query(getFileDocs(),
 		orderBy(new FieldPath(FileField.LINKS, lid, OrderField.CREATE_ORDER), "asc"),
-		orderBy(FileField.FID, "asc"));
+		orderBy(documentId(), "asc"));
 
-	if (afterPos !== undefined && afterFid !== undefined) return query(baseQuery, startAfter(afterPos, afterFid));
+	if (afterPos !== undefined && afterDocId !== undefined) return query(baseQuery, startAfter(afterPos, afterDocId));
 	return baseQuery;
 }
 
@@ -145,7 +146,7 @@ const View: NextPage<Partial<StaticProps>> = ({
 		console.log("fetching next filedocs");
 
 		const lastDoc = files && files[files.length - 1];
-		const nextQuery: Query<FileData> = makeFilesQuery(lid, lastDoc?.pos, lastDoc?.fid);
+		const nextQuery: Query<FileData> = makeFilesQuery(lid, lastDoc?.pos, lastDoc?.fid ? createCFID(lastDoc.fid) : undefined);
 		console.log(`lastdoc: ${lastDoc?.fid}`);
 
 		getDocs(query(nextQuery, limit(FETCH_LIMIT))).then(value => {
