@@ -25,13 +25,13 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 
 	const {
 		files, add: addFiles,
-		appendStatus, removeStatus,
+		status, appendStatus, removeStatus,
 	} = useContext(BatchUploadContext);
 	const { disabled: inheritedDisabled, maxFiles, maxSize } = useContext(BatchUploadConfigContext);
 
 	const disabled = _disabled !== undefined ? _disabled : inheritedDisabled || (maxFiles === files.length);
 
-	const statelessObjs = { appendStatus, removeStatus, addFiles };
+	const statelessObjs = { status, appendStatus, removeStatus, addFiles };
 	const refs = useRef(statelessObjs);
 	refs.current = statelessObjs;
 
@@ -84,14 +84,14 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 	const uid = user?.uid;
 	useEffect(() => {
 		if (!files.length) return;
-		if (!uid) {
+		if (!uid && !refs.current.status.some(s => s === "auth:signing-in" || s === "auth:sign-in-error")) {
 			refs.current.appendStatus("auth:signing-in");
 			signInAnonymously(getAuth()).then(() => {
 				refs.current.removeStatus("auth:signing-in");
 			}).catch((err) => {
 				console.error(`error signing in user [cause: ${err}]`);
-				refs.current.removeStatus("auth:signing-in");
 				refs.current.appendStatus("auth:sign-in-error");
+				refs.current.removeStatus("auth:signing-in");
 			});
 		}
 	}, [files.length, uid]);

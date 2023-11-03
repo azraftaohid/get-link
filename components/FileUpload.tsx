@@ -14,6 +14,8 @@ import { FilePreview, FilePreviewProps } from "./FilePreview";
 import Link from "./Link";
 import { BatchUploadConfigContext, BatchUploadContext } from "./batch_upload/BatchUpload";
 
+const MAX_ATTEMPT = 3;
+
 const ErrorLink: React.FunctionComponent<{ code: FilesStatus }> = ({ code }) => {
 	return <Link variant="danger" href={`/technical#${encodeURIComponent(code)}`}>
 		{code}
@@ -58,6 +60,8 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 	const { fileDocs, files, add, remove, setCompleted, setCancelled, setFailed, resume } = useContext(BatchUploadContext);
 	const { disabled } = useContext(BatchUploadConfigContext);
 
+	const attempt = useRef(0);
+
 	const { data: user } = useAuthUser(["usr"], getAuth());
 	const uid = user?.uid;
 
@@ -99,6 +103,8 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 				},
 			});
 		}
+
+		if (order === 0) link.setCover({ fid });
 	};
 
 	const _stateless = { files, add, remove, associateWithLink, handleComplete, handleCancel, handleError };
@@ -114,6 +120,8 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 		if (!file || !uid || pendingCancel.current) return;
 
 		const handler = async () => {
+			attempt.current++;
+			
 			const [mime, ext] = await getFileType(file); // respect user specified extension
 			console.debug(`mime: ${mime}; ext: ${ext}`);
 
@@ -212,7 +220,10 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			return { upload, unsubscribe };
 		};
 
-		const task = pendingCancel.current ? undefined : handler();
+		let task: ReturnType<typeof handler> | undefined;
+		if (pendingCancel.current) console.debug("upload task ignored, as was cancelled before.");
+		else if (attempt.current >= MAX_ATTEMPT) stateless.current.handleError(file, new Error("max attempt threshold reached."));
+		else task = handler();
 
 		return () => {
 			task?.then(({ upload, unsubscribe }) => {
@@ -259,6 +270,8 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 								console.error(`error deleting file from the server [file: ${file?.name}; err: ${err}]`);
 							});
 							
+							// todo: remove from cover if order is 0
+							// todo: set the next least order value fid as cover
 							link?.removeFile(fid);
 							fileDocs.delete(fid);
 						}
