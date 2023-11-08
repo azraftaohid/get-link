@@ -1,4 +1,4 @@
-import { fromBlob } from "file-type/browser";
+import { fromBuffer } from "file-type/browser";
 import { UploadMetadata } from "firebase/storage";
 import { Dimension } from "../models/dimension";
 import { MimeType } from "./mimeTypes";
@@ -142,7 +142,15 @@ export async function getPdfDimension(src: string): Promise<Dimension> {
 }
 
 export async function getFileType(file: File): Promise<[string | undefined, string]> {
-	const type = await fromBlob(file);
+	// Some browsers including chromiums have ArrayBuffer size limits.
+	// For chromium browsers, that limit is near 2 GiB.
+	// see: https://stackoverflow.com/a/72124984, and https://stackoverflow.com/a/73115301
+	//
+	// Most mime types start within the first 29153 bytes. FOr rare cases, we will be using the first 50 bytes.
+	// see: https://stackoverflow.com/a/66847213
+	const chunk = file.slice(0, 50 * Math.pow(2, 10));
+	const bytes = await chunk.arrayBuffer();
+	const type = await fromBuffer(bytes);
 
 	let mime: MimeType | undefined = type?.mime;
 	const ext = extractExtension(file.name);

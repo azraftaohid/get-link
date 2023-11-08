@@ -11,7 +11,7 @@
     "lint": "next lint",
     "test": "jest --watch",
     "cypress": "cypress open",
-    "emulator": "cd ../project-hubble && firebase emulators:start --import=/.saved-data --export-on-exit --only \"firestore\",\"auth\",\"storage\",\"functions\",\"extensions\"",
+    "emulator": "cd ../project-hubble && firebase emulators:start --only \"firestore\",\"auth\",\"storage\",\"functions\",\"extensions\"",
     "d-emulator": "firebase emulators:start --project demo-getlink --only \"firestore\",\"auth\",\"storage\""
   },
   "resolutions": {
