@@ -16,6 +16,17 @@ import { BatchUploadConfigContext, BatchUploadContext } from "./batch_upload/Bat
 
 const MAX_ATTEMPT = 3;
 
+// Some browsers including chromiums have ArrayBuffer size limits.
+// For chromium browsers, that limit is near 2 GiB.
+// see: https://stackoverflow.com/questions/17823225/do-arraybuffers-have-a-maximum-length,
+// and https://stackoverflow.com/a/73115301
+//
+// Additionally, it is observed in tests that there were some problems with uploading video 
+// files with larger sizes.
+//
+// Apparently, not using URL#createObjectURL solved the issue.
+const THRESHOLD_VIDEO_THUMB = 2000000000;
+
 const ErrorLink: React.FunctionComponent<{ code: FilesStatus }> = ({ code }) => {
 	return <Link variant="danger" href={`/technical#${encodeURIComponent(code)}`}>
 		{code}
@@ -140,27 +151,31 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 					localUrl = URL.createObjectURL(file);
 					dimension = await getImageDimension(localUrl);
 				} else if (mime?.startsWith("video")) {
-					localUrl = URL.createObjectURL(file);
-					dimension = await getVideoDimension(localUrl);
-
-					setStatus("files:creating-thumbnail");
-					try {
-						const thumbnail = await generateThumbnailFromVideo(localUrl, "image/png");
-						if (thumbnail) {
-							await uploadBytes(getFileRef(createFID(prefix + ".png", uid)), thumbnail, {
-								contentType: "image/png",
-								customMetadata: {
-									width: dimension[DimensionField.WIDTH],
-									height: dimension[DimensionField.HEIGHT],
-								} as FileCustomMetadata,
-							});
-						} else {
-							console.warn("skipping to generate video thumbnail");
+					if (file.size < THRESHOLD_VIDEO_THUMB) {
+						localUrl = URL.createObjectURL(file);
+						dimension = await getVideoDimension(localUrl);
+	
+						setStatus("files:creating-thumbnail");
+						try {
+							const thumbnail = await generateThumbnailFromVideo(localUrl, "image/png");
+							if (thumbnail) {
+								await uploadBytes(getFileRef(createFID(prefix + ".png", uid)), thumbnail, {
+									contentType: "image/png",
+									customMetadata: {
+										width: dimension[DimensionField.WIDTH],
+										height: dimension[DimensionField.HEIGHT],
+									} as FileCustomMetadata,
+								});
+							} else {
+								console.warn("skipping to generate video thumbnail");
+							}
+						} catch (error) {
+							console.error(`error generating thumbnail from video [cause: ${error}]`);
 						}
-					} catch (error) {
-						console.error(`error generating thumbnail from video [cause: ${error}]`);
+						setStatus(undefined);
+					} else {
+						console.info(`Skipping dimension and thumbnail for video above threshold size [size: ${file.size}].`);
 					}
-					setStatus(undefined);
 				} else if (mime === "application/pdf") {
 					localUrl = URL.createObjectURL(file);
 					dimension = await getPdfDimension(localUrl);
