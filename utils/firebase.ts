@@ -16,9 +16,11 @@ import {
 	connectFirestoreEmulator,
 	getFirestore,
 } from "firebase/firestore";
+import { connectFunctionsEmulator } from "firebase/functions";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
 import { acquireExperienceOptions } from "./analytics";
 import { firebaseConfig } from "./configs";
+import { getFunctions } from "./functions";
 
 export const FIREBASE_APP_NAME = "[DEFAULT]";
 
@@ -31,6 +33,7 @@ export function initFirebase() {
 
 	const firestore = getFirestore(app);
 	const storage = getStorage(app);
+	const functions = getFunctions(app);
 	const auth = initializeAuth(app, {
 		persistence: [browserLocalPersistence, browserSessionPersistence, indexedDBLocalPersistence],
 	});
@@ -38,6 +41,7 @@ export function initFirebase() {
 	if (process.env.NODE_ENV === "development") {
 		connectFirestoreEmulator(firestore, "localhost", 8080);
 		connectStorageEmulator(storage, "localhost", 9199);
+		connectFunctionsEmulator(functions, "localhost", 5001);
 		connectAuthEmulator(auth, "http://localhost:9099", {
 			disableWarnings: true,
 		});
