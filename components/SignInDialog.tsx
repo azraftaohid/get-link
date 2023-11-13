@@ -1,6 +1,6 @@
 import { useAuthUser } from "@react-query-firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { fetchSignInMethodsForEmail, getAdditionalUserInfo, getAuth, signInWithCustomToken } from "firebase/auth";
+import { getAdditionalUserInfo, getAuth } from "firebase/auth";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
@@ -12,7 +12,7 @@ import ModalFooter from "react-bootstrap/ModalFooter";
 import ModalHeader from "react-bootstrap/ModalHeader";
 import ModalTitle from "react-bootstrap/ModalTitle";
 import * as yup from "yup";
-import { KEY_SIGN_IN_EMAIL, sendOtpToEmail, verifyEmailOtp } from "../utils/auths";
+import { KEY_SIGN_IN_EMAIL, obtainSignInLink, sendSignInLinkToEmail, signInWithLink } from "../utils/auths";
 import { isLocalHost } from "../utils/common";
 import { useStatus } from "../utils/useStatus";
 import { useToast } from "../utils/useToast";
@@ -38,8 +38,12 @@ const schema = yup.object().shape({
 const statusMssgMapping: Record<StatusCode, { variant: string, mssg: React.ReactNode, dismissable?: boolean }> = {
 	"err:send-otp-to-email": {
 		variant: "danger",
-		mssg: <>There was an error while sending the one time password to email. Please try again after some time.</>,
+		mssg: <>There was an error while sending the one time password to your email. Please try again after some time.</>,
 		dismissable: true,
+	},
+	"err:send-sign-in-link-to-email": {
+		variant: "danger",
+		mssg: <>There was an error while sending the sign in link to your email. Please try again after some time.</>
 	},
 	"err:invalid-otp": {
 		variant: "danger",
@@ -70,7 +74,7 @@ const statusMssgMapping: Record<StatusCode, { variant: string, mssg: React.React
 	}
 };
 
-const SendOtpToEmailButton: React.FunctionComponent<SendOtpToEmailButtonProps> = ({
+const SendSignInLinkEmailButton: React.FunctionComponent<SendOtpToEmailButtonProps> = ({
 	onSent,
 	onSendFailed,
 	email,
@@ -95,7 +99,7 @@ const SendOtpToEmailButton: React.FunctionComponent<SendOtpToEmailButtonProps> =
 
 			setState("sending");
 			try {
-				await sendOtpToEmail(email, `${isLocalHost() ? "http://" : "https://"}${window.location.host}/continue-signin?path=${router.asPath}`);
+				await sendSignInLinkToEmail(email, `${isLocalHost() ? "http://" : "https://"}${window.location.host}/continue-signin?path=${router.asPath}`);
 				setState("sent");
 				setResendCountdown(60);
 
@@ -154,45 +158,32 @@ export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) 
 				setState(State.P2);
 				initValues.current = values;
 
-				let linkCurrentUser: boolean;
+				let signInLink: string;
 				try {
-					linkCurrentUser = !!user?.isAnonymous && await fetchSignInMethodsForEmail(getAuth(), values.email)
-						.then(methods => methods.length === 0);
+					signInLink = (await obtainSignInLink(values.email, values.code)).data;
 				} catch (error) {
-					console.error(`failed to fetch sign in methods for email [cause: ${error}]`);
-					appendStatus("err:sign-in");
-					setState(State.SENT);
-					return;
-				}
-
-				let signInToken: string;
-				try {
-					const rslt = await verifyEmailOtp(values.email, values.code, linkCurrentUser);
-					signInToken = rslt.data;
-				} catch (error) {
-					console.error(`failed to verify otp for email [cause: ${error}]`);
-
+					console.error(`failed to obtain sign in link from otp [cause: ${error}]`);
 					switch ((error as FirebaseError)?.code) {
 						case "functions/invalid-argument": appendStatus("err:invalid-otp"); break;
 						case "functions/deadline-exceeded": appendStatus("err:otp-expired"); break;
 						default: appendStatus("err:sign-in");
 					}
-					setState(State.SENT);
-					return;
+					
+					return setState(State.SENT);
 				}
 
 				try {
-					const cred = await signInWithCustomToken(getAuth(), signInToken);
-					const additionalInfo = getAdditionalUserInfo(cred);
+					const cred = await signInWithLink(values.email, signInLink, user);
+					if (cred.operationType === "link") appendStatus("signed-in:user-linked");
+					else if (getAdditionalUserInfo(cred)?.isNewUser) appendStatus("signed-in:new-user");
+					else appendStatus("signed-in:existing-user");
 
-					appendStatus(linkCurrentUser ? "signed-in:user-linked" : additionalInfo?.isNewUser ? "signed-in:new-user" : "signed-in:existing-user");
 					removeStatus("err:sign-in");
 					setState(State.COMPLETED);
-					
-					localStorage.removeItem(KEY_SIGN_IN_EMAIL);
+
 					makeToast(`You are signed in as ${cred.user.email}`, "info");
 				} catch (error) {
-					console.error(`error signing in with token [cause: ${error}]`);
+					console.error(`Sign in with link failed [cause: ${error}]`);
 					appendStatus("err:sign-in");
 					setState(State.SENT);
 				}
@@ -216,6 +207,7 @@ export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) 
 									className="mt-3"
 									name="code"
 									label={<>One time password</>}
+									helperText="You can also click on the link sent to your email to sign in."
 									disabled={state !== State.SENT}
 								/>
 							</Conditional>
@@ -235,7 +227,7 @@ export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) 
 						<Button variant="outline-secondary" onClick={props.onHide} disabled={[State.P1, State.P2].includes(state)}>
 							{state === State.COMPLETED ? "Close" : "Cancel"}
 						</Button>
-						<SendOtpToEmailButton
+						<SendSignInLinkEmailButton
 							email={values.email}
 							error={errors.email}
 							onSent={() => {
@@ -265,6 +257,7 @@ export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) 
 };
 
 type StatusCode = "err:send-otp-to-email" | 
+	"err:send-sign-in-link-to-email" |
 	"err:sign-in" | 
 	"err:invalid-otp" | 
 	"err:otp-expired" |
