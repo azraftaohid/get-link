@@ -26,6 +26,7 @@
     "@react-query-firebase/auth": "^0.3.4",
     "@react-query-firebase/firestore": "^0.4.2",
     "@thegoodcompany/common-utils-js": "^1.4.3",
+    "@vercel/edge-config": "^0.4.1",
     "bootstrap": "5.3.1",
     "file-type": "16.5.4",
     "firebase": "10.4.0",

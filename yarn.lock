@@ -3377,6 +3377,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vercel/edge-config-fs@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@vercel/edge-config-fs@npm:0.1.0"
+  checksum: 4eb27927a1c6a9d77cee4457424e208c3ff7f01e1cd0249b133804d12fd7099bd1aed6a9d9574b122d3bd59289b294a913b4df05bb69aca6091c8a020cbc2121
+  languageName: node
+  linkType: hard
+
+"@vercel/edge-config@npm:^0.4.1":
+  version: 0.4.1
+  resolution: "@vercel/edge-config@npm:0.4.1"
+  dependencies:
+    "@vercel/edge-config-fs": 0.1.0
+  checksum: b391d20385aae2c5fab24ed25f55320441b28ffa128a4dc720097e59cb24079fe63ecd5ca1d0b5256e9f0046254fbf5a7853127b0558d218c202f3a68ebfcd38
+  languageName: node
+  linkType: hard
+
 "@vercel/error-utils@npm:2.0.2":
   version: 2.0.2
   resolution: "@vercel/error-utils@npm:2.0.2"
@@ -6617,6 +6633,7 @@ __metadata:
     "@types/uuid": ^8.3.4
     "@typescript-eslint/eslint-plugin": ^5.10.2
     "@typescript-eslint/parser": ^5.10.2
+    "@vercel/edge-config": ^0.4.1
     bootstrap: 5.3.1
     copy-webpack-plugin: ^10.2.4
     cross-env: ^7.0.3

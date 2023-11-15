@@ -11,3 +11,6 @@ export const firebaseConfig: FirebaseOptions = {
 	appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 	measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
+
+export const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_KEY_ID || "";
+export const appcheckDebugToken = process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN || "";
