@@ -84,12 +84,15 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 				"w-100 text-muted ratio",
 				className
 			)}
-			style={{ "--bs-aspect-ratio": `${((height / width) * 100).toFixed(2)}%` }} 
+			style={{
+				"--bs-aspect-ratio": `${((height / width) * 100).toFixed(2)}%`,
+				"maxHeight": `${height}px`,
+			}} 
 			{...rest}
 		>
 			{(!useFallback &&
 				((type?.startsWith("image/") && (
-					<Link href={src} newTab>
+					<Link className="d-flex justify-content-center" href={src} newTab>
 						<Image
 							src={src}
 							alt="Image"

@@ -36,15 +36,15 @@ export const PDFView: React.FunctionComponent<React.PropsWithChildren<PdfViewPro
 				setPageCount(pdf.numPages);
 				onLoadSuccess?.(pdf);
 			}}
-			loading={
+			loading={<div className="d-flex justify-content-center mw-100">
 				<DownloadProgress as="div" label="Loading PDF" size={size} loaded={loadedSize} style={{ width, height }} />
-			}
+			</div>}
 			{...rest}
 		>
-			<div className="position-relative">
+			<div className="position-relative h-100">
 				<PDFPage
 					key={`page-${activePage}`}
-					className="mw-100 overflow-hidden"
+					className="d-flex justify-content-center mw-100 overflow-hidden"
 					pageIndex={activePage}
 					renderAnnotationLayer={false}
 					renderTextLayer={false} />
