@@ -193,7 +193,7 @@ export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) 
 				setStatus([]);
 			}}
 		>
-			{({ handleSubmit, values, errors }) => (
+			{({ handleSubmit, values, errors, setFieldValue }) => (
 				<Form noValidate onSubmit={handleSubmit}>
 					<ModalBody>
 						<fieldset disabled={[State.P1, State.P2, State.COMPLETED, State.SUBMITTED].includes(state)}>
@@ -208,6 +208,7 @@ export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) 
 									name="code"
 									label={<>One time password</>}
 									helperText="You can also click on the link sent to your email to sign in."
+									onChange={(evt) => setFieldValue("code", evt.currentTarget.value.trim())}
 									disabled={state !== State.SENT}
 								/>
 							</Conditional>
