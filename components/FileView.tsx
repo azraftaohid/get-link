@@ -110,7 +110,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 					/>) || (type?.startsWith("audio/") && <Audio 
 						src={src} 
 						type={type} 
-					/>) || ((type?.startsWith("text/") || ["application/json", "application/xml"].includes(type || "")) && (
+					/>) || ((type?.startsWith("text/") || ["application/json", "application/xml", "application/x-dotenv"].includes(type || "")) && (
 						<RawText
 							className={mergeNames("w-100 mb-0 px-3 py-3", type === "text/plain" && "text-wrap")}
 							src={src}

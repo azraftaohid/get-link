@@ -141,10 +141,10 @@ const About: NextPage = () => {
 						question="What type of files are supported?"
 						answer={
 							<>
-								The list of file formats that are supported include:
+								Essentially any type of file is supported by Get Link. However, most of the common format of the 
+								following type of files are available for previews:
 								<Standout>
-									image, video, audio, text, pdf, xml, json, apk, exe, ps, psd, ai, odt, odp, ods,
-									odg, ms-excel, ms-word, ms-powerpoint and its template files, and rtf.
+									image, video, audio, text, pdf, markup/code.
 								</Standout>
 								We are planning on expanding this list soon.
 							</>
