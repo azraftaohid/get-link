@@ -1,9 +1,41 @@
 import core from "file-type/core";
 
-export type MimeType =
-	| core.MimeType
-	| "image/svg+xml"
-	| "text/csv"
-	| "application/vnd.android.package-archive"
-	| "application/vnd.oasis.opendocument.graphics"
-	| "application/illustrator";
+export const mimeTypes = {
+	".ai": "application/illustrator",
+	".eps": "application/illustrator",
+	".json": "application/json",
+	".firebaserc": "application/json",
+	".apk": "application/vnd.android.package-archive",
+	".odg": "application/vnd.oasis.opendocument.graphics",
+	".env": "application/x-dotenv",
+	".svg": "image/svg+xml",
+	".css": "text/css",
+	".csv": "text/csv",
+	".htm": "text/html",
+	".html": "text/html",
+	".js": "text/javascript",
+	".jsx": "text/javascript",
+	".ts": "text/javascript",
+	".tsx": "text/javascript",
+	".md": "text/markdown",
+	".c": "text/plain",
+	".cpp": "text/plain",
+	".cs": "text/plain",
+	".java": "text/plain",
+	".log": "text/plain",
+	".php": "text/plain",
+	".pl": "text/plain",
+	".py": "text/plain",
+	".rb": "text/plain",
+	".txt": "text/plain",
+	".gitattributes": "text/plain-diff",
+	".vcf": "text/vcard",
+	".editorconfig": "text/x-editorconfig",
+	".gitignore": "text/x-gitignore",
+	".properties": "text/x-java-properties",
+	".xml": "text/xml",
+	".yaml": "text/yaml",
+	".yml": "text/yaml"
+} as const;
+
+export type MimeType = core.MimeType | typeof mimeTypes[keyof typeof mimeTypes];

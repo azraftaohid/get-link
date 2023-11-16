@@ -1,53 +1,19 @@
 import { fromBlob } from "file-type/browser";
 import { UploadMetadata } from "firebase/storage";
 import { Dimension } from "../models/dimension";
-import { MimeType } from "./mimeTypes";
+import { MimeType, mimeTypes } from "./mimeTypes";
 import { initPdfWorker } from "./pdf";
 import { extractExtension } from "./strings";
-import { createAbsoluteUrl, createUrl, DOMAIN } from "./urls";
+import { DOMAIN, createAbsoluteUrl, createUrl } from "./urls";
 
 export const STORAGE_URL_PREFIX =
 	process.env.NODE_ENV === "development"
 		? `http://localhost:9199/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o`
 		: `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o`;
 
-export const acceptedFileFormats = [
-	"audio/*",
-	"video/*",
-	"image/*",
-	"text/*",
-	"application/pdf",
-	"application/zip",
-	"application/x-zip-compressed",
-	"application/gzip",
-	"application/json",
-	"application/xml",
-	"application/vnd.ms-excel", // legacy excel
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // current excel
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.template", // excel template
-	"application/msword", // legacy word
-	"application/vnd.openxmlformats-officedocument.wordprocessingml.document", // current word
-	"application/vnd.openxmlformats-officedocument.wordprocessingml.template", // word template
-	"application/vnd.ms-powerpoint", // powerpoint
-	"application/vnd.openxmlformats-officedocument.presentationml.presentation",
-	"application/vnd.openxmlformats-officedocument.presentationml.slideshow",
-	"application/vnd.openxmlformats-officedocument.presentationml.template",
-	"application/rtf", // rich text format
-	"application/vnd.microsoft.portable-executable", // .exe files
-	"application/x-msdownload", // experimental .exe files,
-	"application/vnd.android.package-archive", // .apk files,
-	"application/vnd.oasis.opendocument.graphics", // libreoffice design; .odg files
-	"application/vnd.oasis.opendocument.spreadsheet", // libreoffice calc; .ods files
-	"application/vnd.oasis.opendocument.presentation", // libreoffice impress; .odp files
-	"application/vnd.oasis.opendocument.text", // libreoffice writer; .odt files
-	"application/illustrator", // .ai files
-	"application/postscript", // .ai, .eps, .ps files
-	"image/vnd.adobe.photoshop", // .psd files
-];
+export const acceptedFileFormats: string[] | undefined = undefined;
 
 export const NON_PREVIEW_SUPPORTING_TYPE = ["image/vnd.adobe.photoshop"];
-
-export const strAcceptedFileFormats = acceptedFileFormats.join(",");
 
 export const executableTypes = [
 	"application/vnd.microsoft.portable-executable",
@@ -148,34 +114,11 @@ export async function getFileType(file: File): Promise<[string | undefined, stri
 	const ext = extractExtension(file.name);
 
 	if (!mime) {
-		switch (ext) {
-			case ".svg":
-				mime = "image/svg+xml";
-				break;
-			case ".csv":
-				mime = "text/csv";
-				break;
-		}
+		mime = mimeTypes[ext as keyof typeof mimeTypes];
 	} else if (mime === "application/zip") {
-		switch (ext) {
-			case ".apk":
-				mime = "application/vnd.android.package-archive";
-				break;
-			case ".odg":
-				mime = "application/vnd.oasis.opendocument.graphics";
-				break;
-			case ".ai":
-			case ".eps":
-				mime = "application/illustrator";
-				break;
-		}
+		if ([".apk", ".odg", ".ai", ".eps"].includes(ext)) mime = mimeTypes[ext as keyof typeof mimeTypes];
 	} else if (mime === "application/postscript") {
-		switch (ext) {
-			case ".ai":
-			case ".eps":
-				mime = "application/illustrator";
-				break;
-		}
+		if ([".ai", ".eps"].includes(ext)) mime = mimeTypes[ext as keyof typeof mimeTypes];
 	}
 
 	return [mime, ext];
