@@ -12,9 +12,10 @@ import { Video } from "./Video";
 
 const PDF = dynamic(() => import("./PDFView"), { ssr: false });
 
-const NoPreview: React.FunctionComponent<React.PropsWithChildren<{ src: string; type?: string | null }>> = ({
+const NoPreview: React.FunctionComponent<React.PropsWithChildren<{ src: string; name?: string | null, type?: string | null }>> = ({
 	type,
 	src,
+	name,
 }) => {
 	return (
 		<div className="d-flex flex-column justify-content-center align-items-center p-2">
@@ -26,6 +27,7 @@ const NoPreview: React.FunctionComponent<React.PropsWithChildren<{ src: string; 
 				size="lg"
 			/>
 			<p className="mb-0">Preview not available.</p>
+			{name && <p className="mb-0">{name}</p>}
 			<p>
 				<Link href={src} newTab download>
 					Download
@@ -40,6 +42,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 	className,
 	src,
 	size,
+	name,
 	type,
 	width: _width,
 	height: _height,
@@ -117,7 +120,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 						/>
 					)) || (type === "application/pdf" && (
 						<PDF file={src} width={width} height={height} size={size} />
-					)))) || <NoPreview src={src} type={type} />}
+					)))) || <NoPreview src={src} name={name} type={type} />}
 		</div>
 	);
 };
@@ -125,6 +128,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 export interface FileViewProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
 	src: string;
 	size: number;
+	name?: string | null;
 	type?: string | null;
 	width?: number | null;
 	height?: number | null;

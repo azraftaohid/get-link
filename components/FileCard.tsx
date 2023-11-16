@@ -18,6 +18,7 @@ export const FileCard: React.FunctionComponent<FileCardProps> = ({
 		<FileView
 			src={directLink}
 			placeholderUrl={placeholderUrl}
+			name={name}
 			size={size}
 			type={type}
 			width={width}
