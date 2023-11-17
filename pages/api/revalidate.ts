@@ -6,14 +6,16 @@ const handler: NextApiHandler = async (req, res) => {
 	}
 
 	const path = req.query.path;
-	if (typeof path !== "string") return res.status(400).json({ message: "Query parameter 'path' is invalid." });
+	if (typeof path !== "string" || !path.startsWith("/") || path.length >= 1024) {
+		return res.status(400).json({ message: `Query parameter 'path' is invalid, received ${path}` });
+	}
 
 	try {
 		await res.revalidate(path);
 		return res.status(200).json({ revalidated: true });
 	} catch (error) {
-		console.error(`error revalidating page [cause: ${error}]`);
-		return res.status(500).send("Revalidate falied due to an internal error.");
+		console.error(`Error revalidating page [cause: ${error}]`);
+		return res.status(500).json({ message: "Revalidate falied due to an internal error." });
 	}
 };
 
