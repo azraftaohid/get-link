@@ -59,6 +59,14 @@ export function initFirebase() {
 	} else {
 		appCheckProvider = new CustomProvider({
 			getToken: async () => {
+				if (process.env.NODE_ENV === "development") {
+					console.debug("Using AppCheck debug token");
+					return {
+						token: appcheckDebugToken,
+						expireTimeMillis: new Date().getTime() + 60 * 60 * 1000,
+					};
+				}
+
 				console.debug("Getting appcheck token from database.");
 				const options = await get("appCheck");
 				if (!options || typeof options !== "object" || Array.isArray(options)) 
