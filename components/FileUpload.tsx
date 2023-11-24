@@ -128,7 +128,10 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			const prefix = nanoid(12);
 			const fid = createFID(prefix + ext, uid);
 			const ref = getFileRef(fid);
-			const metadata: UploadMetadata = { contentType: mime };
+			const metadata: UploadMetadata = {
+				contentType: mime,
+				contentDisposition: `inline; filename*=utf-8''${encodeURIComponent(file.name)}`,
+			};
 
 			// sets metadata: height, width
 			// create and uploads video thumbnail
