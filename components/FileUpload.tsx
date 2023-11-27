@@ -8,11 +8,11 @@ import { Dimension, DimensionField } from "../models/dimension";
 import { FileField, createFID, deleteFile, getFileRef } from "../models/files";
 import { Link as LinkObject } from "../models/links";
 import { FileCustomMetadata, FilesStatus, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
-import { mergeNames } from "../utils/mergeNames";
 import { generateThumbnailFromVideo } from "../utils/video";
 import { FilePreview, FilePreviewProps } from "./FilePreview";
 import Link from "./Link";
 import { BatchUploadConfigContext, BatchUploadContext } from "./batch_upload/BatchUpload";
+import { TextualProgress } from "./progress/TextualProgress";
 
 const MAX_ATTEMPT = 3;
 
@@ -34,17 +34,6 @@ const statusMessages: Record<FilesStatus, React.ReactNode> = {
 	"files:unknown-error": "Something went wrong.",
 	"files:upload-cancelled": "Cancelled",
 	"files:too-large": "File too large",
-};
-
-const StatusIndicator: React.FunctionComponent<StatusIndicatorProps> = ({
-	className,
-	variant = "muted",
-	children,
-	...rest
-}) => {
-	return <small className={mergeNames(`text-${variant}`, className)} {...rest}>
-		{children}
-	</small>;
 };
 
 export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
@@ -302,16 +291,12 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			animated={!status?.includes("files:capture-completed")}
 			now={progress}
 		/>
-		{file ? <StatusIndicator>{status ? statusMessages[status] : `${progress}% completed.`}</StatusIndicator>
-			: <StatusIndicator variant="danger">
+		{file ? <TextualProgress>{status ? statusMessages[status] : `${progress}% completed.`}</TextualProgress>
+			: <TextualProgress variant="danger">
 				Aborted.
-			</StatusIndicator>}
+			</TextualProgress>}
 	</div>;
 };
-
-interface StatusIndicatorProps extends React.PropsWithChildren<React.HTMLAttributes<HTMLElement>> {
-	variant?: "muted" | "danger" | "warning",
-}
 
 export interface FileUploadProps extends FilePreviewProps {
 	file?: File | null,

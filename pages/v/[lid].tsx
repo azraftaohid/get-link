@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { getDownloadURL, getMetadata } from "firebase/storage";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { ParsedUrlQuery } from "querystring";
 import { useEffect, useState } from "react";
@@ -81,6 +82,10 @@ function makeFilesQuery(lid: string, afterPos?: number, afterDocId?: string) {
 	return baseQuery;
 }
 
+const DownloadFilesDialog = dynamic(() => import("../../components/DialogFilesDialog"), {
+	loading: () => <Loading />
+});
+
 const View: NextPage<Partial<StaticProps>> = ({
 	isDynamic,
 	snapshot,
@@ -103,6 +108,7 @@ const View: NextPage<Partial<StaticProps>> = ({
 	const [isDeleting, setDeleting] = useState(false);
 	const [showDeletePrompt, setShowDeletePrompt] = useState(false);
 
+	const [showDownloadPrompt, setShowDownloadPrompt] = useState(false);
 	const [stepOutDownload, setStepOutDownload] = useState(false);
 
 	const [files, setFiles] = useState(initFiles);
@@ -205,6 +211,14 @@ const View: NextPage<Partial<StaticProps>> = ({
 							>
 								<span className="d-none d-md-inline">Share</span>
 							</CopyButton>
+							<Button
+								className="ms-2"
+								variant="outline-vivid"
+								left={<Icon name="download" size="sm" />}
+								onClick={() => setShowDownloadPrompt(true)}
+							>
+								<span className="d-none d-md-inline">Download</span>
+							</Button>
 							{isUser && <Button
 								className="ms-2"
 								variant="outline-danger"
@@ -266,6 +280,11 @@ const View: NextPage<Partial<StaticProps>> = ({
 						.
 					</Alert>
 				</Conditional>
+				<DownloadFilesDialog
+					lid={showDownloadPrompt ? lid : undefined}
+					show={showDownloadPrompt}
+					onHide={() => setShowDownloadPrompt(false)}
+				/>
 				<AssurePrompt
 					title="Link will be deleted permanently"
 					message="Are you sure you want to delete this link. Once deleted, it can not be recovered."
