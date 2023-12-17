@@ -82,7 +82,7 @@ function makeFilesQuery(lid: string, afterPos?: number, afterDocId?: string) {
 	return baseQuery;
 }
 
-const DownloadFilesDialog = dynamic(() => import("../../components/DialogFilesDialog"), {
+const DownloadFilesDialog = dynamic(() => import("../../components/DownloadFilesDialog"), {
 	loading: () => <Loading />
 });
 
