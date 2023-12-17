@@ -5,8 +5,9 @@ import ModalFooter from "react-bootstrap/ModalFooter";
 import ModalHeader from "react-bootstrap/ModalHeader";
 import ModalTitle from "react-bootstrap/ModalTitle";
 import ProgressBar from "react-bootstrap/ProgressBar";
-import { DownloadLink, DownloadLinkField, requestArchive } from "../models/archive";
+import { Bundle, BundleField } from "../models/exports";
 import { AbandonnedError } from "../utils/abandon";
+import { exportLink } from "../utils/exports";
 import { quantityString } from "../utils/quantityString";
 import { formatSize } from "../utils/strings";
 import { useToast } from "../utils/useToast";
@@ -37,11 +38,11 @@ const DownloadFilesDialog: React.FunctionComponent<DownloadFilesDialogProps> = (
 	const [state, setState] = useState<State>("none");
 	
 	const [progress, setProgress] = useState<number>(0);
-	const [downloadLinks, setDownloadLinks] = useState<DownloadLink[]>();
+	const [bundles, setBundles] = useState<Bundle[]>();
 
 	const reset = useRef(() => {
 		setState("none");
-		setDownloadLinks(undefined);
+		setBundles(undefined);
 		setProgress(0);
 	});
 
@@ -54,18 +55,18 @@ const DownloadFilesDialog: React.FunctionComponent<DownloadFilesDialogProps> = (
 		if (!lid) return;
 		setState("preparing");
 
-		const [request, abandon] = requestArchive(lid, setProgress);
+		const [request, abandon] = exportLink(lid, setProgress);
 		request.then(value => {
 			setState("complete");
 
-			setDownloadLinks(value.links);
+			setBundles(value.bundles);
 			if (value.skips?.length) {
 				makeToast("We had trouble with the following files and are not included in the result:\n"
 					+ `${value.skips.join("\n")}`, "error");
 			}
 		}).catch(err => {
 			if (err instanceof AbandonnedError) {
-				console.log("Archive request abandoned.");
+				console.log("Export request abandoned.");
 				reset.current();
 				return;
 			}
@@ -96,12 +97,12 @@ const DownloadFilesDialog: React.FunctionComponent<DownloadFilesDialogProps> = (
 			</TextualProgress>
 			<Conditional in={state === "complete"}>
 				<hr />
-				<p>The following {quantityString("link", "links", downloadLinks?.length || 0)} comprises all your files.{" "}
+				<p>The following {quantityString("link", "links", bundles?.length || 0)} comprises all your files.{" "}
 				Click on their names to start the download:</p>
-				{!downloadLinks?.length ? "No links found." : <ol>{downloadLinks.map(({
-					[DownloadLinkField.NAME]: name = "unnamed",
-					[DownloadLinkField.URL]: url,
-					[DownloadLinkField.SIZE]: size
+				{!bundles?.length ? "No links found." : <ol>{bundles.map(({
+					[BundleField.NAME]: name = "unnamed",
+					[BundleField.URL]: url,
+					[BundleField.SIZE]: size
 				}) => <li key={url}>
 					<Link key={url} href={url || "#"} newTab download={name}>
 						{name}

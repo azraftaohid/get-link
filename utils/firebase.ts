@@ -18,12 +18,11 @@ import {
 	connectFirestoreEmulator,
 	getFirestore,
 } from "firebase/firestore";
-import { connectFunctionsEmulator } from "firebase/functions";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
 import { acquireExperienceOptions } from "./analytics";
 import { hasWindow } from "./common";
 import { appcheckDebugToken, firebaseConfig, siteKey } from "./configs";
-import { getFunctions } from "./functions";
+import { connectFunctionsEmulator, getFunctions } from "./functions";
 
 export const FIREBASE_APP_NAME = "[DEFAULT]";
 
