@@ -10,7 +10,7 @@ export function getExportHttpEndpoint() {
 	return getHttpEndpoint("export-link", Region.ASIA_SOUTH_1);
 }
 
-export async function initiateLinkExport(lid: string): Promise<ExportLinkResponseData> {
+export async function initiateLinkExport(lid: string): Promise<[ExportLinkResponseData, Response]> {
 	const response = await fetch(getExportHttpEndpoint(), {
 		headers: {
 			"Content-Type": "application/json",
@@ -19,7 +19,7 @@ export async function initiateLinkExport(lid: string): Promise<ExportLinkRespons
 		body: JSON.stringify({ lid } as ExportLinkRequestData),
 	});
 
-	return await response.json();
+	return [await response.json(), response];
 }
 
 async function exportLink0(lid: string, onProgress: (progress: number) => unknown, abandonments: Abandonments) {	
@@ -27,7 +27,7 @@ async function exportLink0(lid: string, onProgress: (progress: number) => unknow
 	
 	let docRef: DocumentReference<ExportData>;
 	try {
-		const rslt = await initiateLinkExport(lid);
+		const rslt = (await initiateLinkExport(lid))[0];
 		docRef = getExport(rslt.docId);
 	} catch (error) {
 		throw new Error("Unable to initiate link export: " + error);
@@ -105,7 +105,7 @@ interface ExportLinkResult {
 	skips: string[],
 }
 
-interface ExportLinkResponseData {
+export interface ExportLinkResponseData {
 	docId: string,
 }
 
