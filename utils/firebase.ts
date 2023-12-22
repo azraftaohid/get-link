@@ -29,7 +29,10 @@ export const FIREBASE_APP_NAME = "[DEFAULT]";
 export function initFirebase() {
 	const apps = getApps();
 	const currentApp = apps.find((v) => v.name === FIREBASE_APP_NAME);
-	if (currentApp) return currentApp;
+	if (currentApp) {
+		console.debug("Current app found; returning w/o initialization.");
+		return currentApp;
+	}
 
 	const app = initializeApp(firebaseConfig);
 

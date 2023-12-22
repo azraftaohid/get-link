@@ -1,17 +1,12 @@
 import { DocumentReference, Unsubscribe, onSnapshot } from "firebase/firestore";
 import { Bundle, ExportData, ExportField, OutputField, getExport } from "../models/exports";
+import { ExportLinkRequestData, ExportLinkResponseData } from "../pages/api/export-link";
 import { Abandon, Abandonments, AbandonnedError } from "./abandon";
-import { getHttpEndpoint } from "./functions";
-import { Region } from "./region";
 
 const timeoutMs = (9 + (3 / 60)) * 60 * 1000;
 
-export function getExportHttpEndpoint() {
-	return getHttpEndpoint("export-link", Region.ASIA_SOUTH_1);
-}
-
 export async function initiateLinkExport(lid: string): Promise<[ExportLinkResponseData, Response]> {
-	const response = await fetch(getExportHttpEndpoint(), {
+	const response = await fetch("/api/export-link", {
 		headers: {
 			"Content-Type": "application/json",
 		},
@@ -100,15 +95,7 @@ export function exportLink(lid: string, onProgress: (progress: number) => unknow
 	}];
 }
 
-interface ExportLinkResult {
+export interface ExportLinkResult {
 	bundles: Bundle[],
 	skips: string[],
-}
-
-export interface ExportLinkResponseData {
-	docId: string,
-}
-
-interface ExportLinkRequestData {
-	lid?: unknown,
 }
