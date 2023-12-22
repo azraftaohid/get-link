@@ -68,7 +68,7 @@
     "sass": "^1.49.7",
     "types-react-codemod": "^1.1.0",
     "typescript": "5.2.2",
-    "vercel": "^32.5.2"
+    "vercel": "latest"
   },
   "packageManager": "yarn@3.2.3"
 }

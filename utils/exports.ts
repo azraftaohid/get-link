@@ -1,19 +1,12 @@
 import { DocumentReference, Unsubscribe, onSnapshot } from "firebase/firestore";
 import { Bundle, ExportData, ExportField, OutputField, getExport } from "../models/exports";
-import { ExportLinkRequestData, ExportLinkResponseData } from "../pages/api/export-link";
+import { ExportLinkResponseData } from "../pages/api/export-link";
 import { Abandon, Abandonments, AbandonnedError } from "./abandon";
 
 const timeoutMs = (9 + (3 / 60)) * 60 * 1000;
 
 export async function initiateLinkExport(lid: string): Promise<[ExportLinkResponseData, Response]> {
-	const response = await fetch("/api/export-link", {
-		headers: {
-			"Content-Type": "application/json",
-		},
-		method: "POST",
-		body: JSON.stringify({ lid } as ExportLinkRequestData),
-	});
-
+	const response = await fetch(`/api/export-link?lid=${lid}`, { method: "GET" });
 	return [await response.json(), response];
 }
 
