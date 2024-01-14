@@ -21,10 +21,17 @@
     "protobufjs": "6.11.3"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.484.0",
+    "@aws-sdk/xhr-http-handler": "^3.485.0",
     "@next/bundle-analyzer": "^12.1.0",
     "@popperjs/core": "^2.11.2",
     "@react-query-firebase/auth": "^0.3.4",
     "@react-query-firebase/firestore": "^0.4.2",
+    "@smithy/abort-controller": "^2.0.16",
+    "@smithy/fetch-http-handler": "^2.3.2",
+    "@smithy/node-http-handler": "^2.2.2",
+    "@smithy/protocol-http": "^3.0.12",
+    "@smithy/types": "^2.8.0",
     "@thegoodcompany/common-utils-js": "^1.4.3",
     "@vercel/edge-config": "^0.4.1",
     "bootstrap": "5.3.1",
@@ -69,6 +76,10 @@
     "types-react-codemod": "^1.1.0",
     "typescript": "5.2.2",
     "vercel": "latest"
+  },
+  "browser": {
+    "./utils/runtimeConfig": "./utils/runtimeConfig.browser",
+    "fs": false
   },
   "packageManager": "yarn@3.2.3"
 }

@@ -18,7 +18,6 @@ import {
 	connectFirestoreEmulator,
 	getFirestore,
 } from "firebase/firestore";
-import { connectStorageEmulator, getStorage } from "firebase/storage";
 import { acquireExperienceOptions } from "./analytics";
 import { hasWindow } from "./common";
 import { appcheckDebugToken, firebaseConfig, siteKey } from "./configs";
@@ -37,7 +36,6 @@ export function initFirebase() {
 	const app = initializeApp(firebaseConfig);
 
 	const firestore = getFirestore(app);
-	const storage = getStorage(app);
 	const functions = getFunctions(app);
 	const auth = initializeAuth(app, {
 		persistence: [browserLocalPersistence, browserSessionPersistence, indexedDBLocalPersistence],
@@ -47,7 +45,6 @@ export function initFirebase() {
 		if (hasWindow) self.FIREBASE_APPCHECK_DEBUG_TOKEN = appcheckDebugToken;
 		
 		connectFirestoreEmulator(firestore, "localhost", 8080);
-		connectStorageEmulator(storage, "localhost", 9199);
 		connectFunctionsEmulator(functions, "localhost", 5001);
 		connectAuthEmulator(auth, "http://localhost:9099", {
 			disableWarnings: true,

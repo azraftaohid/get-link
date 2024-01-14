@@ -1,4 +1,5 @@
 import { getAnalytics, logEvent } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
 import type { AppProps, NextWebVitalsMetric } from "next/app";
 import Head from "next/head";
 import Image from "next/image";
@@ -11,6 +12,7 @@ import ToastHeader from "react-bootstrap/ToastHeader";
 import { QueryClient, QueryClientProvider } from "react-query";
 import "../styles/global.scss";
 import { acquireExperienceOptions } from "../utils/analytics";
+import { getBackblaze } from "../utils/backblaze";
 import { initFirebase } from "../utils/firebase";
 import { init } from "../utils/init";
 
@@ -27,7 +29,9 @@ const toastBgMapping: Record<ToastType, string | undefined> = {
 };
 
 function MyApp({ Component, pageProps }: AppProps) {
-	initFirebase();
+	const app = initFirebase();
+	getBackblaze().bindAuth(getAuth(app));
+	
 	const queryClient = useMemo(() => new QueryClient(), []);
 	
 	const [toast, setToast] = useState<React.ReactNode>();

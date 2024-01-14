@@ -1,8 +1,9 @@
+import { HeadObjectCommandOutput } from "@aws-sdk/client-s3";
 import { getAuth } from "firebase/auth";
 import { CollectionReference, DocumentReference, FieldPath, Query, Transaction, WithFieldValue, collection, deleteDoc, deleteField, doc, getDocs, getFirestore, limit, orderBy, query, setDoc, where } from "firebase/firestore";
-import { FullMetadata, StorageReference, deleteObject, ref as fileRef, getStorage } from "firebase/storage";
 import { v5 as uuidV5 } from "uuid";
 import { FileCustomMetadata } from "../utils/files";
+import { deleteObject } from "../utils/storage";
 import { compartFid, extractDisplayName } from "../utils/strings";
 import { Warning } from "./links";
 import { OrderData } from "./order";
@@ -12,7 +13,7 @@ import { UserSnapshot, UserSnapshotField } from "./users";
  * Database structure:
  * 
  * ## Definitions
- * 	- FID: unique file ID; often implies to the file path
+ * 	- FID: unique file ID; often implies to the file path w/o bucket name
  *  - CFID: canonical file ID; created from FID; used to refer document of a file
  * 	- Name: name of the file, that comprises the display name + extension
  * 
@@ -31,17 +32,15 @@ export function createFID(fileName: string, uid: string) {
 	return `users_future/${uid}/${fileName}`;
 }
 
-export function getFileRef(fid: string): StorageReference;
-export function getFileRef(fileName: string, uid: string): StorageReference;
-export function getFileRef(s1: string, s2?: string) {
-	return fileRef(getStorage(), s2 ? createFID(s1, s2) : s1);
+export function getFileKey(fid: string) {
+	return fid;
 }
 
-export function getThumbnailRef(fid: string, size: ThumbnailSize) {
+export function getThumbnailKey(fid: string, size: ThumbnailSize) {
 	const { uid, fileName } = compartFid(fid);
 	const displayName = extractDisplayName(fileName);
 
-	return fileRef(getStorage(), `users_future/${uid}/thumbs/${displayName}_${size}.jpeg`);
+	return `users_future/${uid}/thumbs/${displayName}_${size}.jpeg`;
 }
 
 export function createCFID(fid: string) {
@@ -114,7 +113,7 @@ export function createFileDoc(fid: string,
 		...extras,
 		[FileField.USER]: { [UserSnapshotField.UID]: uid },
 		[FileField.FID]: fid,
-		[FileField.OVERRIDES]: { name: name },
+		[FileField.OVERRIDES]: { Metadata: { name } },
 		[FileField.LINKS]: links,
 	};
 
@@ -129,10 +128,10 @@ export async function updateFileDoc(ref: DocumentReference<FileData>, data: File
 }
 
 export async function deleteFile(fid: string) {
-	const fileRef = getFileRef(fid);
+	const fileKey = getFileKey(fid);
 	const docRef = getFileDocRef(createCFID(fid));
 
-	const dltObj = deleteObject(fileRef);
+	const dltObj = deleteObject(fileKey);
 	const dltDoc = deleteDoc(docRef);
 	return Promise.all([dltObj, dltDoc]);
 }
@@ -164,8 +163,8 @@ export interface FileData {
 	[FileField.WARNS]?: Warning[];
 }
 
-export type FileOverrides = Partial<FullMetadata> & {
-	customMetadata?: FileCustomMetadata
+export type FileOverrides = Partial<HeadObjectCommandOutput> & {
+	Metadata?: FileCustomMetadata
 };
 
-export type SettableFileOverrides = Pick<FileOverrides, "name" | "customMetadata">;
+export type SettableFileOverrides = Pick<FileOverrides, "Metadata">;

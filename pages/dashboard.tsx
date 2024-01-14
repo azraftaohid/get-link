@@ -1,3 +1,4 @@
+import { NotFound } from "@aws-sdk/client-s3";
 import { useAuthUser } from "@react-query-firebase/auth";
 import { useFirestoreInfiniteQuery } from "@react-query-firebase/firestore";
 import { formatDate } from "@thegoodcompany/common-utils-js";
@@ -14,7 +15,6 @@ import {
 	startAfter,
 	where,
 } from "firebase/firestore";
-import { getDownloadURL, getMetadata } from "firebase/storage";
 import { NextPage } from "next";
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
@@ -35,7 +35,7 @@ import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
 import { Shimmer } from "../components/Shimmer";
 import { ShortLoading } from "../components/ShortLoading";
-import { getFileRef, getThumbnailRef } from "../models/files";
+import { getFileKey, getThumbnailKey } from "../models/files";
 import { COLLECTION_LINKS, LinkData, LinkField } from "../models/links";
 import { UserSnapshotField } from "../models/users";
 import styles from "../styles/dashboard.module.scss";
@@ -43,6 +43,7 @@ import { logClick } from "../utils/analytics";
 import { hasExpired } from "../utils/dates";
 import { findFileIcon, NON_PREVIEW_SUPPORTING_TYPE } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
+import { getDownloadURL, getMetadata, requireObject } from "../utils/storage";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
 import { getSolidStallImage } from "../visuals/stallData";
 
@@ -131,19 +132,19 @@ const LinkCard: React.FunctionComponent<React.PropsWithChildren<{ link: QueryDoc
 		}
 		setThumbnail(undefined);
 
-		const thumbRef = getThumbnailRef(fid, "384x384");
-		getDownloadURL(thumbRef)
-			.then((url) => setThumbnail(url))
+		const thumbKey = getThumbnailKey(fid, "384x384");
+		requireObject(thumbKey)
+			.then(() => setThumbnail(getDownloadURL(thumbKey)))
 			.catch(async (err) => {
-				if (err.code !== "storage/object-not-found") console.warn(`thumbnail get failed: ${err}`);
+				if (err instanceof NotFound) console.warn(`thumbnail get failed: ${err}`);
 
-				const fileRef = getFileRef(fid);
+				const fileKey = getFileKey(fid);
 				try {
-					const metadata = await getMetadata(fileRef);
-					const mimeType = metadata.contentType;
+					const metadata = await getMetadata(fileKey);
+					const mimeType = metadata.ContentType;
 
 					if (mimeType?.startsWith("image/") && !NON_PREVIEW_SUPPORTING_TYPE.includes(mimeType)) {
-						const directLink = await getDownloadURL(fileRef);
+						const directLink = getDownloadURL(fileKey);
 						setThumbnail(directLink);
 					} else if (mimeType) {
 						setThumbnail(findFileIcon(mimeType) || null);

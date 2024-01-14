@@ -43,7 +43,19 @@ const nextConfig = {
 		},
 	],
 	images: {
-		domains: ["localhost", "firebasestorage.googleapis.com"],
+		domains: ["localhost", "firebasestorage.googleapis.com", "getlink-dev.s3.eu-central-003.backblazeb2.com"],
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "f003.backblazeb2.com",
+				pathname: "/file/getlink-dev/**"
+			},
+			{
+				protocol: "https",
+				hostname: "f003.backblazeb2.com",
+				pathname: "/file/getlink/**"
+			},
+		]
 	},
 	webpack: (config) => {
 		config.devServer = {

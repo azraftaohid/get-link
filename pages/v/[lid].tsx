@@ -1,3 +1,4 @@
+import { NotFound } from "@aws-sdk/client-s3";
 import { useAuthUser } from "@react-query-firebase/auth";
 import { formatDate } from "@thegoodcompany/common-utils-js";
 import { getAuth } from "firebase/auth";
@@ -13,7 +14,6 @@ import {
 	query,
 	startAfter,
 } from "firebase/firestore";
-import { getDownloadURL, getMetadata } from "firebase/storage";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
@@ -35,7 +35,7 @@ import { Loading } from "../../components/Loading";
 import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
 import { PageContent } from "../../components/PageContent";
-import { createCFID, FileData, FileField, getFileDocs, getFileRef, getThumbnailRef } from "../../models/files";
+import { createCFID, FileData, FileField, getFileDocs, getFileKey, getThumbnailKey } from "../../models/files";
 import { getLinkRef, LinkData, LinkField, releaseLink, Warning } from "../../models/links";
 import { OrderField } from "../../models/order";
 import { UserSnapshotField } from "../../models/users";
@@ -48,6 +48,7 @@ import { initFirebase } from "../../utils/firebase";
 import { initModernizr } from "../../utils/modernizr";
 import { descriptiveNumber } from "../../utils/numbers";
 import { quantityString } from "../../utils/quantityString";
+import { getDownloadURL, getMetadata, requireObject } from "../../utils/storage";
 import { makeProcessedFile, ProcessedFileData } from "../../utils/useProcessedFiles";
 import { useToast } from "../../utils/useToast";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
@@ -64,10 +65,11 @@ const msnryBreakpoitns: MasonryProps["breakpointCols"] = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function suppressError(error: any, lid: string, subject: string) {
-	if (error.code === "storage/object-not-found") {
+	if (error instanceof NotFound) {
 		console.warn(`${subject} not found [lid: ${lid}]`);
 	} else {
-		console.error(`error getting ${subject} [lid: ${lid}]`);
+		if ("$response" in error) console.debug(error.$response);
+		console.error(`error getting ${subject} [lid: ${lid}]: `, error);
 	}
 
 	return undefined;
@@ -367,25 +369,22 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	let coverUrl: string | undefined;
 	let coverType: string | undefined;
 	if (cover?.fid) {
-		const coverRef = getFileRef(cover.fid);
-		const thumbnailRef = getThumbnailRef(cover.fid, "1024x1024");
-		const smThumbnailRef = getThumbnailRef(cover.fid, "56x56");
+		const coverKey = getFileKey(cover.fid);
+		const thumbnailKey = getThumbnailKey(cover.fid, "1024x1024");
+		const smThumbnailKey = getThumbnailKey(cover.fid, "56x56");
 
-		tasks.push(getDownloadURL(thumbnailRef)
-			.then(url => thumbailUrl = url)
+		tasks.push(requireObject(thumbnailKey)
+			.then(() => thumbailUrl = getDownloadURL(thumbnailKey))
 			.catch((err) => suppressError(err, lid, "thumbnail")));
 
-		tasks.push(getDownloadURL(smThumbnailRef)
-			.then()
+		tasks.push(requireObject(smThumbnailKey)
+			.then(() => smThumbnailUrl = getDownloadURL(smThumbnailKey))
 			.catch((err) => suppressError(err, lid, "small thumbnail")));
 
-		tasks.push(getDownloadURL(coverRef)
-			.then(url => coverUrl = url)
-			.catch(err => suppressError(err, lid, "cover")));
-
-		tasks.push(getMetadata(coverRef)
-			.then(metadata => coverType = metadata.contentType)
-			.catch(err => suppressError(err, lid, "cover (metadata)")));
+		tasks.push(getMetadata(coverKey).then(value => {
+			coverType = value.ContentType;
+			coverUrl = getDownloadURL(coverKey);
+		}).catch(err => suppressError(err, lid, "cover")));
 	}
 
 	const initFiles: (ProcessedFileData & { pos: number })[] = [];
@@ -393,7 +392,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 		tasks.push(makeProcessedFile(fid, lid, pushData || staticSnapshot.data?.[LinkField.FILES]?.[fid])
 			.then(res => initFiles.push({ ...res, pos }))
 			.catch(err => {
-				if (err.code === "storage/object-not-found") return;
+				if (err instanceof NotFound) return;
 				throw err;
 			}));
 	};
@@ -436,7 +435,9 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 		});
 	}
 
+	console.debug("Awaiting task complete");
 	await Promise.all(tasks);
+	console.debug("Props are prepared; returning...");
 
 	const baseFile = initFiles[0];
 	if (!baseFile) return notFound;

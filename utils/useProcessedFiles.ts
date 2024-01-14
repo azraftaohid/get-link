@@ -1,31 +1,33 @@
-import { getDownloadURL, getMetadata } from "firebase/storage";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DimensionField } from "../models/dimension";
-import { FileData, FileField, getFileRef } from "../models/files";
+import { FileData, FileField, getFileKey } from "../models/files";
 import { Warning } from "../models/links";
 import { OrderField } from "../models/order";
+import { now } from "./dates";
+import { getDownloadURL, getMetadata } from "./storage";
 
 export async function makeProcessedFile(fid: string, lid: string, data?: FileData): Promise<ProcessedFileData> {
 	console.debug(`making processed file [fid: ${fid}]`);
-	const ref = getFileRef(fid);
+	const startTime = now();
 
+	const fileKey = getFileKey(fid);
 	const overrides = data?.[FileField.OVERRIDES] || {};
 	// todo: use overrides to check for directLinks and metadata before requesting server data
 	return await Promise.all([
-		getDownloadURL(ref),
-		getMetadata(ref),
+		getDownloadURL(fileKey),
+		getMetadata(fileKey),
 	]).then(([directLink, metadata]) => {
-		console.debug(`file direct link and metadata received [fid: ${fid}]`);
-		const type = overrides.contentType || metadata.contentType || "application/octet-stream";
+		console.debug(`file direct link and metadata received [fid: ${fid}; took: ${now() - startTime}ms]`);
+		const type = overrides.ContentType || metadata.ContentType || "application/octet-stream";
 		const pos = data?.[FileField.LINKS]?.[lid][OrderField.CREATE_ORDER];
 
 		return {
 			fid, directLink, type, pos,
-			size: overrides.size || metadata.size,
-			width: +(overrides.customMetadata?.[DimensionField.WIDTH] || metadata.customMetadata?.width || 0) || null,
-			height: +(overrides.customMetadata?.[DimensionField.HEIGHT] || metadata.customMetadata?.height || 0) || null,
+			size: overrides.ContentLength || metadata.ContentLength || 0,
+			width: +(overrides.Metadata?.[DimensionField.WIDTH] || metadata.Metadata?.width || 0) || null,
+			height: +(overrides.Metadata?.[DimensionField.HEIGHT] || metadata.Metadata?.height || 0) || null,
 			warnings: data?.[FileField.WARNS] || null,
-			name: overrides.name || metadata.name,
+			name: overrides.Metadata?.name || metadata.Metadata?.name,
 		};
 	});
 }

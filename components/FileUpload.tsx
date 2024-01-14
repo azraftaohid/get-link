@@ -1,13 +1,15 @@
 import { useAuthUser } from "@react-query-firebase/auth";
 import { getAuth } from "firebase/auth";
-import { UploadMetadata, UploadTask, uploadBytes, uploadBytesResumable } from "firebase/storage";
 import { nanoid } from "nanoid";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { Dimension, DimensionField } from "../models/dimension";
-import { FileField, createFID, deleteFile, getFileRef } from "../models/files";
+import { FileField, createFID, deleteFile, getFileKey } from "../models/files";
 import { Link as LinkObject } from "../models/links";
 import { FileCustomMetadata, FilesStatus, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
+import { ModularUploadParams, uploadObject, uploadObjectResumable } from "../utils/storage";
+import { escapeFilename } from "../utils/strings";
+import { Upload } from "../utils/upload/Upload";
 import { generateThumbnailFromVideo } from "../utils/video";
 import { FilePreview, FilePreviewProps } from "./FilePreview";
 import Link from "./Link";
@@ -74,7 +76,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 		onError?.(file, err);
 	};
 
-	const [control, setControl] = useState<UploadTask>();
+	const [control, setControl] = useState<Upload>();
 	const pendingCancel = useRef(false);
 
 	const [progress, setProgress] = useState(0);
@@ -88,7 +90,9 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 		} else {
 			link.pushFile(fid, order, {
 				[FileField.OVERRIDES]: {
-					name: file.name,
+					Metadata: {
+						name: file.name,
+					}
 				},
 			});
 		}
@@ -116,10 +120,10 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 
 			const prefix = nanoid(12);
 			const fid = createFID(prefix + ext, uid);
-			const ref = getFileRef(fid);
-			const metadata: UploadMetadata = {
-				contentType: mime,
-				contentDisposition: `inline; filename*=utf-8''${encodeURIComponent(file.name)}`,
+			const fileKey = getFileKey(fid);
+			const params: ModularUploadParams = {
+				ContentType: mime,
+				ContentDisposition: `inline; filename*=utf-8''${escapeFilename(file.name)}`,
 			};
 
 			// sets metadata: height, width
@@ -139,11 +143,11 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 					try {
 						const thumbnail = await generateThumbnailFromVideo(localUrl, "image/png");
 						if (thumbnail) {
-							await uploadBytes(getFileRef(createFID(prefix + ".png", uid)), thumbnail, {
-								contentType: "image/png",
-								customMetadata: {
-									width: dimension[DimensionField.WIDTH],
-									height: dimension[DimensionField.HEIGHT],
+							await uploadObject(getFileKey(createFID(prefix + ".png", uid)), thumbnail, {
+								ContentType: "image/png",
+								Metadata: {
+									width: dimension[DimensionField.WIDTH]?.toString(),
+									height: dimension[DimensionField.HEIGHT]?.toString(),
 								} as FileCustomMetadata,
 							});
 						} else {
@@ -160,56 +164,55 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 
 				if (localUrl) URL.revokeObjectURL(localUrl);
 				if (dimension) {
-					metadata.customMetadata = {
-						width: dimension[DimensionField.WIDTH],
-						height: dimension[DimensionField.HEIGHT],
+					params.Metadata = {
+						width: dimension[DimensionField.WIDTH]?.toString(),
+						height: dimension[DimensionField.HEIGHT]?.toString(),
 					} as FileCustomMetadata;
 				}
 			} catch (error) {
 				console.error(`error getting dimension from selected file [cause: ${error}]`);
 			}
 
-			const upload = uploadBytesResumable(ref, file, metadata);
+			const upload = uploadObjectResumable(fileKey, file, params);
 			setControl(upload);
 
-			const unsubscribe = upload.on(
-				"state_changed",
-				async (snapshot) => {
-					const perct = Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-					setProgress(perct);
-
-					switch (snapshot.state) {
-						case "paused": setStatus("files:upload-paused"); break;
-						case "canceled": setStatus("files:upload-cancelled"); break;
-						case "success": setStatus("files:upload-completed"); break;
-						case "running": setStatus(undefined); break;
-					}
-				},
-				(err) => {
-					if (err.code === "storage/canceled") {
-						stateless.current.handleCancel(file);
-					} else {
-						setStatus("files:upload-failed");
-						stateless.current.handleError(file, err);
-					}
-				},
-				() => {
-					stateless.current.associateWithLink(fid, file).then(() => {
-						setStatus("files:capture-completed");
-						stateless.current.handleComplete(file, fid);
-					}).catch(error => {
-						setStatus("files:capture-failed");
-						stateless.current.handleError(file, error);
-
-						deleteFile(fid).catch(err => {
-							if (err.code === "not-found" || err.code === "storage/object-not-found") return;
-							console.error(`error deleting file after failed to associate with link [cause: ${err}]`);
+			upload.on("progress", ({ uploadedBytes, totalBytes = uploadedBytes }) => {
+				console.debug("Upload progress update received.");
+				const perct = Math.floor((uploadedBytes / totalBytes) * 100);
+				setProgress(perct);
+			}).on("state_changed", ({ state }) => {
+				console.debug(`Upload state changed to ${state}.`);
+				switch (state) {
+					case "paused": setStatus("files:upload-paused"); break;
+					case "canceled": setStatus("files:upload-cancelled"); break;
+					case "success":
+						setStatus("files:upload-completed");
+						stateless.current.associateWithLink(fid, file).then(() => {
+							setStatus("files:capture-completed");
+							stateless.current.handleComplete(file, fid);
+						}).catch(error => {
+							setStatus("files:capture-failed");
+							stateless.current.handleError(file, error);
+	
+							deleteFile(fid).catch(err => {
+								if (err.code === "not-found" || err.code === "storage/object-not-found") return;
+								console.error(`error deleting file after failed to associate with link [cause: ${err}]`);
+							});
 						});
-					});
+						break;
+					case "running": setStatus(undefined); break;
 				}
-			);
+			}).on("failed", (error) => {
+				console.debug("Upload failed received.");
+				if (error.code === "storage:upload-canceled") {
+					stateless.current.handleCancel(file);
+				} else {
+					setStatus("files:upload-failed");
+					stateless.current.handleError(file, error);
+				}
+			});
 
-			return { upload, unsubscribe };
+			return { upload };
 		};
 
 		let task: ReturnType<typeof handler> | undefined;
@@ -218,19 +221,19 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 		else task = handler();
 
 		return () => {
-			task?.then(({ upload, unsubscribe }) => {
-				if (upload.snapshot.state === "running" || upload.snapshot.state === "paused") {
+			task?.then(({ upload }) => {
+				if (upload.getState() === "running" || upload.getState() === "paused") {
 					upload.cancel();
 				}
 
-				unsubscribe();
+				upload.removeAllListeners();
 			});
 		};
 	}, [file, uid]);
 
 	// syncs resume status with upload control
 	useEffect(() => {
-		if (file && resume(file)) control?.resume();
+		if (file && resume(file)) control?.start();
 		else control?.pause();
 	}, [control, file, resume]);
 
@@ -248,9 +251,8 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			className="border border-secondary border-bottom-0 rounded-0 rounded-top"
 			file={file} {...rest}
 			onClose={() => {
-				switch (control?.snapshot.state) {
+				switch (control?.getState()) {
 					case "paused":
-						control.resume();
 						control.cancel();
 						return;
 					case "error":

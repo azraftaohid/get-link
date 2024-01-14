@@ -1,4 +1,5 @@
 import { FirebaseOptions } from "firebase/app";
+import { BackblazeConfig } from "./backblaze";
 
 export const EXPIRE_DAYS = 14;
 
@@ -10,6 +11,11 @@ export const firebaseConfig: FirebaseOptions = {
 	messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
 	appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 	measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+};
+
+export const b2Config: BackblazeConfig = {
+	clusterNo: process.env.NEXT_PUBLIC_BACKBLAZE_CLUSTER_NO || "003",
+	defaultBucket: process.env.NEXT_PUBLIC_B2_DEFAULT_BUCKET || "",
 };
 
 export const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_KEY_ID || "";

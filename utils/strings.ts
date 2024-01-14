@@ -31,3 +31,25 @@ export function formatSize(bytes: number) {
 
 	return `${quantity.toFixed(2)} ${sizeUnits[unit]}`;
 }
+
+/**
+ * Escapes special characters (everything except A–Z a–z 0–9 - _).
+ * Returned string should be fine to use with X-Bz-Info-b2-content-disposition header.
+ * 
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#description
+ * @see https://www.backblaze.com/apidocs/b2-upload-file
+ * 
+ * @param name The file name.
+ * @returns Escaped variant of the provided file name.
+ */
+export function escapeFilename(name: string) {
+	return encodeURIComponent(name)
+		.replaceAll("!", "%21")
+		.replaceAll("'", "%27")
+		.replaceAll("(", "%28")
+		.replaceAll(")", "%29")
+		.replaceAll("*", "%2A")
+		.replaceAll("+", "%2B")
+		.replaceAll(".", "%2E")
+		.replaceAll("~", "%7E");
+}
