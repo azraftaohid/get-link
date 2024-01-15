@@ -21,8 +21,8 @@ export function getStorage(b2: Backblaze = getBackblaze()): S3Client {
 	if (!client) {
 		console.debug("Creating new S3 instance.");
 		client = new S3Client({
-			endpoint: `https://s3.eu-central-${b2.config.clusterNo}.backblazeb2.com`,
-			region: `eu-central-${b2.config.clusterNo}`,
+			endpoint: b2.s3Endpoint,
+			region: b2.region,
 			credentials: b2Cred && {
 				accessKeyId: b2Cred.keyId,
 				secretAccessKey: b2Cred.key,

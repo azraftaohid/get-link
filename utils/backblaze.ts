@@ -17,7 +17,9 @@ export function getBackblaze() {
 
 export class Backblaze {
 	public readonly config: BackblazeConfig;
+	public readonly region: string;
 	public readonly b2BaseUrl: string;
+	public readonly s3Endpoint: string;
 	
 	private credential: B2Credential | undefined;
 
@@ -25,7 +27,9 @@ export class Backblaze {
 
 	constructor(config: BackblazeConfig) {
 		this.config = config;
+		this.region = `eu-central-${config.clusterNo}`;
 		this.b2BaseUrl = `https://f${config.clusterNo}.backblazeb2.com/file`;
+		this.s3Endpoint = `https://s3.${this.region}.backblazeb2.com`;
 
 		this.resetCredential();
 		this.boundAuth = [];

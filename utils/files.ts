@@ -58,9 +58,8 @@ export function compartDirectLink(url: string): {
 
 export function makeDirectLink(path: string, token?: string) {
 	const bb = getBackblaze();
-	// const fileUrl = `${bb.b2BaseUrl}/${bb.config.defaultBucket}/${path}`;
-	const fileUrl = `https://${bb.config.defaultBucket}.s3.eu-central-${bb.config.clusterNo}.backblazeb2.com/${path}`;
-	return token ? `${fileUrl}?Authorization=${token}` : fileUrl;
+	return token ? `${bb.b2BaseUrl}/${bb.config.defaultBucket}/${path}?Authorization=${token}`
+		: `${bb.s3Endpoint}/${bb.config.defaultBucket}/${path}`;
 }
 
 export function isValidDirectLink(url: string) {
