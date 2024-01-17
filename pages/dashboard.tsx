@@ -1,4 +1,3 @@
-import { NotFound } from "@aws-sdk/client-s3";
 import { useAuthUser } from "@react-query-firebase/auth";
 import { useFirestoreInfiniteQuery } from "@react-query-firebase/firestore";
 import { formatDate } from "@thegoodcompany/common-utils-js";
@@ -41,6 +40,7 @@ import { UserSnapshotField } from "../models/users";
 import styles from "../styles/dashboard.module.scss";
 import { logClick } from "../utils/analytics";
 import { hasExpired } from "../utils/dates";
+import { NotFound } from "../utils/errors/NotFound";
 import { findFileIcon, NON_PREVIEW_SUPPORTING_TYPE } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
 import { getDownloadURL, getMetadata, requireObject } from "../utils/storage";
@@ -141,7 +141,7 @@ const LinkCard: React.FunctionComponent<React.PropsWithChildren<{ link: QueryDoc
 				const fileKey = getFileKey(fid);
 				try {
 					const metadata = await getMetadata(fileKey);
-					const mimeType = metadata.ContentType;
+					const mimeType = metadata.contentType;
 
 					if (mimeType?.startsWith("image/") && !NON_PREVIEW_SUPPORTING_TYPE.includes(mimeType)) {
 						const directLink = getDownloadURL(fileKey);

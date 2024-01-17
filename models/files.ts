@@ -1,9 +1,8 @@
-import { HeadObjectCommandOutput } from "@aws-sdk/client-s3";
 import { getAuth } from "firebase/auth";
 import { CollectionReference, DocumentReference, FieldPath, Query, Transaction, WithFieldValue, collection, deleteDoc, deleteField, doc, getDocs, getFirestore, limit, orderBy, query, setDoc, where } from "firebase/firestore";
 import { v5 as uuidV5 } from "uuid";
 import { FileCustomMetadata } from "../utils/files";
-import { deleteObject } from "../utils/storage";
+import { FileMetadata, deleteObject } from "../utils/storage";
 import { compartFid, extractDisplayName } from "../utils/strings";
 import { Warning } from "./links";
 import { OrderData } from "./order";
@@ -113,7 +112,7 @@ export function createFileDoc(fid: string,
 		...extras,
 		[FileField.USER]: { [UserSnapshotField.UID]: uid },
 		[FileField.FID]: fid,
-		[FileField.OVERRIDES]: { Metadata: { name } },
+		[FileField.OVERRIDES]: { customMetadata: { name } },
 		[FileField.LINKS]: links,
 	};
 
@@ -163,8 +162,8 @@ export interface FileData {
 	[FileField.WARNS]?: Warning[];
 }
 
-export type FileOverrides = Partial<HeadObjectCommandOutput> & {
-	Metadata?: FileCustomMetadata
-};
+export type FileOverrides = Partial<Pick<FileMetadata, "contentDisposition" | "contentType" | "size" | "uploadTimestamp">> & {
+	customMetadata?: FileCustomMetadata,
+}
 
-export type SettableFileOverrides = Pick<FileOverrides, "Metadata">;
+export type SettableFileOverrides = Pick<FileOverrides, "customMetadata">;

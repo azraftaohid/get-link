@@ -1,4 +1,3 @@
-import { NotFound } from "@aws-sdk/client-s3";
 import { useAuthUser } from "@react-query-firebase/auth";
 import { formatDate } from "@thegoodcompany/common-utils-js";
 import { getAuth } from "firebase/auth";
@@ -43,6 +42,7 @@ import { ClickEventContext, logClick } from "../../utils/analytics";
 import { notFound } from "../../utils/common";
 import { hasExpired } from "../../utils/dates";
 import { shouldStepOutDownload } from "../../utils/downloads";
+import { NotFound } from "../../utils/errors/NotFound";
 import { createViewLink, findFileIcon } from "../../utils/files";
 import { initFirebase } from "../../utils/firebase";
 import { initModernizr } from "../../utils/modernizr";
@@ -68,7 +68,6 @@ function suppressError(error: any, lid: string, subject: string) {
 	if (error instanceof NotFound) {
 		console.warn(`${subject} not found [lid: ${lid}]`);
 	} else {
-		if ("$response" in error) console.debug(error.$response);
 		console.error(`error getting ${subject} [lid: ${lid}]: `, error);
 	}
 
@@ -382,7 +381,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 			.catch((err) => suppressError(err, lid, "small thumbnail")));
 
 		tasks.push(getMetadata(coverKey).then(value => {
-			coverType = value.ContentType;
+			coverType = value.contentType;
 			coverUrl = getDownloadURL(coverKey);
 		}).catch(err => suppressError(err, lid, "cover")));
 	}

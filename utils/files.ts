@@ -48,7 +48,7 @@ export function compartDirectLink(url: string): {
 	const bb = getBackblaze();
 	const urlInstance = new URL(url);
 
-	const path = urlInstance.pathname.split(`${bb.b2BaseUrl}/${bb.config.defaultBucket}`)[1];
+	const path = urlInstance.pathname.split(`${bb.downloadUrl}/${bb.config.defaultBucket}`)[1];
 	const token = urlInstance.searchParams.get("Authorization");
 	if (typeof path !== "string") throw new Error(`invalid direct link: ${url}`);
 
@@ -58,13 +58,13 @@ export function compartDirectLink(url: string): {
 
 export function makeDirectLink(path: string, token?: string) {
 	const bb = getBackblaze();
-	return token ? `${bb.b2BaseUrl}/${bb.config.defaultBucket}/${path}?Authorization=${token}`
-		: `${bb.s3Endpoint}/${bb.config.defaultBucket}/${path}`;
+	const fileUrl = `${bb.downloadUrl}/${bb.config.defaultBucket}/${path}`;
+	return token ? `${fileUrl}?Authorization=${token}` : fileUrl;
 }
 
 export function isValidDirectLink(url: string) {
 	const bb = getBackblaze();
-	return url.startsWith(bb.b2BaseUrl);
+	return url.startsWith(bb.downloadUrl);
 }
 
 export async function getVideoDimension(src: string): Promise<Dimension> {
@@ -169,7 +169,7 @@ export type FilesStatus =
 	| "files:doc-created";
 
 export type FileCustomMetadata = {
-	[prop in keyof Dimension]?: string;
+	[prop in keyof Dimension]?: number | string;
 } & {
 	name?: string,
 };

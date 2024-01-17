@@ -1,80 +1,151 @@
-import { DeleteObjectCommand, HeadObjectCommand, HeadObjectCommandOutput, NotFound, S3Client } from "@aws-sdk/client-s3";
-import { StreamingBlobPayloadInputTypes } from "@smithy/types";
+import { HttpRequest, HttpResponse } from "@smithy/protocol-http";
+import { HttpHandlerOptions, RequestHandlerOutput, StreamingBlobPayloadInputTypes } from "@smithy/types";
+import { IncomingMessage } from "http";
 import { AppHttpHandler } from "./AppHttpHandler";
-import { B2Credential, Backblaze, getBackblaze } from "./backblaze";
+import { B2ApiTypes, B2HeadFileResponse, Backblaze, getBackblaze } from "./backblaze";
 import { now } from "./dates";
+import { NotFound } from "./errors/NotFound";
+import { StorageError } from "./errors/StorageError";
 import { makeDirectLink } from "./files";
+import { toText } from "./strings";
 import { ErrorListener, ProgressListener, Upload, UploadParams } from "./upload/Upload";
 
-let clients: Map<B2Credential | undefined, S3Client> | undefined;
+export const buckets: Record<string, string> = {
+	"getlink-dev": "4511a042c944c90587c00d1e",
+	"getlink": "05a1d0b26924d9f587c00d1e"
+};
 
-/**
- * Initialize on demand and get the storage client for making storage requests.
- * 
- * @returns The S3 client instance of current configurations.
- */
-export function getStorage(b2: Backblaze = getBackblaze()): S3Client {
-	console.debug("Providing storage client.");
-	const b2Cred = b2.getCredential();
+export function requireBucketId(bucketName: string) {
+	const id = buckets[bucketName];
+	if (!id) throw new Error("Unsupported bucket: " + bucketName);
+	return id;
+}
 
-	let client = (clients || (clients = new Map())).get(b2Cred);
-	if (!client) {
-		console.debug("Creating new S3 instance.");
-		client = new S3Client({
-			endpoint: b2.s3Endpoint,
-			region: b2.region,
-			credentials: b2Cred && {
-				accessKeyId: b2Cred.keyId,
-				secretAccessKey: b2Cred.key,
-			},
-			requestHandler: new AppHttpHandler(),
-		});
+export class Storage {
+	private static instances: Map<Backblaze, Storage>;
 
-		clients.set(b2Cred, client);
+	private b2: Backblaze;
+	public readonly requestHandler: AppHttpHandler;
+
+	private constructor(b2: Backblaze) {
+		this.b2 = b2;
+		this.requestHandler = AppHttpHandler.getInstance();
 	}
 
-	return client;
+	public static getInstance(b2: Backblaze = getBackblaze()) {
+		let instance = (Storage.instances || (Storage.instances = new Map())).get(b2);
+		if (!instance) {
+			instance = new Storage(b2);
+			Storage.instances.set(b2, instance);
+		}
+
+		return instance;
+	}
+
+	private static isRetriable(req: HttpRequest) {
+		return req.method === "GET" || req.method === "HEAD" || typeof req.body === "string";
+	}
+
+	public async send<K extends keyof B2ApiTypes>(api: K, options: B2ApiTypes[K][0], params: HttpHandlerOptions = { requestTimeout: 3000 }): Promise<B2ApiTypes[K][1]> {
+		const request = await this.b2.sign(api, options);
+
+		const startTime = now();
+		let result: RequestHandlerOutput<HttpResponse> | undefined;
+		for (let attempt = 1, limit = Storage.isRetriable(request) ? 3 : 1; ; attempt++) {
+			console.debug(`Sending API ${api} request; attempt: ${attempt}/${limit}`);
+			try {
+				result = await this.requestHandler.handle(request, params);
+				if (result.response.statusCode === 504 || result.response.statusCode === 502) 
+					throw new Error("Gateway timed out!");
+				break;
+			} catch (error) {
+				if (error instanceof Error && error.name === "AbortError") throw error;
+				if (attempt >= limit) throw error;
+			}
+		}
+		console.debug(`API ${api} response received [took: ${now() - startTime}]`);
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		let body: any = { };
+		// response#body can be: Blob, ReadableStream, http.IncomingMessage
+		// see: https://github.com/aws/aws-sdk-js-v3/blob/main/packages/xhr-http-handler/src/xhr-http-handler.ts#L182C1-L193C18
+		// see: https://github.com/aws/aws-sdk-js-v3/blob/main/packages/xhr-http-handler/src/xhr-http-handler.ts#L182C1-L193C18
+		// see: https://github.com/smithy-lang/smithy-typescript/blob/main/packages/node-http-handler/src/node-http-handler.ts#L134C1-L144C10
+		if (result.response.body instanceof ReadableStream || result.response.body instanceof IncomingMessage) {
+			console.debug("Response#body is instance of " + result.response.body.constructor.name);
+			try {
+				const txt = await toText(result.response.body);
+				if (txt) body = JSON.parse(txt);
+			} catch (error) {
+				throw new StorageError("storage:json-parse-error", "Response#body can not be parsed as JSON", error);
+			}
+		} else if (result.response.body instanceof Blob) {
+			console.debug("Response#body is instance of Blob");
+			body = { blob: result.response.body };
+		}
+		
+		switch (result.response.statusCode) {
+			case 200: return { ...result.response.headers, ...body };
+			case 404: throw new NotFound();
+			default: throw new StorageError("storage:api-error", `status: ${result.response.statusCode}; reason: ${result.response.reason}`, null);
+		}
+	}
 }
 
 export function getDownloadURL(key: string): string {
 	return makeDirectLink(key);
 }
 
-export async function getMetadata(key: string) {
-	console.debug("Getting metadata: " + key);
+export async function headObject(key: string) {
+	console.debug("Heading file: " + key);
 	const startTime = now();
 
-	const b2 = getBackblaze();
-	const storage = getStorage(b2);
+	const storage = Storage.getInstance();
 
-	let result: HeadObjectCommandOutput;
+	let result: B2HeadFileResponse;
 	try {
-		result = await storage.send(new HeadObjectCommand({
-			Bucket: b2.config.defaultBucket,
-			Key: key,
-		}), { requestTimeout: 3000 });
+		result = await storage.send("b2_head_file", {
+			url: getDownloadURL(key),
+			method: "HEAD",
+		});
 	} catch (error) {
-		console.debug(`Metadata receive failed [key: ${key}; took: ${now() - startTime}ms]`);
+		console.debug(`Head file failed [key: ${key}; took: ${now() - startTime}ms]`);
 		throw error;
 	}
 
-	console.debug(`Metadata received [key: ${key}; took: ${now() - startTime}ms]`);
+	console.debug(`File headers received [key: ${key}; took: ${now() - startTime}ms]`);
 	return result;
 }
 
+export async function getMetadata(key: string): Promise<FileMetadata> {
+	const headers = await headObject(key);
+
+	const customMetadata: Record<string, string> = {};
+	Object.keys(headers).forEach(key => {
+		const lowered = key.toLowerCase();
+		if (!lowered.startsWith("x-bz-info-")) return;
+		customMetadata[lowered.split("x-bz-info-")[1]] = headers[key as keyof typeof headers];
+	});
+
+	return {
+		id: headers["x-bz-file-id"],
+		key: headers["x-bz-file-name"],
+		size: +headers["content-length"],
+		contentType: headers["content-type"],
+		contentDisposition: headers["content-disposition"],
+		sha1Checksum: headers["x-bz-content-sha1"],
+		uploadTimestamp: +headers["x-bz-upload-timestamp"],
+		customMetadata
+	};
+}
+
 export async function requireObject(key: string) {
-	await getMetadata(key);
+	await headObject(key);
 }
 
 export async function objectExists(key: string): Promise<boolean> {
-	const b2 = getBackblaze();
-	const storage = getStorage(b2);
-
 	try {
-		await storage.send(new HeadObjectCommand({
-			Bucket: b2.config.defaultBucket,
-			Key: key,
-		}));
+		await headObject(key);
 	} catch (error) {
 		if (error instanceof NotFound) return false;
 		throw new Error("Failed to head object: " + error);
@@ -86,23 +157,26 @@ export async function objectExists(key: string): Promise<boolean> {
 export async function deleteObject(key: string) {
 	console.debug("Deleting object from server: ", key);
 	const b2 = getBackblaze();
-	const storage = getStorage(b2);
+	const storage = Storage.getInstance(b2);
 
-	return await storage.send(new DeleteObjectCommand({
-		Bucket: b2.config.defaultBucket,
-		Key: key,
-	}));
+	return await storage.send("b2_hide_file", {
+		method: "POST",
+		body: {
+			bucketId: requireBucketId(b2.config.defaultBucket),
+			fileName: key,
+		}
+	});
 }
 
-export function uploadObject(key: string, blob: StreamingBlobPayloadInputTypes, params: ModularUploadParams) {
+export function uploadObject(key: string, blob: StreamingBlobPayloadInputTypes, metadata: UploadParams["metadata"]) {
 	const b2 = getBackblaze();
-	const storage = getStorage(b2);
+	const storage = Storage.getInstance(b2);
 
 	const upload = new Upload(storage, {
-		Bucket: b2.config.defaultBucket,
-		Key: key,
-		Body: blob,
-		...params,
+		bucket: b2.config.defaultBucket,
+		key: key,
+		body: blob,
+		metadata,
 	});
 
 	let stateHandler: ProgressListener | undefined;
@@ -114,21 +188,32 @@ export function uploadObject(key: string, blob: StreamingBlobPayloadInputTypes, 
 		upload.on("state_changed", stateHandler);
 		upload.on("failed", errorHandler);
 	}).finally(() => {
-		if (stateHandler) upload.off("progress", stateHandler);
+		if (stateHandler) upload.off("state_changed", stateHandler);
 		if (errorHandler) upload.off("failed", errorHandler);
 	});
 }
 
-export function uploadObjectResumable(key: string, blob: StreamingBlobPayloadInputTypes, params: ModularUploadParams) {
+export function uploadObjectResumable(key: string, blob: StreamingBlobPayloadInputTypes, metadata: UploadParams["metadata"]) {
 	const b2 = getBackblaze();
-	const storage = getStorage(b2);
+	const storage = Storage.getInstance(b2);
 
 	return new Upload(storage, {
-		Bucket: b2.config.defaultBucket,
-		Key: key,
-		Body: blob,
-		...params,
+		bucket: b2.config.defaultBucket,
+		key: key,
+		body: blob,
+		metadata,
 	});
 }
 
-export type ModularUploadParams = Partial<Omit<UploadParams, "Key" | "Body">>;
+export type FileMetadata = {
+	key: string,
+	id: string,
+	size: number,
+	contentType: string,
+	contentDisposition: string,
+	sha1Checksum: string,
+	uploadTimestamp: number,
+	customMetadata?: Record<Lowercase<string>, string> & { // keys should be in snake_case
+		"src_last_modified_millis"?: string,
+	},
+};

@@ -5,6 +5,8 @@ import EventEmitter from "events";
 import { getRuntimeConfig } from "./runtimeConfig";
 
 export class AppHttpHandler extends EventEmitter implements HttpHandler {
+	private static instance: AppHttpHandler | undefined;
+
 	private defaultRequestHandler: HttpHandler;
 	private putRequestHandler: HttpHandler;
 
@@ -40,6 +42,11 @@ export class AppHttpHandler extends EventEmitter implements HttpHandler {
 		});
 	}
 
+	public static getInstance() {
+		if (!AppHttpHandler.instance) AppHttpHandler.instance = new AppHttpHandler();
+		return AppHttpHandler.instance;
+	}
+
 	private mapCallbacks(requestHandler: HttpHandler, evt: keyof typeof this.requestHandlersEventHandler) {
 		const eventHandler = this.requestHandlersEventHandler[evt];
 		if (requestHandler instanceof EventEmitter && !requestHandler.listeners(evt).includes(eventHandler)) {
@@ -57,7 +64,7 @@ export class AppHttpHandler extends EventEmitter implements HttpHandler {
 	}
 
 	private getHandler(request: HttpRequest) {
-		if (request.method === "PUT" && request.body) return this.putRequestHandler;
+		if ((request.method === "PUT" || request.method === "POST") && request.body) return this.putRequestHandler;
 		return this.defaultRequestHandler;
 	}
 

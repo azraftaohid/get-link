@@ -1,10 +1,11 @@
-import { AbortMultipartUploadCommand, CompleteMultipartUploadCommand, CompletedPart, CreateMultipartUploadCommand, CreateMultipartUploadCommandInput, CreateMultipartUploadCommandOutput, PutObjectCommand, PutObjectCommandInput, S3Client, UploadPartCommand, UploadPartOutput } from "@aws-sdk/client-s3";
-// import { AbortController } from "@smithy/abort-controller";
 import { HttpRequest } from "@smithy/protocol-http";
 import { StreamingBlobPayloadInputTypes } from "@smithy/types";
 import EventEmitter from "events";
 import { AppHttpHandler } from "../AppHttpHandler";
+import { B2GetUploadPartUrlResponse, B2GetUploadUrlResponse, B2StartLargeFileResponse, B2UploadFileOptions, B2UploadPartResponse } from "../backblaze";
 import { StorageError } from "../errors/StorageError";
+import { FileMetadata, Storage, requireBucketId } from "../storage";
+import { percEncoded } from "../strings";
 import { byteLength } from "./bytelength";
 import { getChunk } from "./chunker";
 
@@ -12,9 +13,8 @@ export class Upload extends EventEmitter {
 	public static MIN_PART_SIZE = 5 * Math.pow(2, 20);
 	public static MAX_PARTS = 10000;
 
-	private s3: S3Client;
-	private body: StreamingBlobPayloadInputTypes;
-	private params: Omit<UploadParams, "Body">;
+	private storage: Storage;
+	private params: UploadParams;
 
 	private totalBytes: number | undefined;
 	private uploadedBytes: number;
@@ -26,11 +26,19 @@ export class Upload extends EventEmitter {
 	private _state: UploadState;
 	private aborter: AbortController;
 
-	private createMultipartUploadPromise: Promise<CreateMultipartUploadCommandOutput> | undefined;
-	private uploadId: string | undefined;
+	private getUploadUrlPromise: Promise<B2GetUploadUrlResponse> | undefined;
+	private uploadOptions: { url: string, authToken: string } | undefined;
+
+	private startLargeFilePromise: Promise<B2StartLargeFileResponse> | undefined;
+	private fileId: string | undefined | null;
+
+	private partUploadOptionsArray: { 
+		result?: { url: string, authToken: string }, 
+		getUrlPromise?: Promise<B2GetUploadPartUrlResponse> 
+	}[] | undefined;
 
 	private multipart: boolean;
-	private completedParts: (CompletedPart & { PartNumber: number })[];
+	private partSha1Array: string[];
 
 	private pendings: Set<RawDataPart>;
 	private locks: Set<RawDataPart>;
@@ -38,18 +46,15 @@ export class Upload extends EventEmitter {
 	private maxParallel: number;
 	private active: number;
 
-	constructor(s3: S3Client, params: UploadParams) {
+	constructor(storage: Storage, params: UploadParams) {
 		super({});
 
-		console.debug(`Initializing uploader [key: ${params.Key}; bucket: ${params.Bucket}]`);
+		console.debug(`Initializing uploader [key: ${params.key}; bucket: ${params.bucket}]`);
 
-		this.s3 = s3;
-		
-		const { Body, ...rest } = params;
-		this.body = Body;
-		this.params = rest;
+		this.storage = storage;
+		this.params = params;
 
-		this.totalBytes = byteLength(this.body);
+		this.totalBytes = byteLength(params.body);
 		this.uploadedBytes = 0;
 
 		this.partSize = Math.max(Upload.MIN_PART_SIZE, Math.ceil((this.totalBytes ?? 0) / Upload.MAX_PARTS));
@@ -58,7 +63,7 @@ export class Upload extends EventEmitter {
 		this.aborter = new AbortController();
 
 		this.multipart = true;
-		this.completedParts = [];
+		this.partSha1Array = [];
 		this.pendings = new Set();
 		this.locks = new Set();
 
@@ -78,19 +83,69 @@ export class Upload extends EventEmitter {
 		return this._state;
 	}
 
-	private requestIsOfThisUpload(req: HttpRequest) {
-		return (req.hostname.startsWith(this.params.Bucket + ".") && req.path === `/${this.params.Key}`) ||
-			req.path === `/${this.params.Bucket}/${this.params.Key}`;
+	/**
+	 * @see https://github.com/backblaze-b2-samples/b2-browser-upload/blob/main/public/javascripts/index.js#L13
+	 */
+	private async createSha1Hash(body: Buffer) {
+		const hashBuffer = await crypto.subtle.digest("SHA-1", body);
+		const hashArray = Array.from(new Uint8Array(hashBuffer));
+		return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+	}
+
+	private requestIsOfThisUpload(expectedUrl: URL, req: HttpRequest) {
+		return expectedUrl.protocol === req.protocol &&
+			expectedUrl.hostname === req.hostname &&
+			expectedUrl.protocol === req.protocol &&
+			expectedUrl.pathname === req.path;
+	}
+
+	private withInfoPrefix(src: Record<string, string>) {
+		const res: Record<string, string> = {};
+		Object.entries(src).forEach(([key, value]) => value !== undefined && (res[`x-bz-info-${key}`] = value));
+
+		return res;
 	}
 
 	private async uploadAsWhole(dataPart: RawDataPart) {
 		console.debug("Uploading as whole.");
 
+		if (!this.uploadOptions) {
+			if (!this.getUploadUrlPromise) this.getUploadUrlPromise = this.storage.send("b2_get_upload_url", {
+				method: "GET",
+				query: {
+					bucketId: requireBucketId(this.params.bucket),
+				}
+			});
+
+			let res: B2GetUploadUrlResponse;
+			try {
+				res = await this.getUploadUrlPromise;
+			} catch (error) {
+				throw new StorageError("storage:get-upload-url-failed", "Unable to get regular file upload URL", error);
+			}
+
+			if (!res.uploadUrl || !res.authorizationToken)
+				throw new StorageError("storage:invalid-upload-options", "Get upload URL response did not include "
+				+ "regular file upload URL or auth token.");
+
+			this.uploadOptions = { url: res.uploadUrl, authToken: res.authorizationToken };
+		}
+		if (this.getState() !== "running") return;
+
+		let sha1Hash: string;
+		try {
+			sha1Hash = await this.createSha1Hash(dataPart.data);
+		} catch (error) {
+			throw new StorageError("storage:create-sha1-hash-error", "Unable to create SHA-1 hash of body", error);
+		}
+		if (this.getState() !== "running") return;
+
 		if (this.locks.has(dataPart)) return;
 		this.locks.add(dataPart);
 
+		const uploadUrlInstance = new URL(this.uploadOptions.url);
 		const progressHandler = (evt: ProgressEvent, req: HttpRequest) => {
-			if (!this.requestIsOfThisUpload(req)) {
+			if (!this.requestIsOfThisUpload(uploadUrlInstance, req)) {
 				return;
 			}
 
@@ -100,23 +155,28 @@ export class Upload extends EventEmitter {
 			this.emit("progress", this.makeProgress());
 		};
 
-		const reqHandler = this.s3.config.requestHandler;
+		const reqHandler = this.storage.requestHandler;
 		if (reqHandler instanceof AppHttpHandler) {
 			console.debug("Request handler is an AppHttpHandler. Registering progress handler.");
 			reqHandler.on("xhrUploadProgress", progressHandler);
 		}
 
+		const partSize = byteLength(dataPart.data);
 		try {
-			const res = await this.s3.send(new PutObjectCommand({
-				...this.params,
-				Body: dataPart.data,
-			}), { abortSignal: this.aborter.signal, });
-			
-			// for some reasons, S3Client#send is not throwing automatically on error for XhrHttpHandler request handler.
-			// we are manually checking the status for failed request.
-			if (res.$metadata.httpStatusCode !== 200) {
-				throw new Error(`Put object command send failed [status: ${res.$metadata.httpStatusCode}]`);
-			}
+			await this.storage.send("b2_upload_file", {
+				url: this.uploadOptions.url,
+				method: "POST",
+				headers: {
+					"Authorization": this.uploadOptions.authToken,
+					"X-Bz-File-Name": percEncoded(this.params.key),
+					"Content-Type": this.params.metadata.contentType || "b2/x-auto",
+					"Content-Length": (partSize || 0).toString(),
+					"X-Bz-Content-Sha1": sha1Hash,
+					...(this.params.metadata.contentDisposition && { "X-Bz-Info-b2-content-disposition": percEncoded(this.params.metadata.contentDisposition) }),
+					...(this.params.metadata.customMetadata && this.withInfoPrefix(this.params.metadata.customMetadata))
+				},
+				body: this.params.body,
+			}, { abortSignal: this.aborter.signal, });
 		} catch (error) {
 			throw new StorageError("storage:put-failed", "Unable to upload data part as whole", error);
 		} finally {
@@ -130,9 +190,7 @@ export class Upload extends EventEmitter {
 		console.debug("Data part uploaded as whole.");
 
 		if (!(reqHandler instanceof AppHttpHandler)) {
-			const partSize = byteLength(dataPart.data);
 			this.uploadedBytes += partSize || 0;
-
 			this.emit("progress", this.makeProgress());
 		}
 	}
@@ -140,22 +198,62 @@ export class Upload extends EventEmitter {
 	private async uploadAsPart(dataPart: RawDataPart) {
 		console.debug("Uploading data part: ", dataPart.partNumber);
 
-		if (!this.uploadId) {
-			if (!this.createMultipartUploadPromise) this.createMultipartUploadPromise = this.s3.send(new CreateMultipartUploadCommand({
-				...this.params,
-			}));
+		if (!this.fileId) {
+			if (!this.startLargeFilePromise) this.startLargeFilePromise = this.storage.send("b2_start_large_file", {
+				method: "POST",
+				body: {
+					bucketId: requireBucketId(this.params.bucket),
+					fileName: this.params.key,
+					contentType: this.params.metadata.contentType || "b2/x-auto",
+					fileInfo: {
+						...(this.params.metadata.contentDisposition && { "b2-content-disposition": this.params.metadata.contentDisposition }),
+						...this.params.metadata.customMetadata,
+					}
+				}
+			});
 
 			try {
-				const res = await this.createMultipartUploadPromise;
-				this.uploadId = res.UploadId;
+				const res = await this.startLargeFilePromise;
+				this.fileId = res.fileId;
 			} catch (error) {
-				throw new StorageError("storage:multipart-init-failed", "Unable to initialize multipart upload", error);
+				throw new StorageError("storage:multipart-init-failed", "Large file upload start failed", error);
 			}
 
-			if (!this.uploadId) {
-				throw new StorageError("storage:upload-id-not-found", "Create multipart upload request did not return an Upload ID.", null);
-			}
+			if (!this.fileId) throw new StorageError("storage:no-multipart-file-id", "Start large file response did not include file ID");
 		}
+		if (this.getState() !== "running") return;
+
+		let uploadOptions = (this.partUploadOptionsArray || (this.partUploadOptionsArray = []))[dataPart.partNumber];
+		if (!uploadOptions) uploadOptions = this.partUploadOptionsArray[dataPart.partNumber] = { };
+		if (!uploadOptions.result) {
+			if (!uploadOptions.getUrlPromise) uploadOptions.getUrlPromise = this.storage.send("b2_get_upload_part_url", {
+				method: "GET",
+				query: {
+					fileId: this.fileId,
+				}
+			});
+
+			let res: B2GetUploadPartUrlResponse;
+			try {
+				res = await uploadOptions.getUrlPromise;
+			} catch (error) {
+				throw new StorageError("storage:get-part-upload-url-failed", "Unable to get upload URL for large file part", error);
+			}
+
+			if (!res.uploadUrl || !res.authorizationToken) throw new StorageError("storage:invalid-part-upload-options",
+				"Get part upload url response did not include upload URL or auth token.");
+
+			uploadOptions.result = { url: res.uploadUrl, authToken: res.authorizationToken };
+		}
+		if (this.getState() !== "running") return;
+		
+		let sha1Hash: string;
+		try {
+			sha1Hash = await this.createSha1Hash(dataPart.data);
+		} catch (error) {
+			throw new StorageError("storage:create-sha1-hash-error", "Unable to create SHA-1 hash of part " + dataPart.partNumber, error);
+		}
+		if (this.getState() !== "running") return;
 
 		if (this.locks.has(dataPart) || this.getState() !== "running") return;
 		this.locks.add(dataPart);
@@ -163,9 +261,10 @@ export class Upload extends EventEmitter {
 		const partSize = byteLength(dataPart.data);
 
 		let calculatedBytes = 0;
+		const uploadUrlInstance = new URL(uploadOptions.result.url);
 		const progressHandler = (evt: ProgressEvent, req: HttpRequest) => {
-			const reqPartNumber = Number(req.query.partNumber) || -1;
-			if (!this.requestIsOfThisUpload(req) || reqPartNumber !== dataPart.partNumber) {
+			const reqPartNumber = Number(req.headers["X-Bz-Part-Number"]) || "-1";
+			if (!this.requestIsOfThisUpload(uploadUrlInstance, req) || reqPartNumber !== dataPart.partNumber) {
 				return;
 			}
 
@@ -177,28 +276,33 @@ export class Upload extends EventEmitter {
 			this.emit("progress", this.makeProgress());
 		};
 
-		const reqHandler = this.s3.config.requestHandler;
+		const reqHandler = this.storage.requestHandler;
 		if (reqHandler instanceof AppHttpHandler) {
 			console.debug("Request handler is an AppHttpHandler. Registering progress handler.");
 			reqHandler.on("xhrUploadProgress", progressHandler);
 		}
 
-		let partResult: UploadPartOutput;
+		let partResult: B2UploadPartResponse;
 		try {
-			partResult = await this.s3.send(new UploadPartCommand({
-				...this.params,
-				Body: dataPart.data,
-				UploadId: this.uploadId,
-				PartNumber: dataPart.partNumber,
-			}), { abortSignal: this.aborter.signal });
+			partResult = await this.storage.send("b2_upload_part", {
+				url: uploadOptions.result.url,
+				method: "POST",
+				headers: {
+					"Authorization": uploadOptions.result.authToken,
+					"X-Bz-Part-Number": dataPart.partNumber.toString(),
+					"Content-Length": (partSize || 0).toString(),
+					"X-Bz-Content-Sha1": sha1Hash,
+				},
+				body: dataPart.data,
+			}, { abortSignal: this.aborter.signal });
 
-			if (!partResult.ETag) {
-				throw new StorageError("storage:part-etag-missing", 
-					`ETag of part ${dataPart.partNumber} is missing in UploadPart response. `
-					+ "Make sure that the 'etag' header is exposed to the client application via CORS rules.", null);
+			if (!partResult.contentSha1) {
+				throw new StorageError("storage:part-sha1-checksum-missing", 
+					`SHA-1 checksum of part ${dataPart.partNumber} is missing in upload part response. `
+					+ "Make sure that the 'etag' and/or 'X-Bz-Content-Sha1' header is exposed to the client "
+					+ "application via CORS rules.", null);
 			}
 		} catch (error) {
-			if (error instanceof StorageError) throw error;
 			throw new StorageError("storage:upload-part-failed", "Unable to upload data part " + dataPart.partNumber, error);
 		} finally {
 			this.locks.delete(dataPart);
@@ -215,14 +319,7 @@ export class Upload extends EventEmitter {
 			this.emit("progress", this.makeProgress());
 		}
 
-		this.completedParts.push({
-			PartNumber: dataPart.partNumber,
-			ETag: partResult.ETag,
-			...(partResult.ChecksumCRC32 && { ChecksumCRC32: partResult.ChecksumCRC32 }),
-			...(partResult.ChecksumCRC32C && { ChecksumCRC32C: partResult.ChecksumCRC32C }),
-			...(partResult.ChecksumSHA1 && { ChecksumSHA1: partResult.ChecksumSHA1 }),
-			...(partResult.ChecksumSHA256 && { ChecksumSHA256: partResult.ChecksumSHA256 }),
-		});
+		this.partSha1Array[dataPart.partNumber - 1] = sha1Hash;
 	}
 
 	private async handleDataPart(dataPart: RawDataPart) {
@@ -264,7 +361,7 @@ export class Upload extends EventEmitter {
 
 	private async _start(): Promise<void> {
 		if (!this.feed) {
-			this.feed = getChunk(this.body, this.partSize);
+			this.feed = getChunk(this.params.body, this.partSize);
 			console.debug("Feed prepared.");
 		}
 
@@ -287,16 +384,16 @@ export class Upload extends EventEmitter {
 	private async finish() {
 		if (this.multipart) {
 			console.debug("Completing multipart upload.");
-			this.completedParts.sort((a, b) => a.PartNumber - b.PartNumber);
+			if (!this.fileId) throw new StorageError("storage:no-multipart-file-id", "File ID not found before finishing");
 
 			try {
-				await this.s3.send(new CompleteMultipartUploadCommand({
-					...this.params,
-					UploadId: this.uploadId,
-					MultipartUpload: {
-						Parts: this.completedParts,
-					},
-				}));
+				await this.storage.send("b2_finish_large_file", {
+					method: "POST",
+					body: {
+						fileId: this.fileId,
+						partSha1Array: this.partSha1Array,
+					}
+				});
 			} catch (error) {
 				throw new StorageError("storage:multipart-finalize-failed", "Unable to complete multipart upload", error);
 			}
@@ -314,21 +411,28 @@ export class Upload extends EventEmitter {
 
 	public cancel() {
 		const current = this.getState();
-		if (!(current === "none" || current === "running" || current === "paused")) return false;
+		if (!(current === "none" || current === "running" || current === "paused" || current === "error")) return false;
 
-		this.aborter.abort();
-		const b = this.setState("canceled");
-		if (b) this.emit("failed", new StorageError("storage:upload-canceled", "Upload was aborted by user", null));
+		if (current !== "error") {
+			this.aborter.abort();
+			this.setState("canceled");
+			this.emit("failed", new StorageError("storage:upload-canceled", "Upload was aborted by user", null));
+		}
 
-		if (this.createMultipartUploadPromise) {
+		if (this.startLargeFilePromise) {
 			console.debug("Multipart upload was in progress. Attempting to abort...");
-			this.createMultipartUploadPromise.then(async output => {
+
+			this.startLargeFilePromise.then(async output => {
 				console.debug("Create multipart upload command finished. Sending abort request...");
-				await this.s3.send(new AbortMultipartUploadCommand({
-					Bucket: this.params.Bucket,
-					Key: this.params.Key,
-					UploadId: output.UploadId,
-				})).then(() => {
+				if (!output.fileId) throw new StorageError("storage:no-multipart-file-id", "Start large file response did not "
+					+ "include file ID on cancel");
+				
+				await this.storage.send("b2_cancel_large_file", {
+					method: "POST",
+					body: {
+						fileId: output.fileId
+					}
+				}).then(() => {
 					console.debug("Multipart upload aborted successfully.");
 				}).catch(err => {
 					console.warn("Multipart create or abort failed: ", err);
@@ -336,7 +440,7 @@ export class Upload extends EventEmitter {
 			});
 		}
 
-		return b;
+		return true;
 	}
 
 	private makeProgress(): UploadProgress {
@@ -374,18 +478,21 @@ export type ListenerMapping = {
 export type UploadState = "none" | "running" | "paused" | "error" | "success" | "canceled";
 export type ProgressListener = (progress: UploadProgress) => void;
 export type ErrorListener = (error: StorageError) => void;
-export type BodyDataTypes = PutObjectCommandInput["Body"];
+export type BodyDataTypes = B2UploadFileOptions["body"];
 
 export interface RawDataPart {
 	partNumber: number;
-	data: BodyDataTypes;
+	data: Buffer;
 	lastPart?: boolean;
 }
 
-export interface UploadParams extends CreateMultipartUploadCommandInput {
-	Bucket: string,
-	Key: string,
-	Body: StreamingBlobPayloadInputTypes,
+export type FileUploadMetadata = Partial<Pick<FileMetadata, "contentType" | "contentDisposition" | "customMetadata">>;
+
+export interface UploadParams {
+	bucket: string,
+	key: string,
+	body: StreamingBlobPayloadInputTypes,
+	metadata: FileUploadMetadata,
 }
 
 export interface UploadProgress {

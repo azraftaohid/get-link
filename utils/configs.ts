@@ -14,7 +14,6 @@ export const firebaseConfig: FirebaseOptions = {
 };
 
 export const b2Config: BackblazeConfig = {
-	clusterNo: process.env.NEXT_PUBLIC_BACKBLAZE_CLUSTER_NO || "003",
 	defaultBucket: process.env.NEXT_PUBLIC_B2_DEFAULT_BUCKET || "",
 };
 

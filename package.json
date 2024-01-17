@@ -21,7 +21,6 @@
     "protobufjs": "6.11.3"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.484.0",
     "@aws-sdk/xhr-http-handler": "^3.485.0",
     "@next/bundle-analyzer": "^12.1.0",
     "@popperjs/core": "^2.11.2",

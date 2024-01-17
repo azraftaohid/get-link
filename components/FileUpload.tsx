@@ -7,9 +7,9 @@ import { Dimension, DimensionField } from "../models/dimension";
 import { FileField, createFID, deleteFile, getFileKey } from "../models/files";
 import { Link as LinkObject } from "../models/links";
 import { FileCustomMetadata, FilesStatus, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
-import { ModularUploadParams, uploadObject, uploadObjectResumable } from "../utils/storage";
-import { escapeFilename } from "../utils/strings";
-import { Upload } from "../utils/upload/Upload";
+import { uploadObject, uploadObjectResumable } from "../utils/storage";
+import { percEncoded } from "../utils/strings";
+import { Upload, UploadParams } from "../utils/upload/Upload";
 import { generateThumbnailFromVideo } from "../utils/video";
 import { FilePreview, FilePreviewProps } from "./FilePreview";
 import Link from "./Link";
@@ -90,7 +90,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 		} else {
 			link.pushFile(fid, order, {
 				[FileField.OVERRIDES]: {
-					Metadata: {
+					customMetadata: {
 						name: file.name,
 					}
 				},
@@ -121,9 +121,9 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			const prefix = nanoid(12);
 			const fid = createFID(prefix + ext, uid);
 			const fileKey = getFileKey(fid);
-			const params: ModularUploadParams = {
-				ContentType: mime,
-				ContentDisposition: `inline; filename*=utf-8''${escapeFilename(file.name)}`,
+			const metadata: UploadParams["metadata"] = {
+				contentType: mime,
+				contentDisposition: `inline; filename*=utf-8''${percEncoded(file.name)}`,
 			};
 
 			// sets metadata: height, width
@@ -144,10 +144,10 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 						const thumbnail = await generateThumbnailFromVideo(localUrl, "image/png");
 						if (thumbnail) {
 							await uploadObject(getFileKey(createFID(prefix + ".png", uid)), thumbnail, {
-								ContentType: "image/png",
-								Metadata: {
-									width: dimension[DimensionField.WIDTH]?.toString(),
-									height: dimension[DimensionField.HEIGHT]?.toString(),
+								contentType: "image/png",
+								customMetadata: {
+									width: dimension[DimensionField.WIDTH],
+									height: dimension[DimensionField.HEIGHT],
 								} as FileCustomMetadata,
 							});
 						} else {
@@ -164,7 +164,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 
 				if (localUrl) URL.revokeObjectURL(localUrl);
 				if (dimension) {
-					params.Metadata = {
+					metadata.customMetadata = {
 						width: dimension[DimensionField.WIDTH]?.toString(),
 						height: dimension[DimensionField.HEIGHT]?.toString(),
 					} as FileCustomMetadata;
@@ -173,7 +173,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 				console.error(`error getting dimension from selected file [cause: ${error}]`);
 			}
 
-			const upload = uploadObjectResumable(fileKey, file, params);
+			const upload = uploadObjectResumable(fileKey, file, metadata);
 			setControl(upload);
 
 			upload.on("progress", ({ uploadedBytes, totalBytes = uploadedBytes }) => {
@@ -256,6 +256,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 						control.cancel();
 						return;
 					case "error":
+						control.cancel();
 						if (file) stateless.current.handleCancel(file);
 						return;
 					case "success": {

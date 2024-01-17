@@ -18,16 +18,16 @@ export async function makeProcessedFile(fid: string, lid: string, data?: FileDat
 		getMetadata(fileKey),
 	]).then(([directLink, metadata]) => {
 		console.debug(`file direct link and metadata received [fid: ${fid}; took: ${now() - startTime}ms]`);
-		const type = overrides.ContentType || metadata.ContentType || "application/octet-stream";
+		const type = overrides.contentType || metadata.contentType || "application/octet-stream";
 		const pos = data?.[FileField.LINKS]?.[lid][OrderField.CREATE_ORDER];
 
 		return {
 			fid, directLink, type, pos,
-			size: overrides.ContentLength || metadata.ContentLength || 0,
-			width: +(overrides.Metadata?.[DimensionField.WIDTH] || metadata.Metadata?.width || 0) || null,
-			height: +(overrides.Metadata?.[DimensionField.HEIGHT] || metadata.Metadata?.height || 0) || null,
+			size: overrides.size || metadata.size || 0,
+			width: +(overrides.customMetadata?.[DimensionField.WIDTH] || metadata.customMetadata?.width || 0) || null,
+			height: +(overrides.customMetadata?.[DimensionField.HEIGHT] || metadata.customMetadata?.height || 0) || null,
 			warnings: data?.[FileField.WARNS] || null,
-			name: overrides.Metadata?.name || metadata.Metadata?.name,
+			name: overrides.customMetadata?.name || metadata.customMetadata?.name,
 		};
 	});
 }
