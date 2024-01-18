@@ -11,6 +11,7 @@ import { getChunk } from "./chunker";
 
 export class Upload extends EventEmitter {
 	public static MIN_PART_SIZE = 5 * Math.pow(2, 20);
+	public static MAX_PART_SIZE = 5 * Math.pow(2, 30);
 	public static MAX_PARTS = 10000;
 
 	private storage: Storage;
@@ -57,7 +58,14 @@ export class Upload extends EventEmitter {
 		this.totalBytes = byteLength(params.body);
 		this.uploadedBytes = 0;
 
-		this.partSize = Math.max(Upload.MIN_PART_SIZE, Math.ceil((this.totalBytes ?? 0) / Upload.MAX_PARTS));
+		let partSizeFactor = 1;
+		if (this.totalBytes) {
+			// max part size to 100 MB, and distribute each part size 'almost' equally
+			// subtract to avoid having an additional empty part
+			partSizeFactor = Math.ceil(this.totalBytes / (100 * Math.pow(2, 20))) - .01;
+		}
+
+		this.partSize = Math.max(Upload.MIN_PART_SIZE, Math.min(Upload.MAX_PART_SIZE, Math.ceil((this.totalBytes ?? 0) / partSizeFactor)));
 
 		this._state = "none";
 		this.aborter = new AbortController();

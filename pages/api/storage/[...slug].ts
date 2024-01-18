@@ -94,8 +94,8 @@ const handler: NextApiHandler = async (req, res) => {
 	};
 
 	// End of our proxying
-	if (result.status !== 200) return continueWithResult();
 	let jsonResponse: Record<string, unknown> | undefined;
+	if (result.status !== 200) return continueWithResult();
 
 	if (apiEndpoint === "b2_upload_file" || apiEndpoint === "b2_finish_large_file") {
 		try {
