@@ -1,5 +1,5 @@
 import { FirebaseOptions } from "firebase/app";
-import { BackblazeConfig } from "./backblaze";
+import { Backblaze, BackblazeConfig } from "./backblaze";
 
 export const EXPIRE_DAYS = 14;
 
@@ -13,9 +13,19 @@ export const firebaseConfig: FirebaseOptions = {
 	measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-export const b2Config: BackblazeConfig = {
-	defaultBucket: process.env.NEXT_PUBLIC_B2_DEFAULT_BUCKET || "",
-};
+export function getB2Config(): BackblazeConfig {
+	const apiUrl = Backblaze.resolveDefaultApiUrl();
+	const cred = Backblaze.resolveDefaultCredential();
+
+	return {
+		apiUrl: apiUrl,
+		authUrl: apiUrl,
+		fileUrl: "https://f003.backblazeb2.com/file",
+		defaultBucket: process.env.NEXT_PUBLIC_B2_DEFAULT_BUCKET,
+		defaultAppKey: cred.key,
+		defaultAppKeyId: cred.keyId
+	};
+}
 
 export const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_KEY_ID || "";
 export const appcheckDebugToken = process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN || "";

@@ -1,6 +1,6 @@
 import { fromBuffer } from "file-type/browser";
 import { Dimension } from "../models/dimension";
-import { getBackblaze } from "./backblaze";
+import { Backblaze } from "./backblaze";
 import { MimeType, mimeTypes } from "./mimeTypes";
 import { initPdfWorker } from "./pdf";
 import { extractExtension } from "./strings";
@@ -45,10 +45,10 @@ export function compartDirectLink(url: string): {
 	path: string;
 	token: string | null;
 } {
-	const bb = getBackblaze();
+	const bb = Backblaze.getInstance();
 	const urlInstance = new URL(url);
 
-	const path = urlInstance.pathname.split(`${bb.downloadUrl}/${bb.config.defaultBucket}`)[1];
+	const path = urlInstance.pathname.split(`${bb.fileUrl}/${bb.config.defaultBucket}`)[1];
 	const token = urlInstance.searchParams.get("Authorization");
 	if (typeof path !== "string") throw new Error(`invalid direct link: ${url}`);
 
@@ -57,14 +57,14 @@ export function compartDirectLink(url: string): {
 
 
 export function makeDirectLink(path: string, token?: string) {
-	const bb = getBackblaze();
-	const fileUrl = `${bb.downloadUrl}/${bb.config.defaultBucket}/${path}`;
+	const bb = Backblaze.getInstance();
+	const fileUrl = `${bb.fileUrl}/${bb.config.defaultBucket}/${path}`;
 	return token ? `${fileUrl}?Authorization=${token}` : fileUrl;
 }
 
 export function isValidDirectLink(url: string) {
-	const bb = getBackblaze();
-	return url.startsWith(bb.downloadUrl);
+	const bb = Backblaze.getInstance();
+	return url.startsWith(bb.fileUrl);
 }
 
 export async function getVideoDimension(src: string): Promise<Dimension> {

@@ -93,10 +93,13 @@ export class Upload extends EventEmitter {
 	}
 
 	private requestIsOfThisUpload(expectedUrl: URL, req: HttpRequest) {
-		return expectedUrl.protocol === req.protocol &&
+		const fwdUrl = req.headers["x-gl-forward-url"];
+		return (fwdUrl && expectedUrl.toString() === fwdUrl) || (
+			expectedUrl.protocol === req.protocol &&
 			expectedUrl.hostname === req.hostname &&
 			expectedUrl.protocol === req.protocol &&
-			expectedUrl.pathname === req.path;
+			expectedUrl.pathname === req.path
+		);
 	}
 
 	private withInfoPrefix(src: Record<string, string>) {
@@ -176,7 +179,7 @@ export class Upload extends EventEmitter {
 					...(this.params.metadata.customMetadata && this.withInfoPrefix(this.params.metadata.customMetadata))
 				},
 				body: this.params.body,
-			}, { abortSignal: this.aborter.signal, });
+			}, { abortSignal: this.aborter.signal, maxRetries: 3 });
 		} catch (error) {
 			throw new StorageError("storage:put-failed", "Unable to upload data part as whole", error);
 		} finally {
@@ -294,7 +297,7 @@ export class Upload extends EventEmitter {
 					"X-Bz-Content-Sha1": sha1Hash,
 				},
 				body: dataPart.data,
-			}, { abortSignal: this.aborter.signal });
+			}, { abortSignal: this.aborter.signal, maxRetries: 3 });
 
 			if (!partResult.contentSha1) {
 				throw new StorageError("storage:part-sha1-checksum-missing", 

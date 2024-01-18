@@ -3,38 +3,29 @@ import { StreamingBlobPayloadInputTypes } from "@smithy/types";
 import { Auth, User, getIdTokenResult } from "firebase/auth";
 import { Readable } from "stream";
 import util from "util";
-import { b2Config } from "./configs";
+import { getAppApiUrl } from "./appApi";
+import { getB2Config } from "./configs";
 import { getHttpEndpoint } from "./functions";
 import { Region } from "./region";
-
-let client: Backblaze;
 
 class B2MalformedResponse extends Error { };
 
 function requiresAuthToken(api: keyof B2ApiTypes) {
 	const requiringApis: (keyof B2ApiTypes)[] = [
 		"b2_cancel_large_file", "b2_finish_large_file", "b2_get_upload_part_url", "b2_get_upload_url",
-		"b2_start_large_file", "b2_upload_file", "b2_upload_part", "b2_hide_file"
+		"b2_start_large_file", "b2_upload_file", "b2_upload_part", "delete_file"
 	];
 
 	return requiringApis.includes(api);
 }
 
-/**
- * Initialize on demand and get Backblaze instance.
- * 
- * @returns The B2 instance.
- */
-export function getBackblaze() {
-	if (!client) client = new Backblaze(b2Config);
-	return client;
-}
-
 export class Backblaze {
-	public readonly config: BackblazeConfig;
+	private static instances: Record<string, Backblaze>;
+
+	public readonly config: Required<BackblazeConfig>;
 	public readonly apiUrl: string;
 	private readonly authUrl: string;
-	public readonly downloadUrl: string;
+	public readonly fileUrl: string;
 
 	private credential: B2Credential;
 	private authToken: string | undefined;
@@ -42,24 +33,45 @@ export class Backblaze {
 	
 	private boundAuth: Auth[];
 
-	constructor(config: BackblazeConfig) {
-		this.config = config;
-		this.downloadUrl = "https://f003.backblazeb2.com/file";
-
-		if (typeof document !== "undefined") {
-			const url = `${document.location.protocol}//${document.location.host}/api/storage`;
-			this.authUrl = url;
-			this.apiUrl = url;
-		} else {
-			this.authUrl = "https://api.backblazeb2.com";
-			this.apiUrl = "https://api003.backblazeb2.com";
+	private constructor(config: BackblazeConfig) {
+		if (!(
+			config.apiUrl && config.authUrl && config.fileUrl && config.defaultBucket && config.defaultAppKey &&
+			config.defaultAppKey && config.defaultAppKeyId
+		)) {
+			throw new Error("Required BackblazeConfig props are missing.");
 		}
 
-		console.debug("authUrl: " + this.authUrl);
-		console.debug("apiUrl: " + this.apiUrl);
+		this.config = { ...config } as Required<BackblazeConfig>;
 
-		this.credential = this.resolveDefaultCredential();
+		this.apiUrl = config.apiUrl;
+		this.authUrl = config.authUrl;
+		this.fileUrl = config.fileUrl;
+		
+		this.credential = this.reformCredential();
 		this.boundAuth = [];
+	}
+
+	public static getInstance(name = "[DEFAULT]", config = getB2Config()) {
+		let instance = (Backblaze.instances || (Backblaze.instances = {}))[name];
+		if (!instance) instance = Backblaze.instances[name] = new Backblaze(config);
+		return instance;
+	}
+
+	public static resolveDefaultCredential(): B2Credential {
+		let key: string | undefined;
+		let keyId: string | undefined;
+		if ((keyId = process.env.BACKBLAZE_APP_KEY_ID)) {
+			key = process.env.BACKBLAZE_APP_KEY;
+		} else if ((keyId = process.env.NEXT_PUBLIC_BACKBLAZE_APP_KEY_ID)) {
+			key = process.env.NEXT_PUBLIC_BACKBLAZE_APP_KEY;
+		}
+
+		if (!(key && keyId)) throw new Error("Could not resolve Backblaze application key and/or key ID.");
+		return { key, keyId };
+	}
+
+	public static resolveDefaultApiUrl() {
+		return getAppApiUrl() + "/storage";
 	}
 
 	private static hasFailed<T>(res: Response, data: Partial<T> | Partial<B2RequestFailedResponse>): data is Partial<B2RequestFailedResponse> {
@@ -91,7 +103,7 @@ export class Backblaze {
 	private createAuthorizationPromise() {
 		return new Promise<string>((resolve, reject) => {
 			const strCred = this.credential.keyId + ":" + this.credential.key;
-			const req = fetch(this.authUrl + "/b2api/v2/b2_authorize_account", {
+			const req = fetch(this.authUrl + "/b2_authorize_account", {
 				method: "GET",
 				headers: {
 					Authorization: `Basic ${typeof window !== "undefined" 
@@ -133,8 +145,9 @@ export class Backblaze {
 		console.log("Signing " + api + " request");
 		const options = _options as B2NativeApiOptions;
 
-		const url = new URL(options.url || `${this.apiUrl}/b2api/v2/${api}`);
+		const url = new URL(`${this.apiUrl}/${api}`);
 		let body: unknown;
+		let contentType: string | undefined;
 		if (!options.body) body = undefined;
 		else if (options.body instanceof Blob || options.body instanceof Uint8Array
 			|| options.body instanceof ReadableStream || options.body instanceof Buffer
@@ -142,6 +155,7 @@ export class Backblaze {
 			body = options.body;
 		} else {
 			body = JSON.stringify(options.body);
+			contentType = "application/json";
 		}
 
 		const request = new HttpRequest({
@@ -154,6 +168,8 @@ export class Backblaze {
 			body: body,
 		});
 
+		if (contentType) request.headers["Content-Type"] = contentType;
+
 		if (options.headers) {
 			Object.entries(options.headers).forEach(([key, value]) => request.headers[key] = value);
 		}
@@ -163,6 +179,10 @@ export class Backblaze {
 			request.headers["Authorization"] = authToken;
 		}
 
+		if (options.url) {
+			request.headers["x-gl-forward-url"] = options.url;
+		}
+
 		return request;
 	}
 
@@ -170,17 +190,11 @@ export class Backblaze {
 		return this.credential;
 	}
 
-	private resolveDefaultCredential(): B2Credential {
-		let key: string | undefined;
-		let keyId: string | undefined;
-		if ((keyId = process.env.BACKBLAZE_APP_KEY_ID)) {
-			key = process.env.BACKBLAZE_APP_KEY;
-		} else if ((keyId = process.env.NEXT_PUBLIC_BACKBLAZE_APP_KEY_ID)) {
-			key = process.env.NEXT_PUBLIC_BACKBLAZE_APP_KEY;
-		}
-
-		if (!(key && keyId)) throw new Error("Could not resolve Backblaze application key and/or key ID.");
-		return { key, keyId };
+	private reformCredential() {
+		return {
+			key: this.config.defaultAppKey,
+			keyId: this.config.defaultAppKeyId,
+		};
 	}
 
 	public bindAuth(auth: Auth) {
@@ -193,7 +207,7 @@ export class Backblaze {
 			console.debug("Auth state settled, updating B2 credential");
 			const user = auth.currentUser;
 			if (user) this.credential = await getB2Credential(user);
-			else this.credential = this.resolveDefaultCredential();
+			else this.credential = this.reformCredential();
 		}).catch(error => {
 			console.error("B2 credential update failed on post auth state settle: ", error);
 		});
@@ -203,7 +217,7 @@ export class Backblaze {
 			console.debug("Auth state may change, updating B2 credential.");
 			thenCredential = this.credential;
 			if (user) this.credential = await getB2Credential(user);
-			else this.credential = this.resolveDefaultCredential();
+			else this.credential = this.reformCredential();
 		}, () => {
 			console.debug("Auth state change aborted, reverting B2 credential.");
 			this.credential = thenCredential;
@@ -251,7 +265,12 @@ export async function getB2Credential(user: User | null): Promise<B2Credential> 
 }
 
 export interface BackblazeConfig {
-	defaultBucket: string,
+	apiUrl?: string,
+	authUrl?: string,
+	fileUrl?: string,
+	defaultBucket?: string,
+	defaultAppKey?: string,
+	defaultAppKeyId?: string,
 }
 
 export interface B2Credential {
@@ -268,7 +287,8 @@ export interface B2ApiTypes {
 	"b2_upload_file": [B2UploadFileOptions, B2UploadFileReponse],
 	"b2_upload_part": [B2UploadPartOptions, B2UploadPartResponse],
 	"b2_head_file": [B2HeadFileOptions, B2HeadFileResponse],
-	"b2_hide_file": [B2HideFileOptions, B2HideFileResponse],
+	"delete_file": [B2DeleteFileOptions, B2DeleteFileResponse],
+	"b2_delete_file_version": [B2DeleteFileVersionOptions, B2DeleteFileVersionResponse],
 }
 
 interface B2AuthorizeAccountResponse {
@@ -286,7 +306,7 @@ interface B2AuthorizeAccountResponse {
 	absoluteMinimumPartSize: number,
 }
 
-interface B2RequestFailedResponse {
+export interface B2RequestFailedResponse {
 	status: number,
 	code: string,
 	message?: string,
@@ -422,7 +442,7 @@ export interface B2FinishLargeFileOptions {
 	body: {
 		fileId: string,
 		partSha1Array: string[],
-	}
+	},
 }
 
 export interface B2FinishLargeFileResponse {
@@ -453,24 +473,28 @@ export interface B2CancelLargeFileResposne {
 	fileName: string,
 }
 
-export interface B2HideFileOptions {
+export interface B2DeleteFileOptions {
 	method: "POST",
 	body: {
-		bucketId: string,
+		bucketName: string,
 		fileName: string,
 	}
 }
 
-export interface B2HideFileResponse {
-	accountId: string,
-	action: "hide",
-	bucketId: string,
-	contentLength: 0,
-	contentSha1: null,
-	contentMd5: null,
-	contentType: "application/x-bz-hide-marker",
-	fileId: string | null,
-	fileInfo: Record<string, string> | undefined,
+export interface B2DeleteFileResponse {
+	fileId: string,
 	fileName: string,
-	uploadTimestamp: number,
+}
+
+export interface B2DeleteFileVersionOptions {
+	method: "POST",
+	body: {
+		fileId: string,
+		fileName: string,
+	}
+}
+
+export interface B2DeleteFileVersionResponse {
+	fileId: string,
+	fileName: string,
 }

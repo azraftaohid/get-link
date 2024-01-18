@@ -2,7 +2,7 @@ import { HttpRequest, HttpResponse } from "@smithy/protocol-http";
 import { HttpHandlerOptions, RequestHandlerOutput, StreamingBlobPayloadInputTypes } from "@smithy/types";
 import { IncomingMessage } from "http";
 import { AppHttpHandler } from "./AppHttpHandler";
-import { B2ApiTypes, B2HeadFileResponse, Backblaze, getBackblaze } from "./backblaze";
+import { B2ApiTypes, B2HeadFileResponse, B2RequestFailedResponse, Backblaze } from "./backblaze";
 import { now } from "./dates";
 import { NotFound } from "./errors/NotFound";
 import { StorageError } from "./errors/StorageError";
@@ -15,10 +15,25 @@ export const buckets: Record<string, string> = {
 	"getlink": "05a1d0b26924d9f587c00d1e"
 };
 
+export function getBucketId(bucketName: string) {
+	return buckets[bucketName];
+}
+
+export function getBucketName(bucketId: string) {
+	const res = Object.entries(buckets).find(([, value]) => value === bucketId);
+	return res?.[0];
+}
+
 export function requireBucketId(bucketName: string) {
-	const id = buckets[bucketName];
+	const id = getBucketId(bucketName);
 	if (!id) throw new Error("Unsupported bucket: " + bucketName);
 	return id;
+}
+
+export function requireBucketName(bucketId: string) {
+	const name = getBucketName(bucketId);
+	if (!name) throw new Error("Unsupported bucket: " + bucketId);
+	return name;
 }
 
 export class Storage {
@@ -32,7 +47,7 @@ export class Storage {
 		this.requestHandler = AppHttpHandler.getInstance();
 	}
 
-	public static getInstance(b2: Backblaze = getBackblaze()) {
+	public static getInstance(b2: Backblaze = Backblaze.getInstance()) {
 		let instance = (Storage.instances || (Storage.instances = new Map())).get(b2);
 		if (!instance) {
 			instance = new Storage(b2);
@@ -46,44 +61,52 @@ export class Storage {
 		return req.method === "GET" || req.method === "HEAD" || typeof req.body === "string";
 	}
 
-	public async send<K extends keyof B2ApiTypes>(api: K, options: B2ApiTypes[K][0], params: HttpHandlerOptions = { requestTimeout: 3000 }): Promise<B2ApiTypes[K][1]> {
+	private static async parseBody(body: unknown): Promise<Record<string, unknown> | undefined> {
+		let result: Record<string, unknown> | undefined;
+		// response#body can be: Blob, ReadableStream, http.IncomingMessage
+		// see: https://github.com/aws/aws-sdk-js-v3/blob/main/packages/xhr-http-handler/src/xhr-http-handler.ts#L182C1-L193C18
+		// see: https://github.com/aws/aws-sdk-js-v3/blob/main/packages/xhr-http-handler/src/xhr-http-handler.ts#L182C1-L193C18
+		// see: https://github.com/smithy-lang/smithy-typescript/blob/main/packages/node-http-handler/src/node-http-handler.ts#L134C1-L144C10
+		if (body instanceof ReadableStream || body instanceof IncomingMessage) {
+			try {
+				const txt = await toText(body);
+				if (txt) result = JSON.parse(txt);
+			} catch (error) {
+				throw new StorageError("storage:json-parse-error", "Response#body can not be parsed as JSON", error);
+			}
+		} else if (body instanceof Blob) {
+			result = { blob: body };
+		}
+
+		return result;
+	}
+
+	public async send<K extends keyof B2ApiTypes>(
+		api: K, 
+		options: B2ApiTypes[K][0], 
+		params: (HttpHandlerOptions & { maxRetries?: number }) = { requestTimeout: 3000 }
+	): Promise<B2ApiTypes[K][1]> {
 		const request = await this.b2.sign(api, options);
 
 		const startTime = now();
 		let result: RequestHandlerOutput<HttpResponse> | undefined;
-		for (let attempt = 1, limit = Storage.isRetriable(request) ? 3 : 1; ; attempt++) {
+		for (let attempt = 1, limit = Storage.isRetriable(request) ? 3 : params.maxRetries ?? 1; ; attempt++) {
 			console.debug(`Sending API ${api} request; attempt: ${attempt}/${limit}`);
 			try {
 				result = await this.requestHandler.handle(request, params);
-				if (result.response.statusCode === 504 || result.response.statusCode === 502) 
-					throw new Error("Gateway timed out!");
-				break;
+				if (result.response.statusCode !== 504 && result.response.statusCode !== 502) break;
+
+				const body = await Storage.parseBody(result.response.body) as B2RequestFailedResponse | undefined;
+				throw new Error(`Gateway error [status: ${body?.status}; code: ${body?.code}; message: ${body?.message}]`);
 			} catch (error) {
 				if (error instanceof Error && error.name === "AbortError") throw error;
 				if (attempt >= limit) throw error;
 			}
 		}
-		console.debug(`API ${api} response received [took: ${now() - startTime}]`);
+		console.debug(`API ${api} response received [took: ${now() - startTime}ms]`);
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		let body: any = { };
-		// response#body can be: Blob, ReadableStream, http.IncomingMessage
-		// see: https://github.com/aws/aws-sdk-js-v3/blob/main/packages/xhr-http-handler/src/xhr-http-handler.ts#L182C1-L193C18
-		// see: https://github.com/aws/aws-sdk-js-v3/blob/main/packages/xhr-http-handler/src/xhr-http-handler.ts#L182C1-L193C18
-		// see: https://github.com/smithy-lang/smithy-typescript/blob/main/packages/node-http-handler/src/node-http-handler.ts#L134C1-L144C10
-		if (result.response.body instanceof ReadableStream || result.response.body instanceof IncomingMessage) {
-			console.debug("Response#body is instance of " + result.response.body.constructor.name);
-			try {
-				const txt = await toText(result.response.body);
-				if (txt) body = JSON.parse(txt);
-			} catch (error) {
-				throw new StorageError("storage:json-parse-error", "Response#body can not be parsed as JSON", error);
-			}
-		} else if (result.response.body instanceof Blob) {
-			console.debug("Response#body is instance of Blob");
-			body = { blob: result.response.body };
-		}
-		
+		const body: any = await Storage.parseBody(result.response.body);
 		switch (result.response.statusCode) {
 			case 200: return { ...result.response.headers, ...body };
 			case 404: throw new NotFound();
@@ -156,20 +179,20 @@ export async function objectExists(key: string): Promise<boolean> {
 
 export async function deleteObject(key: string) {
 	console.debug("Deleting object from server: ", key);
-	const b2 = getBackblaze();
+	const b2 = Backblaze.getInstance();
 	const storage = Storage.getInstance(b2);
 
-	return await storage.send("b2_hide_file", {
+	return await storage.send("delete_file", {
 		method: "POST",
 		body: {
-			bucketId: requireBucketId(b2.config.defaultBucket),
+			bucketName: b2.config.defaultBucket,
 			fileName: key,
 		}
 	});
 }
 
 export function uploadObject(key: string, blob: StreamingBlobPayloadInputTypes, metadata: UploadParams["metadata"]) {
-	const b2 = getBackblaze();
+	const b2 = Backblaze.getInstance();
 	const storage = Storage.getInstance(b2);
 
 	const upload = new Upload(storage, {
@@ -194,7 +217,7 @@ export function uploadObject(key: string, blob: StreamingBlobPayloadInputTypes, 
 }
 
 export function uploadObjectResumable(key: string, blob: StreamingBlobPayloadInputTypes, metadata: UploadParams["metadata"]) {
-	const b2 = getBackblaze();
+	const b2 = Backblaze.getInstance();
 	const storage = Storage.getInstance(b2);
 
 	return new Upload(storage, {
