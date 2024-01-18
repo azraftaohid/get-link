@@ -160,7 +160,6 @@ export class Upload extends EventEmitter {
 
 		const reqHandler = this.storage.requestHandler;
 		if (reqHandler instanceof AppHttpHandler) {
-			console.debug("Request handler is an AppHttpHandler. Registering progress handler.");
 			reqHandler.on("xhrUploadProgress", progressHandler);
 		}
 
@@ -281,7 +280,6 @@ export class Upload extends EventEmitter {
 
 		const reqHandler = this.storage.requestHandler;
 		if (reqHandler instanceof AppHttpHandler) {
-			console.debug("Request handler is an AppHttpHandler. Registering progress handler.");
 			reqHandler.on("xhrUploadProgress", progressHandler);
 		}
 
@@ -363,13 +361,10 @@ export class Upload extends EventEmitter {
 	}
 
 	private async _start(): Promise<void> {
-		if (!this.feed) {
-			this.feed = getChunk(this.params.body, this.partSize);
-			console.debug("Feed prepared.");
-		}
+		if (!this.feed) this.feed = getChunk(this.params.body, this.partSize);
 
 		for (const dataPart of Array.from(this.pendings)) {
-			console.debug("Handling pending data part.");
+			console.debug("Pending data part found.");
 			await this.handleDataPart(dataPart);
 		}
 
@@ -426,7 +421,6 @@ export class Upload extends EventEmitter {
 			console.debug("Multipart upload was in progress. Attempting to abort...");
 
 			this.startLargeFilePromise.then(async output => {
-				console.debug("Create multipart upload command finished. Sending abort request...");
 				if (!output.fileId) throw new StorageError("storage:no-multipart-file-id", "Start large file response did not "
 					+ "include file ID on cancel");
 				
@@ -463,7 +457,6 @@ export class Upload extends EventEmitter {
 	}
 
 	emit<K extends keyof ListenerMapping>(eventName: K, ...args: Parameters<ListenerMapping[K]>): boolean {
-		console.debug("Emitting upload event: " + eventName);
 		return super.emit(eventName, ...args);
 	}
 

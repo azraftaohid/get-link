@@ -142,18 +142,20 @@ export class Backblaze {
 	}
 
 	public async sign<K extends keyof B2ApiTypes>(api: K, _options: B2ApiTypes[K][0]): Promise<HttpRequest> {
-		console.log("Signing " + api + " request");
+		console.log("Signing '" + api + "' API call request");
 		const options = _options as B2NativeApiOptions;
 
 		const url = new URL(`${this.apiUrl}/${api}`);
+
 		let body: unknown;
 		let contentType: string | undefined;
 		if (!options.body) body = undefined;
 		else if (options.body instanceof Blob || options.body instanceof Uint8Array
 			|| options.body instanceof ReadableStream || options.body instanceof Buffer
-			|| options.body instanceof Readable) {
+			|| options.body instanceof Readable) { // acceptable static/streaming body types
 			body = options.body;
 		} else {
+			// must be strigified; otherwise will be sent as [object Object];
 			body = JSON.stringify(options.body);
 			contentType = "application/json";
 		}
@@ -169,16 +171,21 @@ export class Backblaze {
 		});
 
 		if (contentType) request.headers["Content-Type"] = contentType;
-
+		
+		// set headers from options to the request object
+		// allow content-type header to be overridden if defined explicitly in options#headers
 		if (options.headers) {
 			Object.entries(options.headers).forEach(([key, value]) => request.headers[key] = value);
 		}
 
+		// do not override authorization header if explicitly provided; use case: upload file requests
 		if (!("Authorization" in request.headers) && requiresAuthToken(api)) {
 			const authToken = await this.getAuthToken();
 			request.headers["Authorization"] = authToken;
 		}
 
+		// gl -> get-link
+		// explicitly indicate to gateway server that the request should be forwarded to this url
 		if (options.url) {
 			request.headers["x-gl-forward-url"] = options.url;
 		}
@@ -198,13 +205,10 @@ export class Backblaze {
 	}
 
 	public bindAuth(auth: Auth) {
-		if (this.boundAuth.indexOf(auth) !== -1) {
-			return console.log(`B2 already bound to given auth instance [bound count: ${this.boundAuth.length}].`);
-		}
+		if (this.boundAuth.indexOf(auth) !== -1) return;
 		this.boundAuth.push(auth);
 
 		auth.authStateReady().then(async () => {
-			console.debug("Auth state settled, updating B2 credential");
 			const user = auth.currentUser;
 			if (user) this.credential = await getB2Credential(user);
 			else this.credential = this.reformCredential();

@@ -6,6 +6,7 @@ import ProgressBar from "react-bootstrap/ProgressBar";
 import { Dimension, DimensionField } from "../models/dimension";
 import { FileField, createFID, deleteFile, getFileKey } from "../models/files";
 import { Link as LinkObject } from "../models/links";
+import { NotFound } from "../utils/errors/NotFound";
 import { FileCustomMetadata, FilesStatus, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
 import { uploadObject, uploadObjectResumable } from "../utils/storage";
 import { percEncoded } from "../utils/strings";
@@ -116,7 +117,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			attempt.current++;
 			
 			const [mime, ext] = await getFileType(file); // respect user specified extension
-			console.debug(`mime: ${mime}; ext: ${ext}`);
+			console.debug(`File loaded for upload [mime-type: ${mime}; ext: ${ext}]`);
 
 			const prefix = nanoid(12);
 			const fid = createFID(prefix + ext, uid);
@@ -177,7 +178,6 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			setControl(upload);
 
 			upload.on("progress", ({ uploadedBytes, totalBytes = uploadedBytes }) => {
-				console.debug("Upload progress update received.");
 				const perct = Math.floor((uploadedBytes / totalBytes) * 100);
 				setProgress(perct);
 			}).on("state_changed", ({ state }) => {
@@ -195,8 +195,8 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 							stateless.current.handleError(file, error);
 	
 							deleteFile(fid).catch(err => {
-								if (err.code === "not-found" || err.code === "storage/object-not-found") return;
-								console.error(`error deleting file after failed to associate with link [cause: ${err}]`);
+								if (err instanceof NotFound || err.code === "not-found") return;
+								console.error(`Error deleting file after failed to associate with link [cause: ${err}]`);
 							});
 						});
 						break;
@@ -222,10 +222,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 
 		return () => {
 			task?.then(({ upload }) => {
-				if (upload.getState() === "running" || upload.getState() === "paused") {
-					upload.cancel();
-				}
-
+				upload.cancel();
 				upload.removeAllListeners();
 			});
 		};
@@ -262,7 +259,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 					case "success": {
 						if (fid) {
 							deleteFile(fid).catch(err => {
-								console.error(`error deleting file from the server [file: ${file?.name}; err: ${err}]`);
+								console.error(`Error deleting file from the server [file: ${file?.name}; err: ${err}]`);
 							});
 							
 							// todo: remove from cover if order is 0

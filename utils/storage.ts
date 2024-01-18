@@ -2,7 +2,7 @@ import { HttpRequest, HttpResponse } from "@smithy/protocol-http";
 import { HttpHandlerOptions, RequestHandlerOutput, StreamingBlobPayloadInputTypes } from "@smithy/types";
 import { IncomingMessage } from "http";
 import { AppHttpHandler } from "./AppHttpHandler";
-import { B2ApiTypes, B2HeadFileResponse, B2RequestFailedResponse, Backblaze } from "./backblaze";
+import { B2ApiTypes, B2RequestFailedResponse, Backblaze } from "./backblaze";
 import { now } from "./dates";
 import { NotFound } from "./errors/NotFound";
 import { StorageError } from "./errors/StorageError";
@@ -82,8 +82,8 @@ export class Storage {
 	}
 
 	public async send<K extends keyof B2ApiTypes>(
-		api: K, 
-		options: B2ApiTypes[K][0], 
+		api: K,
+		options: B2ApiTypes[K][0],
 		params: (HttpHandlerOptions & { maxRetries?: number }) = { requestTimeout: 3000 }
 	): Promise<B2ApiTypes[K][1]> {
 		const request = await this.b2.sign(api, options);
@@ -91,7 +91,7 @@ export class Storage {
 		const startTime = now();
 		let result: RequestHandlerOutput<HttpResponse> | undefined;
 		for (let attempt = 1, limit = Storage.isRetriable(request) ? 3 : params.maxRetries ?? 1; ; attempt++) {
-			console.debug(`Sending API ${api} request; attempt: ${attempt}/${limit}`);
+			console.debug(`Sending request to '${api}' API endpoint; attempt: ${attempt}/${limit}`);
 			try {
 				result = await this.requestHandler.handle(request, params);
 				if (result.response.statusCode !== 504 && result.response.statusCode !== 502) break;
@@ -103,7 +103,7 @@ export class Storage {
 				if (attempt >= limit) throw error;
 			}
 		}
-		console.debug(`API ${api} response received [took: ${now() - startTime}ms]`);
+		console.debug(`API endpoint (${api}) response received [took: ${now() - startTime}ms]`);
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const body: any = await Storage.parseBody(result.response.body);
@@ -120,24 +120,11 @@ export function getDownloadURL(key: string): string {
 }
 
 export async function headObject(key: string) {
-	console.debug("Heading file: " + key);
-	const startTime = now();
-
 	const storage = Storage.getInstance();
-
-	let result: B2HeadFileResponse;
-	try {
-		result = await storage.send("b2_head_file", {
-			url: getDownloadURL(key),
-			method: "HEAD",
-		});
-	} catch (error) {
-		console.debug(`Head file failed [key: ${key}; took: ${now() - startTime}ms]`);
-		throw error;
-	}
-
-	console.debug(`File headers received [key: ${key}; took: ${now() - startTime}ms]`);
-	return result;
+	return await storage.send("b2_head_file", {
+		url: getDownloadURL(key),
+		method: "HEAD",
+	});
 }
 
 export async function getMetadata(key: string): Promise<FileMetadata> {
@@ -178,7 +165,6 @@ export async function objectExists(key: string): Promise<boolean> {
 }
 
 export async function deleteObject(key: string) {
-	console.debug("Deleting object from server: ", key);
 	const b2 = Backblaze.getInstance();
 	const storage = Storage.getInstance(b2);
 

@@ -7,7 +7,7 @@ import { now } from "./dates";
 import { getDownloadURL, getMetadata } from "./storage";
 
 export async function makeProcessedFile(fid: string, lid: string, data?: FileData): Promise<ProcessedFileData> {
-	console.debug(`making processed file [fid: ${fid}]`);
+	console.debug(`Making processed file [fid: ${fid}]`);
 	const startTime = now();
 
 	const fileKey = getFileKey(fid);
@@ -17,7 +17,7 @@ export async function makeProcessedFile(fid: string, lid: string, data?: FileDat
 		getDownloadURL(fileKey),
 		getMetadata(fileKey),
 	]).then(([directLink, metadata]) => {
-		console.debug(`file direct link and metadata received [fid: ${fid}; took: ${now() - startTime}ms]`);
+		console.debug(`File direct link and metadata received [fid: ${fid}; took: ${now() - startTime}ms]`);
 		const type = overrides.contentType || metadata.contentType || "application/octet-stream";
 		const pos = data?.[FileField.LINKS]?.[lid][OrderField.CREATE_ORDER];
 

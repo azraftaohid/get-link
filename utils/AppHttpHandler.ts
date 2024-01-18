@@ -26,7 +26,6 @@ export class AppHttpHandler extends EventEmitter implements HttpHandler {
 		};
 
 		this.on("newListener", (evt) => {
-			console.debug("New listener added to AppHttpHandler: " + evt);
 			if (evt === "xhrUploadProgress") {
 				this.mapCallbacks(this.defaultRequestHandler, "xhr.upload.progress");
 				this.mapCallbacks(this.putRequestHandler, "xhr.upload.progress");
@@ -34,7 +33,6 @@ export class AppHttpHandler extends EventEmitter implements HttpHandler {
 		});
 
 		this.on("removeListener", (evt) => {
-			console.debug("Listener removed from AppHttpHandler: " + evt);
 			if (evt === "xhrUploadProgress" && this.listenerCount("xhrUploadProgress") === 0) {
 				this.unmapCallbacks(this.defaultRequestHandler, "xhr.upload.progress");
 				this.unmapCallbacks(this.putRequestHandler, "xhr.upload.progress");
@@ -50,7 +48,6 @@ export class AppHttpHandler extends EventEmitter implements HttpHandler {
 	private mapCallbacks(requestHandler: HttpHandler, evt: keyof typeof this.requestHandlersEventHandler) {
 		const eventHandler = this.requestHandlersEventHandler[evt];
 		if (requestHandler instanceof EventEmitter && !requestHandler.listeners(evt).includes(eventHandler)) {
-			console.debug(`Mapped callbacks to request handler (${requestHandler.constructor.name}): ${evt}`);
 			requestHandler.on(evt, this.requestHandlersEventHandler[evt]);
 		}
 	}
@@ -58,7 +55,6 @@ export class AppHttpHandler extends EventEmitter implements HttpHandler {
 	private unmapCallbacks(requestHandler: HttpHandler, evt: keyof typeof this.requestHandlersEventHandler) {
 		const eventHandler = this.requestHandlersEventHandler[evt];
 		if (requestHandler instanceof EventEmitter) {
-			console.debug(`Unmapped callbacks to request handler (${requestHandler.constructor.name}): ${evt}`);
 			requestHandler.off(evt, eventHandler);
 		}
 	}
