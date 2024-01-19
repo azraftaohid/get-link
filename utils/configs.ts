@@ -13,18 +13,23 @@ export const firebaseConfig: FirebaseOptions = {
 	measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+let b2Config: BackblazeConfig;
 export function getB2Config(): BackblazeConfig {
-	const apiUrl = Backblaze.resolveDefaultApiUrl();
-	const cred = Backblaze.resolveDefaultCredential();
+	if (!b2Config) {
+		const apiUrl = Backblaze.resolveDefaultApiUrl();
+		const cred = Backblaze.resolveDefaultCredential();
+	
+		b2Config = {
+			apiUrl: apiUrl,
+			authUrl: apiUrl,
+			fileUrl: "https://f003.backblazeb2.com/file",
+			defaultBucket: process.env.NEXT_PUBLIC_BACKBLAZE_DEFAULT_BUCKET,
+			defaultAppKey: cred.key,
+			defaultAppKeyId: cred.keyId
+		};
+	}
 
-	return {
-		apiUrl: apiUrl,
-		authUrl: apiUrl,
-		fileUrl: "https://f003.backblazeb2.com/file",
-		defaultBucket: process.env.NEXT_PUBLIC_B2_DEFAULT_BUCKET,
-		defaultAppKey: cred.key,
-		defaultAppKeyId: cred.keyId
-	};
+	return b2Config;
 }
 
 export const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_KEY_ID || "";

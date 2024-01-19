@@ -6,6 +6,19 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 	enabled: process.env.ANALYZE === "true",
 });
 
+function ensureEnvVariablesDefined(names) {
+	for (const name of names) {
+		if (!process.env[name]) throw new Error(`Environmetnal variabel '${name}' is missing.`);
+	}
+}
+
+ensureEnvVariablesDefined([
+	"API_KEY", "EDGE_CONFIG",
+	"NEXT_PUBLIC_FIREBASE_API_KEY",
+	"NEXT_PUBLIC_BACKBLAZE_DEFAULT_BUCKET",
+	"NEXT_PUBLIC_BACKBLAZE_APP_KEY_ID", "NEXT_PUBLIC_BACKBLAZE_APP_KEY", "BACKBLAZE_APP_KEY_ID", "BACKBLAZE_APP_KEY"
+]);
+
 /**
  * @type {import('next/dist/lib/load-custom-routes').Header["headers"]}
  */
@@ -36,6 +49,11 @@ const nextConfig = {
 	trailingSlash: false,
 	distDir: "./.next",
 	reactStrictMode: true,
+	compiler: {
+		removeConsole: process.env.NODE_ENV === "production" && {
+			exclude: ["error"],
+		},
+	},
 	headers: async () => [
 		{
 			source: "/(.*)",
