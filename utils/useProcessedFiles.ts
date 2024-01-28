@@ -18,12 +18,12 @@ export async function makeProcessedFile(fid: string, lid: string, data?: FileDat
 		getMetadata(fileKey),
 	]).then(([directLink, metadata]) => {
 		console.debug(`File direct link and metadata received [fid: ${fid}; took: ${now() - startTime}ms]`);
-		const type = overrides.contentType || metadata.contentType || "application/octet-stream";
+		const type = overrides.mimeType || metadata.mimeType || "application/octet-stream";
 		const pos = data?.[FileField.LINKS]?.[lid][OrderField.CREATE_ORDER];
 
 		return {
 			fid, directLink, type, pos,
-			size: overrides.size || metadata.size || 0,
+			size: +(overrides.size || metadata.size || 0),
 			width: +(overrides.customMetadata?.[DimensionField.WIDTH] || metadata.customMetadata?.width || 0) || null,
 			height: +(overrides.customMetadata?.[DimensionField.HEIGHT] || metadata.customMetadata?.height || 0) || null,
 			warnings: data?.[FileField.WARNS] || null,

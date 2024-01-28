@@ -31,4 +31,5 @@ export type StorageErrorCodes = "storage:no-multipart-file-id" |
 	"storage:part-sha1-checksum-missing" |
 	"storage:json-parse-error" |
 	"storage:invalid-upload-options" |
-	"storage:invalid-part-upload-options";
+	"storage:invalid-part-upload-options" |
+	"storage:not-signed-in";

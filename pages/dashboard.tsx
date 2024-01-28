@@ -141,13 +141,13 @@ const LinkCard: React.FunctionComponent<React.PropsWithChildren<{ link: QueryDoc
 				const fileKey = getFileKey(fid);
 				try {
 					const metadata = await getMetadata(fileKey);
-					const mimeType = metadata.contentType;
+					const mimeType = metadata.mimeType;
 
 					if (mimeType?.startsWith("image/") && !NON_PREVIEW_SUPPORTING_TYPE.includes(mimeType)) {
 						const directLink = getDownloadURL(fileKey);
 						setThumbnail(directLink);
-					} else if (mimeType) {
-						setThumbnail(findFileIcon(mimeType) || null);
+					} else {
+						setThumbnail(mimeType && findFileIcon(mimeType) || null);
 					}
 				} catch (error) {
 					console.error(`direct download link get failed: ${error}`);

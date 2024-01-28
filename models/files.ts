@@ -162,7 +162,7 @@ export interface FileData {
 	[FileField.WARNS]?: Warning[];
 }
 
-export type FileOverrides = Partial<Pick<FileMetadata, "contentDisposition" | "contentType" | "size" | "uploadTimestamp">> & {
+export type FileOverrides = Partial<Pick<FileMetadata, "contentDisposition" | "mimeType" | "size" | "uploadTimestamp">> & {
 	customMetadata?: FileCustomMetadata,
 }
 

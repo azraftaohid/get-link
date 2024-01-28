@@ -2,16 +2,15 @@ import { HttpRequest } from "@smithy/protocol-http";
 import { StreamingBlobPayloadInputTypes } from "@smithy/types";
 import EventEmitter from "events";
 import { AppHttpHandler } from "../AppHttpHandler";
-import { B2GetUploadPartUrlResponse, B2GetUploadUrlResponse, B2StartLargeFileResponse, B2UploadFileOptions, B2UploadPartResponse } from "../backblaze";
 import { StorageError } from "../errors/StorageError";
-import { FileMetadata, Storage, requireBucketId } from "../storage";
+import { FileMetadata, StartLargeFileResponse, Storage, UploadFileOptions, UploadPartResponse } from "../storage";
 import { percEncoded } from "../strings";
 import { byteLength } from "./bytelength";
 import { getChunk } from "./chunker";
 
 export class Upload extends EventEmitter {
 	public static MIN_PART_SIZE = 5 * Math.pow(2, 20);
-	public static MAX_PART_SIZE = 5 * Math.pow(2, 30);
+	public static MAX_PART_SIZE = 95 * Math.pow(2, 20); // cf workers request body size limit -> 100 MB
 	public static MAX_PARTS = 10000;
 
 	private storage: Storage;
@@ -27,16 +26,8 @@ export class Upload extends EventEmitter {
 	private _state: UploadState;
 	private aborter: AbortController;
 
-	private getUploadUrlPromise: Promise<B2GetUploadUrlResponse> | undefined;
-	private uploadOptions: { url: string, authToken: string } | undefined;
-
-	private startLargeFilePromise: Promise<B2StartLargeFileResponse> | undefined;
+	private startLargeFilePromise: Promise<StartLargeFileResponse> | undefined;
 	private fileId: string | undefined | null;
-
-	private partUploadOptionsArray: { 
-		result?: { url: string, authToken: string }, 
-		getUrlPromise?: Promise<B2GetUploadPartUrlResponse> 
-	}[] | undefined;
 
 	private multipart: boolean;
 	private partSha1Array: string[];
@@ -50,7 +41,7 @@ export class Upload extends EventEmitter {
 	constructor(storage: Storage, params: UploadParams) {
 		super({});
 
-		console.debug(`Initializing uploader [key: ${params.key}; bucket: ${params.bucket}]`);
+		console.debug(`Initializing uploader [key: ${params.fileName}; bucket: ${params.bucket}]`);
 
 		this.storage = storage;
 		this.params = params;
@@ -100,13 +91,10 @@ export class Upload extends EventEmitter {
 		return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 	}
 
-	private requestIsOfThisUpload(expectedUrl: URL, req: HttpRequest) {
-		const fwdUrl = req.headers["x-gl-forward-url"];
-		return (fwdUrl && expectedUrl.toString() === fwdUrl) || (
-			expectedUrl.protocol === req.protocol &&
-			expectedUrl.hostname === req.hostname &&
-			expectedUrl.protocol === req.protocol &&
-			expectedUrl.pathname === req.path
+	private requestIsOfThisUpload(req: HttpRequest) {
+		return (this.fileId && req.headers["x-gl-file-id"] === this.fileId) || (
+			req.headers["x-gl-bucket"] === this.params.bucket &&
+			req.headers["X-Bz-File-Name"] === percEncoded(this.params.fileName)
 		);
 	}
 
@@ -119,28 +107,6 @@ export class Upload extends EventEmitter {
 
 	private async uploadAsWhole(dataPart: RawDataPart) {
 		console.debug("Uploading as whole.");
-
-		if (!this.uploadOptions) {
-			if (!this.getUploadUrlPromise) this.getUploadUrlPromise = this.storage.send("b2_get_upload_url", {
-				method: "GET",
-				query: {
-					bucketId: requireBucketId(this.params.bucket),
-				}
-			});
-
-			let res: B2GetUploadUrlResponse;
-			try {
-				res = await this.getUploadUrlPromise;
-			} catch (error) {
-				throw new StorageError("storage:get-upload-url-failed", "Unable to get regular file upload URL", error);
-			}
-
-			if (!res.uploadUrl || !res.authorizationToken)
-				throw new StorageError("storage:invalid-upload-options", "Get upload URL response did not include "
-				+ "regular file upload URL or auth token.");
-
-			this.uploadOptions = { url: res.uploadUrl, authToken: res.authorizationToken };
-		}
 		if (this.getState() !== "running") return;
 
 		let sha1Hash: string;
@@ -154,9 +120,8 @@ export class Upload extends EventEmitter {
 		if (this.locks.has(dataPart)) return;
 		this.locks.add(dataPart);
 
-		const uploadUrlInstance = new URL(this.uploadOptions.url);
 		const progressHandler = (evt: ProgressEvent, req: HttpRequest) => {
-			if (!this.requestIsOfThisUpload(uploadUrlInstance, req)) {
+			if (!this.requestIsOfThisUpload(req)) {
 				return;
 			}
 
@@ -173,13 +138,12 @@ export class Upload extends EventEmitter {
 
 		const partSize = byteLength(dataPart.data);
 		try {
-			await this.storage.send("b2_upload_file", {
-				url: this.uploadOptions.url,
+			await this.storage.send("upload_file", {
 				method: "POST",
 				headers: {
-					"Authorization": this.uploadOptions.authToken,
-					"X-Bz-File-Name": percEncoded(this.params.key),
-					"Content-Type": this.params.metadata.contentType || "b2/x-auto",
+					"x-gl-bucket": this.params.bucket,
+					"X-Bz-File-Name": percEncoded(this.params.fileName),
+					"Content-Type": this.params.metadata.mimeType || "b2/x-auto",
 					"Content-Length": (partSize || 0).toString(),
 					"X-Bz-Content-Sha1": sha1Hash,
 					...(this.params.metadata.contentDisposition && { "X-Bz-Info-b2-content-disposition": percEncoded(this.params.metadata.contentDisposition) }),
@@ -209,12 +173,12 @@ export class Upload extends EventEmitter {
 		console.debug("Uploading data part: ", dataPart.partNumber);
 
 		if (!this.fileId) {
-			if (!this.startLargeFilePromise) this.startLargeFilePromise = this.storage.send("b2_start_large_file", {
+			if (!this.startLargeFilePromise) this.startLargeFilePromise = this.storage.send("start_large_file", {
 				method: "POST",
 				body: {
-					bucketId: requireBucketId(this.params.bucket),
-					fileName: this.params.key,
-					contentType: this.params.metadata.contentType || "b2/x-auto",
+					bucket: this.params.bucket,
+					fileName: this.params.fileName,
+					contentType: this.params.metadata.mimeType || "b2/x-auto",
 					fileInfo: {
 						...(this.params.metadata.contentDisposition && { "b2-content-disposition": this.params.metadata.contentDisposition }),
 						...this.params.metadata.customMetadata,
@@ -232,30 +196,6 @@ export class Upload extends EventEmitter {
 			if (!this.fileId) throw new StorageError("storage:no-multipart-file-id", "Start large file response did not include file ID");
 		}
 		if (this.getState() !== "running") return;
-
-		let uploadOptions = (this.partUploadOptionsArray || (this.partUploadOptionsArray = []))[dataPart.partNumber];
-		if (!uploadOptions) uploadOptions = this.partUploadOptionsArray[dataPart.partNumber] = { };
-		if (!uploadOptions.result) {
-			if (!uploadOptions.getUrlPromise) uploadOptions.getUrlPromise = this.storage.send("b2_get_upload_part_url", {
-				method: "GET",
-				query: {
-					fileId: this.fileId,
-				}
-			});
-
-			let res: B2GetUploadPartUrlResponse;
-			try {
-				res = await uploadOptions.getUrlPromise;
-			} catch (error) {
-				throw new StorageError("storage:get-part-upload-url-failed", "Unable to get upload URL for large file part", error);
-			}
-
-			if (!res.uploadUrl || !res.authorizationToken) throw new StorageError("storage:invalid-part-upload-options",
-				"Get part upload url response did not include upload URL or auth token.");
-
-			uploadOptions.result = { url: res.uploadUrl, authToken: res.authorizationToken };
-		}
-		if (this.getState() !== "running") return;
 		
 		let sha1Hash: string;
 		try {
@@ -271,10 +211,9 @@ export class Upload extends EventEmitter {
 		const partSize = byteLength(dataPart.data);
 
 		let calculatedBytes = 0;
-		const uploadUrlInstance = new URL(uploadOptions.result.url);
 		const progressHandler = (evt: ProgressEvent, req: HttpRequest) => {
 			const reqPartNumber = Number(req.headers["X-Bz-Part-Number"]) || "-1";
-			if (!this.requestIsOfThisUpload(uploadUrlInstance, req) || reqPartNumber !== dataPart.partNumber) {
+			if (!this.requestIsOfThisUpload(req) || reqPartNumber !== dataPart.partNumber) {
 				return;
 			}
 
@@ -291,13 +230,12 @@ export class Upload extends EventEmitter {
 			reqHandler.on("xhrUploadProgress", progressHandler);
 		}
 
-		let partResult: B2UploadPartResponse;
+		let partResult: UploadPartResponse;
 		try {
-			partResult = await this.storage.send("b2_upload_part", {
-				url: uploadOptions.result.url,
+			partResult = await this.storage.send("upload_part", {
 				method: "POST",
 				headers: {
-					"Authorization": uploadOptions.result.authToken,
+					"x-gl-file-id": this.fileId,
 					"X-Bz-Part-Number": dataPart.partNumber.toString(),
 					"Content-Length": (partSize || 0).toString(),
 					"X-Bz-Content-Sha1": sha1Hash,
@@ -393,7 +331,7 @@ export class Upload extends EventEmitter {
 			if (!this.fileId) throw new StorageError("storage:no-multipart-file-id", "File ID not found before finishing");
 
 			try {
-				await this.storage.send("b2_finish_large_file", {
+				await this.storage.send("finish_large_file", {
 					method: "POST",
 					body: {
 						fileId: this.fileId,
@@ -432,16 +370,16 @@ export class Upload extends EventEmitter {
 				if (!output.fileId) throw new StorageError("storage:no-multipart-file-id", "Start large file response did not "
 					+ "include file ID on cancel");
 				
-				await this.storage.send("b2_cancel_large_file", {
+				await this.storage.send("cancel_large_file", {
 					method: "POST",
 					body: {
 						fileId: output.fileId
 					}
-				}).then(() => {
-					console.debug("Multipart upload aborted successfully.");
-				}).catch(err => {
-					console.warn("Multipart create or abort failed: ", err);
 				});
+			}).then(() => {
+				console.debug("Multipart upload aborted successfully.");
+			}).catch(err => {
+				console.warn("Multipart create or abort failed: ", err);
 			});
 		}
 
@@ -482,7 +420,7 @@ export type ListenerMapping = {
 export type UploadState = "none" | "running" | "paused" | "error" | "success" | "canceled";
 export type ProgressListener = (progress: UploadProgress) => void;
 export type ErrorListener = (error: StorageError) => void;
-export type BodyDataTypes = B2UploadFileOptions["body"];
+export type BodyDataTypes = UploadFileOptions["body"];
 
 export interface RawDataPart {
 	partNumber: number;
@@ -490,11 +428,11 @@ export interface RawDataPart {
 	lastPart?: boolean;
 }
 
-export type FileUploadMetadata = Partial<Pick<FileMetadata, "contentType" | "contentDisposition" | "customMetadata">>;
+export type FileUploadMetadata = Partial<Pick<FileMetadata, "mimeType" | "contentDisposition" | "customMetadata">>;
 
 export interface UploadParams {
 	bucket: string,
-	key: string,
+	fileName: string,
 	body: StreamingBlobPayloadInputTypes,
 	metadata: FileUploadMetadata,
 }

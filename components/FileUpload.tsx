@@ -123,7 +123,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			const fid = createFID(prefix + ext, uid);
 			const fileKey = getFileKey(fid);
 			const metadata: UploadParams["metadata"] = {
-				contentType: mime,
+				mimeType: mime,
 				contentDisposition: `inline; filename*=utf-8''${percEncoded(file.name)}`,
 			};
 
@@ -145,7 +145,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 						const thumbnail = await generateThumbnailFromVideo(localUrl, "image/png");
 						if (thumbnail) {
 							await uploadObject(getFileKey(createFID(prefix + ".png", uid)), thumbnail, {
-								contentType: "image/png",
+								mimeType: "image/png",
 								customMetadata: {
 									width: dimension[DimensionField.WIDTH],
 									height: dimension[DimensionField.HEIGHT],

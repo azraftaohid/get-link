@@ -12,9 +12,9 @@ import ToastHeader from "react-bootstrap/ToastHeader";
 import { QueryClient, QueryClientProvider } from "react-query";
 import "../styles/global.scss";
 import { acquireExperienceOptions } from "../utils/analytics";
-import { Backblaze } from "../utils/backblaze";
 import { initFirebase } from "../utils/firebase";
 import { init } from "../utils/init";
+import { getStorage } from "../utils/storage";
 
 init();
 
@@ -30,7 +30,7 @@ const toastBgMapping: Record<ToastType, string | undefined> = {
 
 function MyApp({ Component, pageProps }: AppProps) {
 	const app = initFirebase();
-	Backblaze.getInstance().bindAuth(getAuth(app));
+	getStorage().bindAuth(getAuth(app));
 	
 	const queryClient = useMemo(() => new QueryClient(), []);
 	

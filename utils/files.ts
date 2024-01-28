@@ -1,8 +1,8 @@
 import { fromBuffer } from "file-type/browser";
 import { Dimension } from "../models/dimension";
-import { Backblaze } from "./backblaze";
 import { MimeType, mimeTypes } from "./mimeTypes";
 import { initPdfWorker } from "./pdf";
+import { getStorage } from "./storage";
 import { extractExtension } from "./strings";
 import { DOMAIN, createAbsoluteUrl, createUrl } from "./urls";
 
@@ -45,10 +45,10 @@ export function compartDirectLink(url: string): {
 	path: string;
 	token: string | null;
 } {
-	const bb = Backblaze.getInstance();
+	const storage = getStorage();
 	const urlInstance = new URL(url);
 
-	const path = urlInstance.pathname.split(`${bb.fileUrl}/${bb.config.defaultBucket}`)[1];
+	const path = urlInstance.pathname.split(`${storage.fileUrl}/${storage.defaultBucket}`)[1];
 	const token = urlInstance.searchParams.get("Authorization");
 	if (typeof path !== "string") throw new Error(`invalid direct link: ${url}`);
 
@@ -57,14 +57,14 @@ export function compartDirectLink(url: string): {
 
 
 export function makeDirectLink(path: string, token?: string) {
-	const bb = Backblaze.getInstance();
-	const fileUrl = `${bb.fileUrl}/${bb.config.defaultBucket}/${path}`;
+	const storage= getStorage();
+	const fileUrl = `${storage.fileUrl}/${storage.defaultBucket}/${path}`;
 	return token ? `${fileUrl}?Authorization=${token}` : fileUrl;
 }
 
 export function isValidDirectLink(url: string) {
-	const bb = Backblaze.getInstance();
-	return url.startsWith(bb.fileUrl);
+	const storage = getStorage();
+	return url.startsWith(storage.fileUrl);
 }
 
 export async function getVideoDimension(src: string): Promise<Dimension> {
