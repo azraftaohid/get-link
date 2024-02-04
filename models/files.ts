@@ -51,7 +51,7 @@ export function getFileDocs(lid: string): Query<FileData>;
 export function getFileDocs(lid?: string) {
 	const col = collection(getFirestore(), COLLECTION_FILES);
 	if (!lid) return col;
-	return query(col, orderBy(new FieldPath(FileField.LINKS, lid)));
+	return query(col, orderBy(new FieldPath(FileField.LINKS, lid), "asc"));
 }
 
 export function getFileDocRef(cfid: string) {

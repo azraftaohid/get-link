@@ -106,6 +106,7 @@ export class Link {
 	readonly ref: DocumentReference<LinkData>;
 	readonly data: WithFieldValue<LinkData> = { };
 
+	private downloadSize = 0;
 	private lock = false;
 
 	constructor(ref?: DocumentReference<LinkData>) {
@@ -124,6 +125,11 @@ export class Link {
 
 	public setTitle(title: string) {
 		this.data[LinkField.TITLE] = title;
+	}
+
+	public increaseDownloadSize(increment: number) {
+		this.downloadSize += increment;
+		this.data[LinkField.DOWNLOAD_SIZE] = this.downloadSize;
 	}
 
 	public setCover(cover?: LinkCover) {
@@ -158,7 +164,7 @@ export class Link {
 		this.lock = true;
 		
 		const updateData: LinkUpdateData = this.extractData(
-			LinkField.TITLE, LinkField.FILES, LinkField.EXPIRE_TIME, LinkField.COVER
+			LinkField.TITLE, LinkField.FILES, LinkField.EXPIRE_TIME, LinkField.COVER, LinkField.DOWNLOAD_SIZE,
 		);
 
 		return updateLink(this.ref, updateData).catch((err) => {
@@ -174,7 +180,7 @@ export class Link {
 		this.lock = true;
 
 		const createData: LinkCreateData = this.extractData(
-			LinkField.COVER, LinkField.FILES, LinkField.EXPIRE_TIME, LinkField.COVER,
+			LinkField.COVER, LinkField.FILES, LinkField.EXPIRE_TIME, LinkField.DOWNLOAD_SIZE,
 		);
 
 		if (transaction) createLink(title, this.ref, createData, transaction);
@@ -192,6 +198,7 @@ export enum LinkField {
 	USER = "user",
 	COVER = "cover",
 	FILES = "files",
+	DOWNLOAD_SIZE = "download_size",
 	CREATE_TIME = "create_time",
 	EXPIRE_TIME = "expire_time",
 }
@@ -217,6 +224,7 @@ export interface LinkData {
 	[LinkField.USER]?: UserSnapshot;
 	[LinkField.COVER]?: LinkCover;
 	[LinkField.FILES]?: Record<string, InlineFileData>;
+	[LinkField.DOWNLOAD_SIZE]?: number,
 	[LinkField.CREATE_TIME]?: Timestamp;
 	[LinkField.EXPIRE_TIME]?: Timestamp;
 }

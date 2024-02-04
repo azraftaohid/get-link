@@ -58,10 +58,10 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 	const uid = user?.uid;
 
 	const [status, setStatus] = useState<FilesStatus>();
-	const [fid, setFid] = useState<string>();
+	const [uploadedFile, setUploadedFile] = useState<{ fid: string, size: number }>();
 
 	const handleComplete = (file: File, fid: string) => {
-		setFid(fid);
+		setUploadedFile({ fid, size: file.size });
 		setCompleted(file);
 		
 		onComplete?.(file, fid);
@@ -97,7 +97,8 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 				},
 			});
 		}
-
+		
+		link.increaseDownloadSize(file.size);
 		if (order === 0) link.setCover({ fid });
 	};
 
@@ -257,15 +258,16 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 						if (file) stateless.current.handleCancel(file);
 						return;
 					case "success": {
-						if (fid) {
-							deleteFile(fid).catch(err => {
+						if (uploadedFile) {
+							deleteFile(uploadedFile.fid).catch(err => {
 								console.error(`Error deleting file from the server [file: ${file?.name}; err: ${err}]`);
 							});
 							
 							// todo: remove from cover if order is 0
 							// todo: set the next least order value fid as cover
-							link?.removeFile(fid);
-							fileDocs.delete(fid);
+							link?.removeFile(uploadedFile.fid);
+							link?.increaseDownloadSize(-uploadedFile.size);
+							fileDocs.delete(uploadedFile.fid);
 						}
 
 						if (file) stateless.current.handleCancel(file);

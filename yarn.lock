@@ -1432,6 +1432,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime-corejs3@npm:^7.23.5":
+  version: 7.23.9
+  resolution: "@babel/runtime-corejs3@npm:7.23.9"
+  dependencies:
+    core-js-pure: ^3.30.2
+    regenerator-runtime: ^0.14.0
+  checksum: 715d916b6cf60013597aa9a5823fd04a9c6cc6ba6221bb8611e76c369cbf1b4baf1d0ad63b6522736593a38e89a6502213a38f57a9c24e5586628e930c4fd52c
+  languageName: node
+  linkType: hard
+
 "@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.8.4":
   version: 7.17.9
   resolution: "@babel/runtime@npm:7.17.9"
@@ -3066,6 +3076,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@transcend-io/conflux@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "@transcend-io/conflux@npm:4.1.0"
+  dependencies:
+    "@babel/runtime-corejs3": ^7.23.5
+    jsbi: ^4.3.0
+    pako: ^2.1.0
+    web-streams-polyfill: ^3.2.1
+  checksum: f7f0083272a31138b24e66fc98a59ea40dca87a434201f6c345c0fda064837d17719dfc1ee0f2b105edc65b6d11d0c7a5f1de1687ab9c78f0ab991fd0ac13ecb
+  languageName: node
+  linkType: hard
+
 "@ts-morph/common@npm:~0.11.0":
   version: 0.11.1
   resolution: "@ts-morph/common@npm:0.11.1"
@@ -3371,6 +3393,13 @@ __metadata:
   version: 2.0.1
   resolution: "@types/stack-utils@npm:2.0.1"
   checksum: 205fdbe3326b7046d7eaf5e494d8084f2659086a266f3f9cf00bccc549c8e36e407f88168ad4383c8b07099957ad669f75f2532ed4bc70be2b037330f7bae019
+  languageName: node
+  linkType: hard
+
+"@types/streamsaver@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "@types/streamsaver@npm:2.0.4"
+  checksum: 764f489616dc6b062ccbf0d6cb73021c599045cedefdfd6357d44b0ecfbbdc9bb91bb67f2c8a0d6ab5a536fbdc1baa374b1be657fc26f82777da6c333079b65a
   languageName: node
   linkType: hard
 
@@ -5141,6 +5170,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"core-js-pure@npm:^3.30.2":
+  version: 3.35.1
+  resolution: "core-js-pure@npm:3.35.1"
+  checksum: 2fb360757c403b1487e746bb3648c7f0be45c196640552767f4e2a55a962411a33093cd8babf5e0416de7f4c38d1b05bbaf576c0a3bf2d6565935bab749d3fb5
+  languageName: node
+  linkType: hard
+
 "create-require@npm:^1.1.0":
   version: 1.1.1
   resolution: "create-require@npm:1.1.1"
@@ -6846,11 +6882,13 @@ __metadata:
     "@testing-library/jest-dom": ^5.16.2
     "@testing-library/react": ^12.1.4
     "@thegoodcompany/common-utils-js": ^1.4.3
+    "@transcend-io/conflux": ^4.1.0
     "@types/masonry-layout": ^4.2.5
     "@types/modernizr": ^3.5.3
     "@types/node": 17.0.14
     "@types/react": 17.0.38
     "@types/react-pdf": 5.7.1
+    "@types/streamsaver": ^2.0.4
     "@types/uuid": ^8.3.4
     "@typescript-eslint/eslint-plugin": 6.11.0
     "@typescript-eslint/parser": 6.11.0
@@ -6880,10 +6918,12 @@ __metadata:
     react-query: ^3.34.14
     sass: ^1.49.7
     sharp: ^0.30.5
+    streamsaver: ^2.0.6
     types-react-codemod: ^1.1.0
     typescript: 5.2.2
     uuid: ^8.3.2
     vercel: latest
+    web-streams-polyfill: ^3.3.2
     yup: ^0.32.11
   languageName: unknown
   linkType: soft
@@ -8403,6 +8443,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsbi@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "jsbi@npm:4.3.0"
+  checksum: 27c4f178eb7fd9d1756144066fdebc62f4a0176e877f55e646e8ce84075c13551bd575a316b9959ccdcca9d5dc05a81c9907cfa09f0cfeb43c9777797e36b0e9
+  languageName: node
+  linkType: hard
+
 "jscodeshift@npm:^0.13.1":
   version: 0.13.1
   resolution: "jscodeshift@npm:0.13.1"
@@ -9879,6 +9926,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pako@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "pako@npm:2.1.0"
+  checksum: 71666548644c9a4d056bcaba849ca6fd7242c6cf1af0646d3346f3079a1c7f4a66ffec6f7369ee0dc88f61926c10d6ab05da3e1fca44b83551839e89edd75a3e
+  languageName: node
+  linkType: hard
+
 "parent-module@npm:^1.0.0":
   version: 1.0.1
   resolution: "parent-module@npm:1.0.1"
@@ -11347,6 +11401,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"streamsaver@npm:^2.0.6":
+  version: 2.0.6
+  resolution: "streamsaver@npm:2.0.6"
+  checksum: 7b4b06d8da3864b74f1887e5e9d142de380abb48864ca1d6ba38ba3b7b9b964213c5976820f5f09b3b7164fe05d824b4d6296e23b142e7d1c42f87f998f63a2a
+  languageName: node
+  linkType: hard
+
 "string-length@npm:^4.0.1":
   version: 4.0.2
   resolution: "string-length@npm:4.0.2"
@@ -12333,6 +12394,13 @@ __metadata:
   version: 3.2.0
   resolution: "web-streams-polyfill@npm:3.2.0"
   checksum: e23ad0649392fa0159dbfc6bb27474c308c3f332d9078cfef3c06c154165bef18732c5814126147c6c712f604216ddc950c171c854e3821f020e0d2d721a5958
+  languageName: node
+  linkType: hard
+
+"web-streams-polyfill@npm:^3.2.1, web-streams-polyfill@npm:^3.3.2":
+  version: 3.3.2
+  resolution: "web-streams-polyfill@npm:3.3.2"
+  checksum: 0292f4113c1bda40d8e8ecebee39eb14cc2e2e560a65a6867980e394537a2645130e2c73f5ef6e641fd3697d2f71720ccf659aebaf69a9d5a773f653a0fdf39d
   languageName: node
   linkType: hard
 

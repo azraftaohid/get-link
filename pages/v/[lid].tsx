@@ -41,7 +41,7 @@ import { UserSnapshotField } from "../../models/users";
 import { ClickEventContext, logClick } from "../../utils/analytics";
 import { notFound } from "../../utils/common";
 import { hasExpired } from "../../utils/dates";
-import { shouldStepOutDownload } from "../../utils/downloads";
+import { shouldStepOutDownload, THRESHOLD_DIRECT_DOWNLOAD } from "../../utils/downloads";
 import { NotFound } from "../../utils/errors/NotFound";
 import { createViewLink, findFileIcon } from "../../utils/files";
 import { initFirebase } from "../../utils/firebase";
@@ -52,6 +52,7 @@ import { getDownloadURL, getMetadata, requireObject } from "../../utils/storage"
 import { makeProcessedFile, ProcessedFileData } from "../../utils/useProcessedFiles";
 import { useToast } from "../../utils/useToast";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
+import { makeDownloadParams } from "../d";
 
 const FETCH_LIMIT = 12;
 
@@ -117,6 +118,7 @@ const View: NextPage<Partial<StaticProps>> = ({
 
 	const title = snapshot?.data?.[LinkField.TITLE];
 	const isUser = user && snapshot?.data?.[LinkField.USER]?.[UserSnapshotField.UID] === user.uid;
+	const downloadSize = snapshot?.data?.[LinkField.DOWNLOAD_SIZE];
 
 	useEffect(() => {
 		// stored as state; update client after initial render because
@@ -216,7 +218,14 @@ const View: NextPage<Partial<StaticProps>> = ({
 								className="ms-2"
 								variant="outline-vivid"
 								left={<Icon name="download" size="sm" />}
-								onClick={() => setShowDownloadPrompt(true)}
+								href={fileCount === 1 && files[0] 
+									? `d?${makeDownloadParams(files[0].directLink, files[0].name || "", files[0].size < THRESHOLD_DIRECT_DOWNLOAD ? "built-in" : "browser_default")}`
+									: undefined}
+								target="_blank"
+								onClick={() => {
+									if (fileCount === 1 && files[0]) return;
+									setShowDownloadPrompt(true);
+								}}
 							>
 								<span className="d-none d-md-inline">Download</span>
 							</Button>
@@ -282,8 +291,11 @@ const View: NextPage<Partial<StaticProps>> = ({
 					</Alert>
 				</Conditional>
 				<DownloadFilesDialog
-					lid={showDownloadPrompt ? lid : undefined}
+					lid={showDownloadPrompt && lid}
+					files={!isDynamic && initFiles}
 					show={showDownloadPrompt}
+					saveAsPrefix={title}
+					downloadSize={downloadSize}
 					onHide={() => setShowDownloadPrompt(false)}
 				/>
 				<AssurePrompt
@@ -381,7 +393,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 			.catch((err) => suppressError(err, lid, "small thumbnail")));
 
 		tasks.push(getMetadata(coverKey).then(value => {
-			coverType = value.contentType;
+			coverType = value.mimeType;
 			coverUrl = getDownloadURL(coverKey);
 		}).catch(err => suppressError(err, lid, "cover")));
 	}
