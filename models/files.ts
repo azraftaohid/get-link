@@ -23,12 +23,12 @@ import { UserSnapshot, UserSnapshotField } from "./users";
  * user/uid/file_name
  */
 
-export const COLLECTION_FILES = "files_future";
+export const COLLECTION_FILES = "files_v2";
 
 export const NAMESPACE_FILES = "3b436020-ef99-49fe-9b8a-a96554172278";
 
 export function createFID(fileName: string, uid: string) {
-	return `users_future/${uid}/${fileName}`;
+	return `users_v2/${uid}/${fileName}`;
 }
 
 export function getFileRef(fid: string): StorageReference;
@@ -41,7 +41,7 @@ export function getThumbnailRef(fid: string, size: ThumbnailSize) {
 	const { uid, fileName } = compartFid(fid);
 	const displayName = extractDisplayName(fileName);
 
-	return fileRef(getStorage(), `users_future/${uid}/thumbs/${displayName}_${size}.jpeg`);
+	return fileRef(getStorage(), `users_v2/${uid}/thumbs/${displayName}_${size}.jpeg`);
 }
 
 export function createCFID(fid: string) {

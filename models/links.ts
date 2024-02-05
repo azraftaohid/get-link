@@ -36,7 +36,7 @@ import { UserSnapshot, UserSnapshotField } from "./users";
  * 
  */
 
-export const COLLECTION_LINKS = "links_future";
+export const COLLECTION_LINKS = "links_v2";
 
 export const MAX_LEN_LINK_TITLE = 255;
 
