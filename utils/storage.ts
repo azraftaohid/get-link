@@ -310,12 +310,17 @@ export function uploadObject(fileName: string, blob: StreamingBlobPayloadInputTy
 
 		upload.on("state_changed", stateHandler);
 		upload.on("failed", errorHandler);
+		upload.start();
 	}).finally(() => {
 		if (stateHandler) upload.off("state_changed", stateHandler);
 		if (errorHandler) upload.off("failed", errorHandler);
 	});
 }
 
+/**
+ * Initializes an uploader that can be resumed or paused. Invoking this method does not start the uploader automatically.
+ * @returns The uploader instance.
+ */
 export function uploadObjectResumable(fileName: string, blob: StreamingBlobPayloadInputTypes, metadata: UploadParams["metadata"]) {
 	const storage = getStorage();
 
