@@ -67,6 +67,11 @@ const nextConfig = {
 		remotePatterns: [
 			{
 				protocol: "https",
+				hostname: "storage.getlinksoft.workers.dev",
+				pathname: "/file/**"
+			},
+			{
+				protocol: "https",
 				hostname: "f003.backblazeb2.com",
 				pathname: "/file/getlink-dev/**"
 			},
