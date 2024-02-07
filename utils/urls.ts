@@ -1,6 +1,6 @@
 import { QueryParameterBag } from "@smithy/types";
 
-export const DOMAIN = process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000";
+export const DOMAIN = process.env.NEXT_PUBLIC_APP_URL || "https://getlink.vercel.app";
 
 export function createUrl(...segments: string[]) {
 	return createAbsoluteUrl("", ...segments);
