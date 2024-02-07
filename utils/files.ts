@@ -8,7 +8,7 @@ import { DOMAIN, createAbsoluteUrl, createUrl } from "./urls";
 
 export const acceptedFileFormats: string[] | undefined = undefined;
 
-export const NON_PREVIEW_SUPPORTING_TYPE = ["image/vnd.adobe.photoshop"];
+export const NON_PREVIEWABLE_IMAGE_TYPES = ["image/vnd.adobe.photoshop"];
 
 export const executableTypes = [
 	"application/vnd.microsoft.portable-executable",

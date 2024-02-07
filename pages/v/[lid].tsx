@@ -47,6 +47,7 @@ import { createViewLink, findFileIcon } from "../../utils/files";
 import { initFirebase } from "../../utils/firebase";
 import { initModernizr } from "../../utils/modernizr";
 import { descriptiveNumber } from "../../utils/numbers";
+import { whenTruthy } from "../../utils/objects";
 import { quantityString } from "../../utils/quantityString";
 import { getDownloadURL, getMetadata, requireObject } from "../../utils/storage";
 import { makeProcessedFile, ProcessedFileData } from "../../utils/useProcessedFiles";
@@ -95,7 +96,6 @@ const View: NextPage<Partial<StaticProps>> = ({
 	fileCount = 0,
 	cover,
 	thumbnail,
-	thumbnailSmall,
 }) => {
 	const lid = snapshot?.id;
 
@@ -194,7 +194,10 @@ const View: NextPage<Partial<StaticProps>> = ({
 			<Metadata
 				title={title || "Files - Get Link"}
 				description="Create and instantly share link of files and images."
-				image={thumbnail || thumbnailSmall || (cover.type.startsWith("image/") && cover.url) || findFileIcon(cover.type)}
+				image={
+					whenTruthy(thumbnail || (cover.type.startsWith("image/") && cover.url), 
+					url => `/_next/image?url=${url}&w=1200&q=75`) || findFileIcon(cover.type)
+				}
 			/>
 			<Header />
 			<PageContent>
@@ -375,22 +378,16 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	let isDynamic = false;
 	let fileCount = 0;
 
-	let smThumbnailUrl: string | undefined;
-	let thumbailUrl: string | undefined;
+	let thumbnailUrl: string | undefined;
 	let coverUrl: string | undefined;
 	let coverType: string | undefined;
 	if (cover?.fid) {
 		const coverKey = getFileKey(cover.fid);
-		const thumbnailKey = getThumbnailKey(cover.fid, "1024x1024");
-		const smThumbnailKey = getThumbnailKey(cover.fid, "56x56");
+		const thumbKey = getThumbnailKey(cover.fid);
 
-		tasks.push(requireObject(thumbnailKey)
-			.then(() => thumbailUrl = getDownloadURL(thumbnailKey))
+		tasks.push(requireObject(thumbKey)
+			.then(() => thumbnailUrl = getDownloadURL(thumbKey))
 			.catch((err) => suppressError(err, lid, "thumbnail")));
-
-		tasks.push(requireObject(smThumbnailKey)
-			.then(() => smThumbnailUrl = getDownloadURL(smThumbnailKey))
-			.catch((err) => suppressError(err, lid, "small thumbnail")));
 
 		tasks.push(getMetadata(coverKey).then(value => {
 			coverType = value.mimeType;
@@ -469,8 +466,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 				type: coverType,
 				url: coverUrl,
 			},
-			thumbnail: thumbailUrl || null,
-			thumbnailSmall: smThumbnailUrl || null,
+			thumbnail: thumbnailUrl || null,
 			snapshot: staticSnapshot,
 		},
 	};
@@ -487,7 +483,6 @@ interface StaticProps {
 		type: string;
 	};
 	thumbnail?: string | null;
-	thumbnailSmall?: string | null;
 	fileCount: number;
 }
 

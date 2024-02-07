@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { Dimension, DimensionField } from "../models/dimension";
-import { FileField, createFID, deleteFile, getFileKey } from "../models/files";
+import { FileField, createFID, deleteFile, getFileKey, getThumbnailKey } from "../models/files";
 import { Link as LinkObject } from "../models/links";
 import { NotFound } from "../utils/errors/NotFound";
 import { FileCustomMetadata, FilesStatus, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
@@ -145,7 +145,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 					try {
 						const thumbnail = await generateThumbnailFromVideo(localUrl, "image/png");
 						if (thumbnail) {
-							await uploadObject(getFileKey(createFID(prefix + ".png", uid)), thumbnail, {
+							await uploadObject(getThumbnailKey(fid), thumbnail, {
 								mimeType: "image/png",
 								customMetadata: {
 									width: dimension[DimensionField.WIDTH],

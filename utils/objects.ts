@@ -1,4 +1,5 @@
 import { Bytes, DocumentReference, FieldValue, GeoPoint, Primitive, Timestamp, WithFieldValue } from "firebase/firestore";
+import { Falsy } from "./falsy";
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function ensureProperty<T extends {}, K extends keyof WithFieldValue<T>>(
@@ -48,6 +49,11 @@ export function accessProperty<T, R>(obj: T, dottedKey: string & keyof Flattened
 	dottedKey.split(".").forEach(key => lvl = lvl?.[key]);
 
 	return lvl;
+}
+
+export function whenTruthy<T, R>(o: T | Falsy, callback: (t: T) => R): R | undefined {
+	if (o) return callback(o);
+	return undefined;
 }
 
 /**

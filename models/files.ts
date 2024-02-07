@@ -35,11 +35,11 @@ export function getFileKey(fid: string) {
 	return fid;
 }
 
-export function getThumbnailKey(fid: string, size: ThumbnailSize) {
+export function getThumbnailKey(fid: string) {
 	const { uid, fileName } = compartFid(fid);
 	const displayName = extractDisplayName(fileName);
 
-	return `users_v3/${uid}/thumbs/${displayName}_${size}.jpeg`;
+	return `users_v3/${uid}/thumbs/${displayName}.png`;
 }
 
 export function createCFID(fid: string) {

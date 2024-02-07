@@ -40,10 +40,9 @@ import { UserSnapshotField } from "../models/users";
 import styles from "../styles/dashboard.module.scss";
 import { logClick } from "../utils/analytics";
 import { hasExpired } from "../utils/dates";
-import { NotFound } from "../utils/errors/NotFound";
-import { findFileIcon, NON_PREVIEW_SUPPORTING_TYPE } from "../utils/files";
+import { findFileIcon, NON_PREVIEWABLE_IMAGE_TYPES } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
-import { getDownloadURL, getMetadata, requireObject } from "../utils/storage";
+import { getDownloadURL, getMetadata, objectExists } from "../utils/storage";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
 import { getSolidStallImage } from "../visuals/stallData";
 
@@ -126,34 +125,22 @@ const LinkCard: React.FunctionComponent<React.PropsWithChildren<{ link: QueryDoc
 
 	useEffect(() => {
 		const fid = cover?.fid;
-		if (!fid) {
-			setThumbnail(null);
-			return;
-		}
+		if (!fid) return setThumbnail(null);
 		setThumbnail(undefined);
 
-		const thumbKey = getThumbnailKey(fid, "384x384");
-		requireObject(thumbKey)
-			.then(() => setThumbnail(getDownloadURL(thumbKey)))
-			.catch(async (err) => {
-				if (err instanceof NotFound) console.warn(`thumbnail get failed: ${err}`);
-
-				const fileKey = getFileKey(fid);
-				try {
-					const metadata = await getMetadata(fileKey);
-					const mimeType = metadata.mimeType;
-
-					if (mimeType?.startsWith("image/") && !NON_PREVIEW_SUPPORTING_TYPE.includes(mimeType)) {
-						const directLink = getDownloadURL(fileKey);
-						setThumbnail(directLink);
-					} else {
-						setThumbnail(mimeType && findFileIcon(mimeType) || null);
-					}
-				} catch (error) {
-					console.error(`direct download link get failed: ${error}`);
-					setThumbnail(null);
-				}
-			});
+		const coverKey = getFileKey(fid);
+		const thumbKey = getThumbnailKey(fid);
+		Promise.all([objectExists(thumbKey).catch(console.warn), getMetadata(coverKey).catch(console.warn)]).then(([thumb, metadata]) => {
+			if (thumb) return setThumbnail(getDownloadURL(thumbKey));
+			
+			const mimeType = metadata?.mimeType;
+			if (mimeType?.startsWith("image/") && !NON_PREVIEWABLE_IMAGE_TYPES.includes(mimeType)) {
+				const dl = getDownloadURL(coverKey);
+				setThumbnail(dl);
+			} else {
+				setThumbnail(mimeType && findFileIcon(mimeType) || null);
+			}
+		});
 	}, [cover?.fid]);
 
 	return (
