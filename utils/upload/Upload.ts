@@ -9,9 +9,9 @@ import { byteLength } from "./bytelength";
 import { getChunk } from "./chunker";
 
 export class Upload extends EventEmitter {
-	public static MIN_PART_SIZE = 5 * Math.pow(2, 20);
-	public static MAX_PART_SIZE = 95 * Math.pow(2, 20); // cf workers request body size limit -> 100 MB
-	public static MAX_PARTS = 10000;
+	public static readonly MIN_PART_SIZE = 5 * Math.pow(2, 20);
+	public static readonly MAX_PART_SIZE = 95 * Math.pow(2, 20); // cf workers request body size limit -> 100 MB
+	public static readonly MAX_PARTS = 10000;
 
 	private storage: Storage;
 	private params: UploadParams;
@@ -361,6 +361,25 @@ export class Upload extends EventEmitter {
 			this.aborter.abort();
 			this.setState("canceled");
 			this.emit("failed", new StorageError("storage:upload-canceled", "Upload was aborted by user", null));
+		}
+
+		// we are sending the file to our workers first, then the workers is uploading the file, as a stream
+		// there may be situations when the workers has the full file body, but client has canceled the upload
+		// we are deleting the file on that suspection
+		// in case of multipart uploads, either this or the multipart cancellation part is expected to success
+		if (this.totalBytes && this.uploadedBytes >= this.totalBytes) {
+			console.debug("Upload may have completed. Attempting to delete...");
+			const del = () => this.storage.send("delete_file", {
+				method: "POST",
+				body: {
+					bucket: this.params.bucket,
+					fileName: this.params.fileName,
+				}
+			});
+
+			del().catch(() => { // may be the server has the full body, but has not yet done uploading
+				setTimeout(() => { del().catch(console.warn); }, 2000);
+			});
 		}
 
 		if (this.startLargeFilePromise) {
