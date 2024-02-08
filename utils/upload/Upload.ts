@@ -305,7 +305,7 @@ export class Upload extends EventEmitter {
 	}
 
 	private async _start(): Promise<void> {
-		if (!this.feed) this.feed = getChunk(this.params.body, this.partSize);
+		if (!this.feed) this.feed = getChunk(this.params.body, this.partSize, (this.totalBytes ?? 0) / this.partSize > Upload.MAX_PARALLEL);
 
 		for (const dataPart of Array.from(this.pendings)) {
 			console.debug("Pending data part found.");
