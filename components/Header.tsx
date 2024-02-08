@@ -1,5 +1,3 @@
-import { useAuthUser } from "@react-query-firebase/auth";
-import { getAuth } from "firebase/auth";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -15,6 +13,7 @@ import styles from "../styles/header.module.scss";
 import { logClick } from "../utils/analytics";
 import { mergeNames } from "../utils/mergeNames";
 import { Theme, useTheme } from "../utils/useTheme";
+import { useUser } from "../utils/useUser";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
 import { RouteIndicator } from "./RouteIndicator";
@@ -37,15 +36,7 @@ const navs: { title: string; pathname: string }[] = [
 
 export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
 	const router = useRouter();
-	const { data: user } = useAuthUser(["usr"], getAuth(), {
-		onSuccess: (usr) => {
-			if (usr) console.log("user signed in");
-			else console.log("user signed out");
-		},
-		onError: (err) => {
-			console.error(`error listening to auth state [cause: ${err}]`);
-		}
-	});
+	const { user } = useUser();
 	const { current: theme, setTheme } = useTheme();
 
 	const [showSignIn, setSignIn] = useState(false);

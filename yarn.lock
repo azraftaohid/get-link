@@ -2784,17 +2784,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-query-firebase/auth@npm:^0.3.4":
-  version: 0.3.4
-  resolution: "@react-query-firebase/auth@npm:0.3.4"
-  peerDependencies:
-    firebase: ^9.0.1
-    react: ^16.8.0 || ^17.0.0
-    react-query: ^3.23.2
-  checksum: fc31184e42ee45fad8ba730d1e2f59f9ac824579d3efeca7005b364b7257aa0f64c15241727ff0302d05e700579bdd07f2c838217e9164e4730e79021f0580d4
-  languageName: node
-  linkType: hard
-
 "@react-query-firebase/firestore@npm:^0.4.2":
   version: 0.4.2
   resolution: "@react-query-firebase/firestore@npm:0.4.2"
@@ -6872,7 +6861,6 @@ __metadata:
     "@aws-sdk/xhr-http-handler": ^3.485.0
     "@next/bundle-analyzer": ^12.1.0
     "@popperjs/core": ^2.11.2
-    "@react-query-firebase/auth": ^0.3.4
     "@react-query-firebase/firestore": ^0.4.2
     "@smithy/abort-controller": ^2.0.16
     "@smithy/fetch-http-handler": ^2.3.2

@@ -1,6 +1,4 @@
-import { useAuthUser } from "@react-query-firebase/auth";
 import { formatDate } from "@thegoodcompany/common-utils-js";
-import { getAuth } from "firebase/auth";
 import {
 	documentId,
 	FieldPath,
@@ -52,6 +50,7 @@ import { quantityString } from "../../utils/quantityString";
 import { getDownloadURL, getMetadata, requireObject } from "../../utils/storage";
 import { makeProcessedFile, ProcessedFileData } from "../../utils/useProcessedFiles";
 import { useToast } from "../../utils/useToast";
+import { useUser } from "../../utils/useUser";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
 import { makeDownloadParams } from "../d";
 
@@ -101,7 +100,7 @@ const View: NextPage<Partial<StaticProps>> = ({
 
 	const router = useRouter();
 	const { makeToast } = useToast();
-	const { data: user } = useAuthUser(["usr"], getAuth());
+	const { user } = useUser();
 
 	const [warns, setWarns] = useState(new Set<Warning>());
 

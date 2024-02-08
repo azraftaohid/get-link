@@ -1,22 +1,23 @@
-import { useAuthUser } from "@react-query-firebase/auth";
 import { getAuth, signOut } from "firebase/auth";
 import { NextPage } from "next";
 import Alert from "react-bootstrap/Alert";
 import { ExpandButton } from "../components/ExpandButton";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
+import { Loading } from "../components/Loading";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
 import { useToast } from "../utils/useToast";
+import { useUser } from "../utils/useUser";
 
 const Profile: NextPage = () => {
 	const { makeToast } = useToast();
-	const { data: user } = useAuthUser(["usr"], getAuth());
+	const { user, isLoading } = useUser();
 
 	return <PageContainer>
 		<Header />
 		<PageContent>
-			{user ? <ExpandButton
+			{(user && <ExpandButton
 				onClick={async () => {
 					try {
 						await signOut(getAuth());
@@ -28,7 +29,7 @@ const Profile: NextPage = () => {
 				}}
 			>
 				Sign out
-			</ExpandButton> : <Alert variant="info">
+			</ExpandButton>) || (isLoading && <Loading />) ||  <Alert variant="info">
 				User not signed-in yet. Please sign-in using the button from header.
 			</Alert>}
 		</PageContent>

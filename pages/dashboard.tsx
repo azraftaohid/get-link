@@ -1,7 +1,5 @@
-import { useAuthUser } from "@react-query-firebase/auth";
 import { useFirestoreInfiniteQuery } from "@react-query-firebase/firestore";
 import { formatDate } from "@thegoodcompany/common-utils-js";
-import { getAuth } from "firebase/auth";
 import {
 	collection,
 	FieldPath,
@@ -44,6 +42,7 @@ import { findFileIcon, NON_PREVIEWABLE_IMAGE_TYPES } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
 import { getDownloadURL, getMetadata, objectExists } from "../utils/storage";
 import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
+import { useUser } from "../utils/useUser";
 import { getSolidStallImage } from "../visuals/stallData";
 
 const FETCH_LIMIT = 12;
@@ -312,7 +311,7 @@ const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: stri
 };
 
 const Dashboard: NextPage = () => {
-	const { data: user, isLoading } = useAuthUser(["usr"], getAuth());
+	const { user, isLoading } = useUser();
 
 	return (
 		<PageContainer>

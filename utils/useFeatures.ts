@@ -1,13 +1,12 @@
-import { useAuthUser } from "@react-query-firebase/auth";
-import { getAuth } from "firebase/auth";
 import { onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { QuotaMetric } from "../models/quotaMetric";
 import { Quotas, defaultQuotas, getQuotas, mergeQuotas } from "../models/quotas";
 import { Flattened, accessProperty } from "./objects";
+import { useUser } from "./useUser";
 
 export const useFeatures = (): UseFeatures => {
-	const { data: user } = useAuthUser(["usr"], getAuth());
+	const { user } = useUser();
 
 	const [isDefault, setDefault] = useState(true);
 	const [quotas, setQuotas] = useState<Quotas>(defaultQuotas);

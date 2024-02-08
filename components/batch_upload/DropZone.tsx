@@ -1,4 +1,3 @@
-import { useAuthUser } from "@react-query-firebase/auth";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { useRouter } from "next/router";
 import React, { useContext, useEffect, useRef } from "react";
@@ -7,6 +6,7 @@ import styles from "../../styles/batch_upload/dropzone.module.scss";
 import { acceptedFileFormats, shallowHash } from "../../utils/files";
 import { mergeNames } from "../../utils/mergeNames";
 import { useToast } from "../../utils/useToast";
+import { useUser } from "../../utils/useUser";
 import { Conditional } from "../Conditional";
 import { Icon } from "../Icon";
 import { BatchUploadConfigContext, BatchUploadContext } from "./BatchUpload";
@@ -20,7 +20,7 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 	...rest
 }) => {
 	const router = useRouter();
-	const { data: user } = useAuthUser(["usr"], getAuth());
+	const { user } = useUser();
 	const { makeToast } = useToast();
 
 	const {

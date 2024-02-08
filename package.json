@@ -24,7 +24,6 @@
     "@aws-sdk/xhr-http-handler": "^3.485.0",
     "@next/bundle-analyzer": "^12.1.0",
     "@popperjs/core": "^2.11.2",
-    "@react-query-firebase/auth": "^0.3.4",
     "@react-query-firebase/firestore": "^0.4.2",
     "@smithy/abort-controller": "^2.0.16",
     "@smithy/fetch-http-handler": "^2.3.2",

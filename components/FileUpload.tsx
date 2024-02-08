@@ -1,5 +1,3 @@
-import { useAuthUser } from "@react-query-firebase/auth";
-import { getAuth } from "firebase/auth";
 import { nanoid } from "nanoid";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import ProgressBar from "react-bootstrap/ProgressBar";
@@ -11,6 +9,7 @@ import { FileCustomMetadata, FilesStatus, getFileType, getImageDimension, getPdf
 import { uploadObject, uploadObjectResumable } from "../utils/storage";
 import { percEncoded } from "../utils/strings";
 import { Upload, UploadParams } from "../utils/upload/Upload";
+import { useUser } from "../utils/useUser";
 import { generateThumbnailFromVideo } from "../utils/video";
 import { FilePreview, FilePreviewProps } from "./FilePreview";
 import Link from "./Link";
@@ -54,7 +53,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 
 	const attempt = useRef(0);
 
-	const { data: user } = useAuthUser(["usr"], getAuth());
+	const { user } = useUser();
 	const uid = user?.uid;
 
 	const [status, setStatus] = useState<FilesStatus>();

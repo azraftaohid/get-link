@@ -1,6 +1,5 @@
-import { useAuthUser } from "@react-query-firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { getAdditionalUserInfo, getAuth } from "firebase/auth";
+import { getAdditionalUserInfo } from "firebase/auth";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
@@ -16,6 +15,7 @@ import { KEY_SIGN_IN_EMAIL, obtainSignInLink, sendSignInLinkToEmail, signInWithL
 import { isLocalHost } from "../utils/common";
 import { useStatus } from "../utils/useStatus";
 import { useToast } from "../utils/useToast";
+import { useUser } from "../utils/useUser";
 import { Button } from "./Button";
 import { Conditional } from "./Conditional";
 import TextField from "./forms/TextField";
@@ -124,7 +124,7 @@ const SendSignInLinkEmailButton: React.FunctionComponent<SendOtpToEmailButtonPro
 };
 
 export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) => {
-	const { data: user } = useAuthUser(["usr"], getAuth());
+	const { user } = useUser();
 	const { makeToast } = useToast();
 
 	const [state, setState] = useState<State>(State.NONE);
