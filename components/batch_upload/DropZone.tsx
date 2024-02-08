@@ -31,10 +31,6 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 
 	const disabled = _disabled !== undefined ? _disabled : inheritedDisabled || (maxFiles === files.length);
 
-	const statelessObjs = { status, appendStatus, removeStatus, addFiles };
-	const refs = useRef(statelessObjs);
-	refs.current = statelessObjs;
-
 	const handleDrop: NonNullable<DropzoneOptions["onDrop"]> = (dropped, rejects) => {
 		if (rejects.length) {
 			const errMssg = `Upload cancelled for the following files\n${rejects
@@ -73,13 +69,15 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 		disabled: disabled,
 	});
 
+	const statelessObjs = { status, appendStatus, removeStatus, addFiles, open };
+	const refs = useRef(statelessObjs);
+	refs.current = statelessObjs;
+
 	const triggerChooser = router.query.open_chooser;
 	useEffect(() => {
 		if (triggerChooser !== "true") return;
-
-		console.debug("manually trigger to open picker");
-		open();
-	}, [triggerChooser, open]);
+		refs.current.open();
+	}, [triggerChooser]);
 
 	const uid = user?.uid;
 	useEffect(() => {
