@@ -81,7 +81,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 	return (
 		<div
 			className={mergeNames(
-				"w-100 text-muted ratio",
+				"w-100 text-muted ratio overflow-hidden", // hide overflow caused by ratio (img w less than view w)
 				className
 			)}
 			style={{
