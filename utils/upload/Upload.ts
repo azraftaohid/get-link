@@ -363,25 +363,6 @@ export class Upload extends EventEmitter {
 			this.emit("failed", new StorageError("storage:upload-canceled", "Upload was aborted by user", null));
 		}
 
-		// we are sending the file to our workers first, then the workers is uploading the file, as a stream
-		// there may be situations when the workers has the full file body, but client has canceled the upload
-		// we are deleting the file on that suspection
-		// in case of multipart uploads, either this or the multipart cancellation part is expected to success
-		if (this.totalBytes && this.uploadedBytes >= this.totalBytes) {
-			console.debug("Upload may have completed. Attempting to delete...");
-			const del = () => this.storage.send("delete_file", {
-				method: "POST",
-				body: {
-					bucket: this.params.bucket,
-					fileName: this.params.fileName,
-				}
-			});
-
-			del().catch(() => { // may be the server has the full body, but has not yet done uploading
-				setTimeout(() => { del().catch(console.warn); }, 2000);
-			});
-		}
-
 		if (this.startLargeFilePromise) {
 			console.debug("Multipart upload was in progress. Attempting to abort...");
 

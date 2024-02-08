@@ -283,7 +283,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 
 				setStatus("files:upload-cancelled");
 			}}
-			closable={!disabled}
+			closable={!disabled && (!!uploadedFile || progress < 100)}
 		/>
 		<ProgressBar
 			id="file-upload-progress"
