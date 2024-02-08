@@ -1,4 +1,5 @@
 import { FirebaseOptions } from "firebase/app";
+import { StorageConfig } from "./storage";
 
 export const EXPIRE_DAYS = 14;
 
@@ -10,6 +11,12 @@ export const firebaseConfig: FirebaseOptions = {
 	messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
 	appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 	measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+};
+
+export const storageConfig: StorageConfig = {
+	apiUrl: process.env.NEXT_PUBLIC_STORAGE_API_URL || "",
+	fileUrl: process.env.NEXT_PUBLIC_STORAGE_FILE_URL || "",
+	defaultBucket: process.env.NEXT_PUBLIC_STORAGE_DEFAULT_BUCKET || "",
 };
 
 export const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_KEY_ID || "";

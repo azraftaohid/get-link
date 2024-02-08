@@ -1,19 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useState } from "react";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
+import NavLink from "react-bootstrap/NavLink";
 import Navbar from "react-bootstrap/Navbar";
 import NavbarBrand from "react-bootstrap/NavbarBrand";
 import NavbarCollapse from "react-bootstrap/NavbarCollapse";
 import NavbarToggle from "react-bootstrap/NavbarToggle";
-import NavLink from "react-bootstrap/NavLink";
 import styles from "../styles/header.module.scss";
 import { logClick } from "../utils/analytics";
 import { mergeNames } from "../utils/mergeNames";
 import { Theme, useTheme } from "../utils/useTheme";
+import { useUser } from "../utils/useUser";
+import { Button } from "./Button";
 import { Icon } from "./Icon";
 import { RouteIndicator } from "./RouteIndicator";
+import { SignInDialog } from "./SignInDialog";
 
 const navs: { title: string; pathname: string }[] = [
 	{
@@ -32,7 +36,10 @@ const navs: { title: string; pathname: string }[] = [
 
 export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
 	const router = useRouter();
+	const { user } = useUser();
 	const { current: theme, setTheme } = useTheme();
+
+	const [showSignIn, setSignIn] = useState(false);
 
 	return (
 		<>
@@ -46,7 +53,7 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 							alt="Get-Link logo"
 						/>
 					</NavbarBrand>
-					<NavbarToggle className="order-1" aria-controls="navbar-nav" />
+					<NavbarToggle className="order-2" aria-controls="navbar-nav" />
 					<NavbarCollapse id="navbar-nav">
 						<Nav
 							className={mergeNames(
@@ -64,7 +71,7 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 					</NavbarCollapse>
 					<Icon
 						role="button"
-						className={"btn btn-outline-secondary order-0 order-md-2 ms-auto me-3 me-md-0"}
+						className={"btn btn-outline-secondary order-0 order-md-3 ms-auto me-2"}
 						name="dark_mode"
 						tabIndex={1}
 						onClick={() => {
@@ -74,8 +81,23 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 							logClick("toggle_theme", { to: newTheme });
 						}}
 					/>
+					{user && !user.isAnonymous && <Link href="/profile" prefetch={false} passHref>
+						<a role="button"
+							className="btn btn-outline-secondary d-flex flex-row gap-1 align-items-center order-1 order-md-4 me-2 me-md-0"
+							aria-label="profile"
+						>
+							<Icon size="md" name="account_circle" />
+						</a>
+					</Link>}
+					{(!user || user.isAnonymous) && <Button
+						className="order-1 order-md-4 me-2 me-md-0"
+						variant="outline-secondary"
+						left={<Icon size="md" name="login" />}
+						onClick={() => setSignIn(true)}
+					/>}
 				</Container>
 			</Navbar>
+			<SignInDialog show={showSignIn} onHide={() => setSignIn(false)} />
 			<RouteIndicator />
 		</>
 	);

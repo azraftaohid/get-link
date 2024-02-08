@@ -22,7 +22,7 @@ export const useTheme = (): ThemePops => {
 	const [theme, setTheme] = useState<Theme>(initTheme);
 
 	useEffect(() => {
-		document.documentElement.setAttribute("data-theme", theme);
+		document.documentElement.setAttribute("data-bs-theme", theme);
 	}, [theme]);
 
 	return useMemo(

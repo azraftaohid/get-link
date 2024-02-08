@@ -1,19 +1,14 @@
-import { fromBlob } from "file-type/browser";
-import { UploadMetadata } from "firebase/storage";
+import { fromBuffer } from "file-type/browser";
 import { Dimension } from "../models/dimension";
 import { MimeType, mimeTypes } from "./mimeTypes";
 import { initPdfWorker } from "./pdf";
+import { getStorage } from "./storage";
 import { extractExtension } from "./strings";
 import { DOMAIN, createAbsoluteUrl, createUrl } from "./urls";
 
-export const STORAGE_URL_PREFIX =
-	process.env.NODE_ENV === "development"
-		? `http://localhost:9199/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o`
-		: `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o`;
-
 export const acceptedFileFormats: string[] | undefined = undefined;
 
-export const NON_PREVIEW_SUPPORTING_TYPE = ["image/vnd.adobe.photoshop"];
+export const NON_PREVIEWABLE_IMAGE_TYPES = ["image/vnd.adobe.photoshop"];
 
 export const executableTypes = [
 	"application/vnd.microsoft.portable-executable",
@@ -42,29 +37,34 @@ const formatIconMapping: Record<string, string> = {
 	"(odt)|(application/vnd.oasis.opendocument.text)": "odt",
 };
 
-export function createFileLink(id: string, absolute = false) {
+export function createViewLink(id: string, absolute = false) {
 	return !absolute ? createUrl("v", id) : createAbsoluteUrl(DOMAIN, "v", id);
 }
 
 export function compartDirectLink(url: string): {
 	path: string;
-	token: string;
+	token: string | null;
 } {
-	const instance = new URL(url);
+	const storage = getStorage();
+	const urlInstance = new URL(url);
 
-	const path = instance.pathname.substring(instance.pathname.lastIndexOf("/") + 1);
-	const token = instance.searchParams.get("token");
-	if (typeof path !== "string" || typeof token !== "string") throw new Error(`invalid direct link: ${url}`);
+	const path = urlInstance.pathname.split(`${storage.fileUrl}/${storage.defaultBucket}`)[1];
+	const token = urlInstance.searchParams.get("Authorization");
+	if (typeof path !== "string") throw new Error(`invalid direct link: ${url}`);
 
 	return { path, token };
 }
 
-export function makeDirectLink(path: string, token: string) {
-	return `${STORAGE_URL_PREFIX}/${encodeURIComponent(path)}?alt=media&token=${token}`;
+
+export function makeDirectLink(path: string, token?: string) {
+	const storage= getStorage();
+	const fileUrl = `${storage.fileUrl}/${storage.defaultBucket}/${path}`;
+	return token ? `${fileUrl}?Authorization=${token}` : fileUrl;
 }
 
 export function isValidDirectLink(url: string) {
-	return url.startsWith(STORAGE_URL_PREFIX) && url.includes("&token=");
+	const storage = getStorage();
+	return url.startsWith(storage.fileUrl);
 }
 
 export async function getVideoDimension(src: string): Promise<Dimension> {
@@ -108,7 +108,15 @@ export async function getPdfDimension(src: string): Promise<Dimension> {
 }
 
 export async function getFileType(file: File): Promise<[string | undefined, string]> {
-	const type = await fromBlob(file);
+	// Some browsers including chromiums have ArrayBuffer size limits.
+	// For chromium browsers, that limit is near 2 GiB.
+	// see: https://stackoverflow.com/a/72124984, and https://stackoverflow.com/a/73115301
+	//
+	// Most mime types start within the first 29153 bytes. FOr rare cases, we will be using the first 50 bytes.
+	// see: https://stackoverflow.com/a/66847213
+	const chunk = file.slice(0, 50 * Math.pow(2, 10));
+	const bytes = await chunk.arrayBuffer();
+	const type = await fromBuffer(bytes);
 
 	let mime: MimeType | undefined = type?.mime;
 	const ext = extractExtension(file.name);
@@ -136,15 +144,32 @@ export function findFileIcon(extOrMimeType: string): string | undefined {
 	return match ? `/image/ic/${formatIconMapping[match]}.png` : undefined;
 }
 
+export function prependExt(fullName: string, text: string) {
+	const lastDot = fullName.lastIndexOf(".");
+	if (lastDot === -1) return text + fullName;
+
+	return fullName.slice(0, lastDot) + text + fullName.slice(lastDot);
+}
+
+export function shallowHash(file: File) {
+	return `${file.name};${file.type};${file.size};${file.lastModified}`;
+}
+
 export type FilesStatus =
 	| "files:unknown-error"
-	| "files:upload-cancelled"
-	| "files:upload-error"
-	| "files:capture-error"
-	| "files:creating-link"
+	| "files:upload-cancelled" // upload to firebase storage
+	| "files:upload-paused"
+	| "files:upload-failed"
+	| "files:upload-completed"
+	| "files:capture-failed" // capture: upload file, associate with a link
+	| "files:capture-completed"
 	| "files:too-large"
-	| "files:creating-thumbnail";
+	| "files:creating-thumbnail"
+	| "files:creating-doc"
+	| "files:doc-created";
 
-export type FileCustomMetadata = UploadMetadata["customMetadata"] & {
-	[prop in keyof Dimension]?: string;
+export type FileCustomMetadata = {
+	[prop in keyof Dimension]?: number | string;
+} & {
+	name?: string,
 };

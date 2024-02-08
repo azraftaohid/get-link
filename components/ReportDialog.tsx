@@ -1,4 +1,4 @@
-import { WithFieldValue, serverTimestamp } from "firebase/firestore/lite";
+import { WithFieldValue, serverTimestamp } from "firebase/firestore";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useRef, useState } from "react";

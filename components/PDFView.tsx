@@ -15,6 +15,7 @@ export const PDFView: React.FunctionComponent<React.PropsWithChildren<PdfViewPro
 	onLoadSuccess,
 	size: initSize,
 	width,
+	height,
 	...rest
 }) => {
 	const [pageCount, setPageCount] = useState(0);
@@ -35,25 +36,32 @@ export const PDFView: React.FunctionComponent<React.PropsWithChildren<PdfViewPro
 				setPageCount(pdf.numPages);
 				onLoadSuccess?.(pdf);
 			}}
-			loading={
-				<DownloadProgress as="div" label="Loading PDF" size={size} loaded={loadedSize} style={{ width }} />
-			}
+			loading={<div className="d-flex justify-content-center mw-100">
+				<DownloadProgress as="div" label="Loading PDF" size={size} loaded={loadedSize} style={{ width, height }} />
+			</div>}
 			{...rest}
 		>
-			<PDFPage key={`page-${activePage}`} className="mw-100 overflow-hidden" pageIndex={activePage} />
-			{pageCount > 1 && (
-				<Pagination className="justify-content-center mt-3 mb-2" size="sm">
-					<Pagination.First onClick={() => page.to(0)} disabled={activePage === 0} />
-					<Pagination.Item onClick={page.decrease} disabled={activePage <= 0}>
-						Prev
-					</Pagination.Item>
-					<Pagination.Item active>{activePage + 1}</Pagination.Item>
-					<Pagination.Item onClick={page.increase} disabled={activePage + 1 >= pageCount}>
-						Next
-					</Pagination.Item>
-					<Pagination.Last onClick={() => page.to(pageCount - 1)} disabled={activePage === pageCount - 1} />
-				</Pagination>
-			)}
+			<div className="position-relative h-100">
+				<PDFPage
+					key={`page-${activePage}`}
+					className="d-flex justify-content-center mw-100 overflow-hidden"
+					pageIndex={activePage}
+					renderAnnotationLayer={false}
+					renderTextLayer={false} />
+				{pageCount > 1 && (
+					<Pagination className="position-absolute bottom-0 start-50 translate-middle-x opacity-75" size="sm">
+						<Pagination.First onClick={() => page.to(0)} disabled={activePage === 0} />
+						<Pagination.Item onClick={page.decrease} disabled={activePage <= 0}>
+							Prev
+						</Pagination.Item>
+						<Pagination.Item active>{activePage + 1}</Pagination.Item>
+						<Pagination.Item onClick={page.increase} disabled={activePage + 1 >= pageCount}>
+							Next
+						</Pagination.Item>
+						<Pagination.Last onClick={() => page.to(pageCount - 1)} disabled={activePage === pageCount - 1} />
+					</Pagination>
+				)}
+			</div>
 		</PDF>
 	);
 };

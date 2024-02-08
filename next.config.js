@@ -6,6 +6,18 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 	enabled: process.env.ANALYZE === "true",
 });
 
+function ensureEnvVariablesDefined(names) {
+	for (const name of names) {
+		if (!process.env[name]) throw new Error(`Environmetnal variabel '${name}' is missing.`);
+	}
+}
+
+ensureEnvVariablesDefined([
+	"API_KEY", "EDGE_CONFIG", "NEXT_PUBLIC_APP_URL",
+	"NEXT_PUBLIC_FIREBASE_API_KEY",
+	"NEXT_PUBLIC_STORAGE_API_URL", "NEXT_PUBLIC_STORAGE_FILE_URL", "NEXT_PUBLIC_STORAGE_DEFAULT_BUCKET",
+]);
+
 /**
  * @type {import('next/dist/lib/load-custom-routes').Header["headers"]}
  */
@@ -36,6 +48,11 @@ const nextConfig = {
 	trailingSlash: false,
 	distDir: "./.next",
 	reactStrictMode: true,
+	compiler: {
+		removeConsole: process.env.NODE_ENV === "production" && {
+			exclude: ["error"],
+		},
+	},
 	headers: async () => [
 		{
 			source: "/(.*)",
@@ -43,7 +60,37 @@ const nextConfig = {
 		},
 	],
 	images: {
-		domains: ["localhost", "firebasestorage.googleapis.com"],
+		domains: [
+			"localhost", "firebasestorage.googleapis.com", "getlink-dev.s3.eu-central-003.backblazeb2.com", 
+			"getlink.s3.eu-central-003.backblazeb2.com"
+		],
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "storage.getlinksoft.workers.dev",
+				pathname: "/file/**"
+			},
+			{
+				protocol: "https",
+				hostname: "f003.backblazeb2.com",
+				pathname: "/file/getlink-dev/**"
+			},
+			{
+				protocol: "https",
+				hostname: "f003.backblazeb2.com",
+				pathname: "/file/getlink/**"
+			},
+			{
+				protocol: "https",
+				hostname: "s3.eu-central-003.backblazeb2.com",
+				pathname: "/getlink-dev/**"
+			},
+			{
+				protocol: "https",
+				hostname: "s3.eu-central-003.backblazeb2.com",
+				pathname: "/getlink/**"
+			},
+		]
 	},
 	webpack: (config) => {
 		config.devServer = {

@@ -1,3 +1,6 @@
+/**
+  This has been deprecated in favor of the mixin color-theme that comes with bootstrap 5.3 and above.
+*/
 @mixin app-theme($theme) {
   html {
     &[data-theme="#{$theme}"] {

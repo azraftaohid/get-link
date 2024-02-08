@@ -89,31 +89,13 @@ ol {
   @extend .my-3;
 }
 
-@include app-theme(dark) {
-  #nav {
-    @extend .navbar-dark, .bg-dark;
-  }
-
+@include color-mode(dark) {
   #root {
-    @extend .text-white;
     background-color: $black;
   }
 
-  .toast {
-    @extend .text-white, .bg-gray-900;
-
-    .toast-header {
-      @extend .navbar-dark, .bg-gray-800;
-    }
-  }
-
-  .card {
-    @extend .bg-black;
-    border-color: rgba($white, 0.125);
-  }
-
-  .card-footer {
-    @extend .bg-dark;
+  #nav {
+	@extend .bg-dark;
   }
 
   .file-preview {
@@ -128,49 +110,12 @@ ol {
     @extend .border-light;
   }
 
-  .btn-close {
-    @extend .btn-close-white;
-  }
-
   .page-link {
     @extend .border, .border-secondary, .bg-gray-900;
   }
 
-  .modal-content {
-    @extend .bg-dark, .text-white;
-  }
-
-  .modal-header,
-  .modal-body,
-  .modal-footer {
-    @extend .border-secondary;
-  }
-
-  .form-control {
-    @extend .bg-dark, .text-white;
-  }
-
-  .form-control:not(.is-invalid) {
-    @extend .border-secondary;
-  }
-
-  .form-control:disabled,
-  .form-control[readonly] {
-    @extend .bg-gray-900;
-  }
-
   .standout {
     @extend .bg-gray-900;
-  }
-
-  .progress {
-    background-color: $gray-800;
-  }
-
-  .alert {
-    .btn-close {
-      filter: unset;
-    }
   }
 
   .border-feedback {
@@ -180,9 +125,9 @@ ol {
   }
 }
 
-@include app-theme(light) {
+@include color-mode(light) {
   #nav {
-    @extend .navbar-light, .bg-light;
+	@extend .bg-light;
   }
 
   .file-preview {

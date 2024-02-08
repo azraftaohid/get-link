@@ -8,6 +8,7 @@ export const FilePreview: React.FunctionComponent<React.PropsWithChildren<FilePr
 	file,
 	onClose,
 	closable,
+	children,
 	...rest
 }) => {
 	const { current: initClosable } = useRef(closable);
@@ -23,12 +24,13 @@ export const FilePreview: React.FunctionComponent<React.PropsWithChildren<FilePr
 					<CloseButton className="my-auto" onClick={onClose} disabled={!closable} />
 				</div>
 			)}
+			{children}
 		</div>
 	);
 };
 
 export interface FilePreviewProps
-	extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
+	extends Omit<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "onError"> {
 	file?: File | null;
 	closable?: boolean;
 	onClose?: () => unknown;
