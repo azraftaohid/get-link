@@ -20,7 +20,7 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 	...rest
 }) => {
 	const router = useRouter();
-	const { user } = useUser();
+	const { user, isLoading: authLoading } = useUser();
 	const { makeToast } = useToast();
 
 	const {
@@ -83,7 +83,8 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 
 	const uid = user?.uid;
 	useEffect(() => {
-		if (!files.length) return;
+		if (authLoading || !files.length) return;
+
 		if (!uid && !refs.current.status.some(s => s === "auth:signing-in" || s === "auth:sign-in-error")) {
 			refs.current.appendStatus("auth:signing-in");
 			signInAnonymously(getAuth()).then(() => {
@@ -94,7 +95,7 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 				refs.current.removeStatus("auth:signing-in");
 			});
 		}
-	}, [files.length, uid]);
+	}, [files.length, uid, authLoading]);
 
 	return <>
 		<Conditional className="h-100" in={continous || files.length === 0}>
