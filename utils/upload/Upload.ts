@@ -12,6 +12,7 @@ export class Upload extends EventEmitter {
 	public static readonly MIN_PART_SIZE = 5 * Math.pow(2, 20);
 	public static readonly MAX_PART_SIZE = 95 * Math.pow(2, 20); // cf workers request body size limit -> 100 MB
 	public static readonly MAX_PARTS = 10000;
+	public static readonly MAX_PARALLEL = 4;
 
 	private storage: Storage;
 	private params: UploadParams;
@@ -35,7 +36,6 @@ export class Upload extends EventEmitter {
 	private pendings: Set<RawDataPart>;
 	private locks: Set<RawDataPart>;
 
-	private maxParallel: number;
 	private active: number;
 
 	constructor(storage: Storage, params: UploadParams) {
@@ -49,13 +49,7 @@ export class Upload extends EventEmitter {
 		this.totalBytes = byteLength(params.body);
 		this.uploadedBytes = 0;
 
-		let partSizeFactor = 1;
-		if (this.totalBytes) {
-			// max part size to 100 MB, and distribute each part size 'almost' equally
-			// subtract to avoid having an additional empty part
-			partSizeFactor = Math.ceil(this.totalBytes / (100 * Math.pow(2, 20))) - .01;
-		}
-
+		const partSizeFactor = this.totalBytes ? Math.ceil(this.totalBytes / Upload.MAX_PART_SIZE) : 1;
 		this.partSize = Math.max(Upload.MIN_PART_SIZE, Math.min(Upload.MAX_PART_SIZE, Math.ceil((this.totalBytes ?? 0) / partSizeFactor)));
 
 		this._state = "none";
@@ -66,7 +60,6 @@ export class Upload extends EventEmitter {
 		this.pendings = new Set();
 		this.locks = new Set();
 
-		this.maxParallel = 4;
 		this.active = 0;
 	}
 
@@ -171,6 +164,11 @@ export class Upload extends EventEmitter {
 
 	private async uploadAsPart(dataPart: RawDataPart) {
 		console.debug("Uploading data part: ", dataPart.partNumber);
+		if (dataPart.data.length === 0) {
+			console.warn("Empty data part: " + dataPart.partNumber);
+			this.pendings.delete(dataPart);
+			return;
+		}
 
 		if (!this.fileId) {
 			if (!this.startLargeFilePromise) this.startLargeFilePromise = this.storage.send("start_large_file", {
@@ -289,7 +287,7 @@ export class Upload extends EventEmitter {
 		if (!this.setState("running")) return false;
 
 		const tasks: Promise<unknown>[] = [];
-		for (let i = 0, lim = this.maxParallel - this.active; i < lim; i++) {
+		for (let i = 0, lim = Upload.MAX_PARALLEL - this.active; i < lim; i++) {
 			tasks.push(this._start().finally(() => this.active--));
 			this.active++;
 		}
