@@ -292,10 +292,11 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			animated={!status?.includes("files:capture-completed")}
 			now={progress}
 		/>
-		{file ? <TextualProgress>{status ? statusMessages[status] : `${progress}% completed.`}</TextualProgress>
-			: <TextualProgress variant="danger">
-				Aborted.
-			</TextualProgress>}
+		{file ? <TextualProgress>
+			{status ? statusMessages[status] : progress < 100 ? `${progress}% completed.` : <>Finalizing&hellip;</>}
+		</TextualProgress> : <TextualProgress variant="danger">
+			Aborted.
+		</TextualProgress>}
 	</div>;
 };
 
