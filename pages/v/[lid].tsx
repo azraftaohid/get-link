@@ -58,6 +58,7 @@ const FETCH_LIMIT = 12;
 
 initModernizr();
 
+// changes to this must be reflected on FileView image sizes
 const msnryBreakpoitns: MasonryProps["breakpointCols"] = {
 	default: 3,
 	992: 2,

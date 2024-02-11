@@ -160,7 +160,7 @@ const LinkCard: React.FunctionComponent<React.PropsWithChildren<{ link: QueryDoc
 						alt="link preview"
 						objectFit="cover"
 						layout="fill"
-						sizes="50vw"
+						sizes="(max-width: 576px) 100vw, (max-width: 768px) 50vw, (max-width: 992px) 33vw, 25vw"
 						quality={50}
 						blurDataURL={getSolidStallImage()}
 						onError={() => setThumbnail(null)}

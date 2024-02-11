@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
+import styles from "../styles/file-view.module.scss";
 import { getBlob } from "../utils/downloads";
 import { mergeNames } from "../utils/mergeNames";
 import { getSolidStallImage } from "../visuals/stallData";
@@ -81,6 +82,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 	return (
 		<div
 			className={mergeNames(
+				styles.fileView,
 				"w-100 text-muted ratio overflow-hidden", // hide overflow caused by ratio (img w less than view w)
 				className
 			)}
@@ -92,14 +94,15 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 		>
 			{(!useFallback &&
 				((type?.startsWith("image/") && (
-					<Link className="d-flex justify-content-center" href={src} newTab>
+					<a className="mx-auto" href={src} title={name || "Orginal image"} target="_blank" rel="noreferrer">
 						<Image
 							src={src}
-							alt="Image"
+							alt={name || "Image"}
 							placeholder={imageLoaded ? "empty" : "blur"}
 							width={width}
 							height={height}
-							objectFit="cover"
+							sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw"
+							objectFit="contain"
 							blurDataURL={placeholderDataUrl || getSolidStallImage()}
 							onLoadingComplete={() => {
 								setImageLoaded(true);
@@ -108,7 +111,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 							priority
 							onError={() => setUseFallback(true)}
 						/>
-					</Link>
+					</a>
 				)) ||
 					(type?.startsWith("video/") && <Video 
 						src={src} type={type} 
