@@ -24,7 +24,7 @@ export const QUOTA_COLLECTION_ID = "quotas";
 export const defaultQuotas = {
 	storage: {
 		space: { limit: 1 * 1024 * 1024 * 1024 },
-		filesize: { limit: 100 * 1024 * 1024 },
+		filesize: { limit: 95 * 1024 * 1024 },
 	},
 	links: {
 		inlinefids: { limit: 5 },
