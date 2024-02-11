@@ -17,6 +17,7 @@ export const BatchUploadContext = createContext<BatchUploadContextInterface>({
 	fileDocs: new Map(),
 	files: [], add: methodNotImplemented, remove: methodNotImplemented, setCancelled: methodNotImplemented,
 	setCompleted: methodNotImplemented, setFailed: methodNotImplemented, resume: methodNotImplemented,
+	hasCompleted: methodNotImplemented, hasCancelled: methodNotImplemented, hasFailed: methodNotImplemented,
 	completedCount: -1, cancelledCount: -1, failedCount: -1,
 	status: [], appendStatus: methodNotImplemented, removeStatus: methodNotImplemented,
 });
@@ -34,7 +35,7 @@ export const BatchUpload: React.FunctionComponent<BatchUploadProps> = ({
 
 	const {
 		keys: files, setKeys: setFiles, removeKey: removeFile,
-		markCompleted, markFailed,
+		markCompleted, markFailed, hasCompleted, hasFailed,
 		completedCount, cancelledCount, failedCount
 	} = useProgressTracker<File>([]);
 	const { markCompleted: markPCompleted, markPaused: markPPaused, runnings } = useParallelTracker(files, MAX_CONCURRENT_UPLOAD);
@@ -47,10 +48,12 @@ export const BatchUpload: React.FunctionComponent<BatchUploadProps> = ({
 		setCompleted: (file) => { markCompleted(file); markPCompleted(file); },
 		setCancelled: removeFile,
 		setFailed: (file) => { markFailed(file); markPPaused(file); },
+		hasCompleted, hasFailed,
+		hasCancelled: files.includes,
 		resume: (file) => runnings.includes(file),
 		completedCount, cancelledCount, failedCount,
 		status, appendStatus, removeStatus,
-	}), [files, removeFile, completedCount, cancelledCount, failedCount, status, appendStatus, removeStatus, setFiles, markCompleted, markPCompleted, markFailed, markPPaused, runnings]);
+	}), [files, removeFile, hasCompleted, hasFailed, completedCount, cancelledCount, failedCount, status, appendStatus, removeStatus, setFiles, markCompleted, markPCompleted, markFailed, markPPaused, runnings]);
 
 	const config = useMemo<BatchUploadConfig>(() => ({
 		link, disabled, maxFiles, maxSize, method, startOrder,
@@ -89,6 +92,9 @@ export type BatchUploadContextInterface = {
 	setCompleted: (file: File) => unknown,
 	setCancelled: (file: File) => unknown,
 	setFailed: (file: File) => unknown,
+	hasCompleted: (file: File) => boolean,
+	hasCancelled: (file: File) => boolean,
+	hasFailed: (file: File) => boolean,
 	resume: (file: File) => boolean,
 	completedCount: number,
 	cancelledCount: number,

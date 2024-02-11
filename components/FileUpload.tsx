@@ -48,7 +48,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 	onError,
 	...rest
 }) => {
-	const { fileDocs, files, add, remove, setCompleted, setCancelled, setFailed, resume } = useContext(BatchUploadContext);
+	const { fileDocs, files, add, remove, setCompleted, setCancelled, setFailed, hasFailed, resume } = useContext(BatchUploadContext);
 	const { disabled } = useContext(BatchUploadConfigContext);
 
 	const attempt = useRef(0);
@@ -283,7 +283,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 
 				setStatus("files:upload-cancelled");
 			}}
-			closable={!disabled && (!!uploadedFile || progress < 100)}
+			closable={!disabled && !!(uploadedFile || progress < 100 || (file && hasFailed(file)))}
 		/>
 		<ProgressBar
 			id="file-upload-progress"
