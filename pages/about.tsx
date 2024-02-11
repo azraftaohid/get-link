@@ -116,8 +116,8 @@ const About: NextPage = () => {
 						question="Will the links ever expire?"
 						answer={
 							<>
-								Get-Link is meant to be a share &amp; forget type of solution. It automatically deletes
-								any file not less than 14 days old. For longer and persistable storage, consider{" "}
+								Get-Link is designed to be a share &amp; forget type of solution. It eventually deletes
+								any file older than 14 days. For longer and persistable storage, consider{" "}
 								<Link href="https://onedrive.live.com/" newTab>
 									OneDrive
 								</Link>
@@ -135,7 +135,12 @@ const About: NextPage = () => {
 					/>
 					<QAndA
 						question="Are there any file size limits?"
-						answer="Yes, currently you can only upload files smaller than 100 MB in size."
+						answer={
+							<>
+								Yes, currently, files up to 95 MB can be uploaded. However, we plan to introduce a paid plan with 
+								higher limits.
+							</>
+						}
 					/>
 					<QAndA
 						question="What type of files are supported?"
@@ -155,13 +160,13 @@ const About: NextPage = () => {
 							question="Can I delete a file after I have uploaded it?"
 							answer={
 								<>
-									Yes. To delete a file, open the shared link using the same browser you used to upload
-									the file. Then click on the &quot;Delete&quot; button visible below the file preview.
+									Currently, deleting a file requires deleting its corresponding link. Simply open the shared link 
+									using the same browser or account used to create it and click &quot;Delete&quot;.
 								</>
 							}
 						/>
 						<QAndA
-							question="Can I password-protect my uploaded files?"
+							question="Can I password-protect my shared links?"
 							answer="No, password protection is not currently available on our site, but we are planning to introduce this feature in the future."
 						/>
 						<QAndA
@@ -176,19 +181,33 @@ const About: NextPage = () => {
 							question="What should I do if I loss the link to my uploaded file?"
 							answer={
 								<>
-									Don&apos;t worry, you can find a list of all your shared links on your dashboard. Simply
-									navigate to your <Link href="/dashboard">dashboard</Link> and click on the link to the
-									file you want to share again.
+									Don&apos;t worry, you can find a list of your shared links on your dashboard. Simply
+									navigate to your <Link href="/dashboard">dashboard</Link> and click on the link to reshare.
 								</>
 							}
 						/>
 						<QAndA
 							question="Is there a limit to the number of files I can upload?"
-							answer="No, there is currently no hard limit on the number of files you can upload to our site."
+							answer={
+								<>
+									No, there is currently no hard limit on the number of files you can upload to our site. However, 
+									there is a limit on storage usage. Check the usage quotas available on the{" "}
+									<Link href="/">home</Link> page for more details.
+								</>
+							}
 						/>
 						<QAndA
-							question="Can I edit a file after I have uploaded it?"
-							answer="No, file editing is not currently available on our site."
+							question="Can I edit a link after creation?"
+							answer="No, editing links is not currently possible on our website."
+						/>
+						<QAndA
+							question="How is storage usage calculated"
+							answer={
+								<>
+									Storage usage is calculated by adding up the sizes of all uploaded and/or generated files. Generated 
+									files include thumbnails of certain file type, e.g., videos. Our system considers 1 KB to be 1024 bytes.
+								</>
+							}
 						/>
 						<QAndA
 							question="Do you offer customer support for technical issues?"
