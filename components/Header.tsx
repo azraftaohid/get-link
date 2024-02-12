@@ -1,7 +1,8 @@
+import { getAuth } from "firebase/auth";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import NavLink from "react-bootstrap/NavLink";
@@ -40,6 +41,11 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 	const { current: theme, setTheme } = useTheme();
 
 	const [showSignIn, setSignIn] = useState(false);
+	const[authReady, setAuthReady] = useState(false);
+
+	useEffect(() => {
+		getAuth().authStateReady().then(() => setAuthReady(true));
+	}, []);
 
 	return (
 		<>
@@ -90,10 +96,12 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 						</a>
 					</Link>}
 					{(!user || user.isAnonymous) && <Button
-						className="order-1 order-md-4 me-2 me-md-0"
+						className={mergeNames(styles.authStateBtn, "order-1 order-md-4 me-2 me-md-0")}
 						variant="outline-secondary"
+						state={authReady ? "none" : "loading"}
 						left={<Icon size="md" name="login" />}
 						onClick={() => setSignIn(true)}
+						disabled={!authReady}
 					/>}
 				</Container>
 			</Navbar>
