@@ -12,6 +12,7 @@ export const FileCard: React.FunctionComponent<FileCardProps> = ({
 	height,
 	name,
 	isOwner,
+	fileCount,
 	stepOutDownload
 }) => {
 	return <Card className="border-feedback">
@@ -23,6 +24,7 @@ export const FileCard: React.FunctionComponent<FileCardProps> = ({
 			type={type}
 			width={width}
 			height={height}
+			fileCount={fileCount}
 		/>
 		<FileControl
 			className="card-footer"
@@ -34,5 +36,5 @@ export const FileCard: React.FunctionComponent<FileCardProps> = ({
 	</Card>;
 };
 
-export type FileCardProps = Pick<FileViewProps, "placeholderUrl" | "size" | "type" | "width" | "height"> &
+export type FileCardProps = Pick<FileViewProps, "placeholderUrl" | "size" | "type" | "width" | "height" | "fileCount"> &
 	Pick<FileControlProps, "directLink" | "name" | "isOwner" | "stepOutDownload">;

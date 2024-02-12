@@ -272,6 +272,7 @@ const View: NextPage<Partial<StaticProps>> = ({
 							width={width}
 							height={height}
 							isOwner={isUser}
+							fileCount={fileCount || files.length}
 							stepOutDownload={stepOutDownload}
 						/>
 					))}

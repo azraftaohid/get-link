@@ -48,6 +48,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 	width: _width,
 	height: _height,
 	placeholderUrl,
+	fileCount = 1,
 	...rest
 }) => {
 	const [imageLoaded, setImageLoaded] = useState(false);
@@ -101,7 +102,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 							placeholder={imageLoaded ? "empty" : "blur"}
 							width={width}
 							height={height}
-							sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw"
+							sizes={`(max-width: 576px) 100vw, (max-width: 992px) ${100 / Math.min(fileCount, 2)}vw, ${Math.ceil(100 / Math.min(fileCount, 3))}vw`}
 							objectFit="contain"
 							blurDataURL={placeholderDataUrl || getSolidStallImage()}
 							onLoadingComplete={() => {
@@ -139,4 +140,5 @@ export interface FileViewProps extends React.DetailedHTMLProps<React.HTMLAttribu
 	width?: number | null;
 	height?: number | null;
 	placeholderUrl?: string;
+	fileCount?: number,
 }
