@@ -23,7 +23,7 @@ import { Button } from "../../components/Button";
 import { Conditional } from "../../components/Conditional";
 import { CopyButton } from "../../components/CopyButton";
 import { ExpandButton } from "../../components/ExpandButton";
-import { FileCard } from "../../components/FileCard";
+import { FileCard } from "../../components/cards/FileCard";
 import { Footer } from "../../components/Footer";
 import { Header } from "../../components/Header";
 import { Icon } from "../../components/Icon";
@@ -53,6 +53,7 @@ import { useToast } from "../../utils/useToast";
 import { useUser } from "../../utils/useUser";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
 import { makeDownloadParams } from "../d";
+import { ViewHeader } from "../../components/ViewHeader";
 
 const FETCH_LIMIT = 12;
 
@@ -201,49 +202,44 @@ const View: NextPage<Partial<StaticProps>> = ({
 			/>
 			<Header />
 			<PageContent>
-				<div className="vstack">
-					<h1 className="text-break">{title || "Untitled"}</h1>
-					<div className="d-flex align-items-top">
-						<div>
-							<p className="text-wrap mb-0">{strCreateTime}</p>
-							<small className="text-muted mb-0">{descriptiveNumber(fileCount)} {quantityString("file", "files", fileCount)}</small>
-						</div>
-						<div className="d-flex flex-row ms-auto my-auto ps-2">
-							<CopyButton
-								variant="outline-vivid"
-								content={createViewLink(lid, true)}
-								left={<Icon name="link" size="sm" />}
-								onClick={() => logClick("share")}
-							>
-								<span className="d-none d-md-inline">Share</span>
-							</CopyButton>
-							<Button
-								className="ms-2"
-								variant="outline-vivid"
-								left={<Icon name="download" size="sm" />}
-								href={fileCount === 1 && files[0] 
-									? `d?${makeDownloadParams(files[0].directLink, files[0].name || "", files[0].size < THRESHOLD_DIRECT_DOWNLOAD ? "built-in" : "browser_default")}`
-									: undefined}
-								target="_blank"
-								onClick={() => {
-									if (fileCount === 1 && files[0]) return;
-									setShowDownloadPrompt(true);
-								}}
-							>
-								<span className="d-none d-md-inline">Download</span>
-							</Button>
-							{isUser && <Button
-								className="ms-2"
-								variant="outline-danger"
-								left={<Icon name="delete" size="sm" />}
-								onClick={() => setShowDeletePrompt(true)}
-							>
-								<span className="d-none d-md-inline">Delete</span>
-							</Button>}
-						</div>
-					</div>
-				</div>
-				<hr className="mb-4" />
+				<ViewHeader
+					primaryText={title || "Untitled"}
+					secondaryText={strCreateTime}
+					tertiaryText={descriptiveNumber(fileCount) + " " + quantityString("file", "files", fileCount)}
+					actions={<>
+						<CopyButton
+							variant="outline-vivid"
+							content={createViewLink(lid, true)}
+							left={<Icon name="link" size="sm" />}
+							onClick={() => logClick("share")}
+						>
+							<span className="d-none d-md-inline">Share</span>
+						</CopyButton>
+						<Button
+							className="ms-2"
+							variant="outline-vivid"
+							left={<Icon name="download" size="sm" />}
+							href={fileCount === 1 && files[0]
+								? `d?${makeDownloadParams(files[0].directLink, files[0].name || "", files[0].size < THRESHOLD_DIRECT_DOWNLOAD ? "built-in" : "browser_default")}`
+								: undefined}
+							target="_blank"
+							onClick={() => {
+								if (fileCount === 1 && files[0]) return;
+								setShowDownloadPrompt(true);
+							}}
+						>
+							<span className="d-none d-md-inline">Download</span>
+						</Button>
+						{isUser && <Button
+							className="ms-2"
+							variant="outline-danger"
+							left={<Icon name="delete" size="sm" />}
+							onClick={() => setShowDeletePrompt(true)}
+						>
+							<span className="d-none d-md-inline">Delete</span>
+						</Button>}
+					</>}
+				/>
 				<Conditional in={warns.has("executable")}>
 					<Alert
 						variant="warning"

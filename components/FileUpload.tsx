@@ -1,11 +1,10 @@
-import { nanoid } from "nanoid";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { Dimension, DimensionField } from "../models/dimension";
 import { FileField, createFID, deleteFile, getFileKey, getThumbnailKey } from "../models/files";
 import { Link as LinkObject } from "../models/links";
 import { NotFound } from "../utils/errors/NotFound";
-import { FileCustomMetadata, FilesStatus, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
+import { FileCustomMetadata, FilesStatus, createFileNamePrefix, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
 import { uploadObject, uploadObjectResumable } from "../utils/storage";
 import { percEncoded } from "../utils/strings";
 import { Upload, UploadParams } from "../utils/upload/Upload";
@@ -119,7 +118,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			const [mime, ext] = await getFileType(file); // respect user specified extension
 			console.debug(`File loaded for upload [mime-type: ${mime}; ext: ${ext}]`);
 
-			const prefix = nanoid(12);
+			const prefix = createFileNamePrefix();
 			const fid = createFID(prefix + ext, uid);
 			const fileKey = getFileKey(fid);
 			const metadata: UploadParams["metadata"] = {

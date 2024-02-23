@@ -1,6 +1,8 @@
 import { fromBuffer } from "file-type/browser";
+import { customAlphabet } from "nanoid";
 import { Dimension } from "../models/dimension";
 import { MimeType, mimeTypes } from "./mimeTypes";
+import { toBase } from "./numbers";
 import { initPdfWorker } from "./pdf";
 import { getStorage } from "./storage";
 import { extractExtension } from "./strings";
@@ -36,6 +38,30 @@ const formatIconMapping: Record<string, string> = {
 	"(odp)|(application/vnd.oasis.opendocument.presentation)": "odp",
 	"(odt)|(application/vnd.oasis.opendocument.text)": "odt",
 };
+
+// Base 64 web-safe chars ordered by ASCII
+// see: https://gist.github.com/mikelehen/3596a30bd69384624c11
+const fileNameChars = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
+
+// Timestamp used as a reference for file names to which current timestamp is approaching
+// It is calculated as the largest 8 characters possible by fileNameChars: 63*64^7 + 63*64^6 + ... + 63*64^0
+const fileNameReferenceTimestamp = 281474976710655;
+
+let fileNameSuffixGenerator: (size: number) => string | undefined;
+/**
+ * Creates a file display name without extension that decreases monotonically.
+ */
+export function createFileNamePrefix() {
+	// We are using a reference timestamp, and the difference between current and that timestamp as base for our file name.
+	// The difference is guaranteed to decrease as we approach the reference timestamp.
+	// While the current difference, when converted, is 8 chars long, it may become 7 or lower as we approach the reference timestamp
+	// Hence, to ensure the order is not broken, we are padding zeroth character before
+	const prefix = toBase(fileNameReferenceTimestamp - new Date().getTime(), fileNameChars).padStart(8, fileNameChars[0]);
+	// We are also appending required number of random characters at the end to ensure uniqueness; total length to be 12 chars long
+	const suffix = (fileNameSuffixGenerator || (fileNameSuffixGenerator = customAlphabet(fileNameChars)))(6);
+
+	return prefix + suffix;
+}
 
 export function createViewLink(id: string, absolute = false) {
 	return !absolute ? createUrl("v", id) : createAbsoluteUrl(DOMAIN, "v", id);

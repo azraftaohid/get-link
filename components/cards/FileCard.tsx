@@ -1,7 +1,7 @@
 import React from "react";
 import Card from "react-bootstrap/Card";
-import { FileControl, FileControlProps } from "./FileControl";
-import { FileView, FileViewProps } from "./FileView";
+import { FileControl, FileControlProps } from "../FileControl";
+import { FileView, FileViewProps } from "../FileView";
 
 export const FileCard: React.FunctionComponent<FileCardProps> = ({
 	directLink,

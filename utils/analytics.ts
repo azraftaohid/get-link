@@ -26,7 +26,7 @@ export function logClick(btnId: ButtonId, ctx?: ClickEventContext) {
 	logEvent(getAnalytics(), "click", params);
 }
 
-export type ButtonId = "download" | "toggle_theme" | "delete" | "share" | "share_file_card";
+export type ButtonId = "download" | "toggle_theme" | "delete" | "delete_file" | "share" | "share_file_card";
 
 export interface ClickEventParams extends ClickEventContext {
 	button_id: string;

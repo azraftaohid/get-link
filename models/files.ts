@@ -1,12 +1,31 @@
 import { getAuth } from "firebase/auth";
-import { CollectionReference, DocumentReference, FieldPath, Query, Transaction, WithFieldValue, collection, deleteDoc, deleteField, doc, getDocs, getFirestore, limit, orderBy, query, setDoc, where } from "firebase/firestore";
+import {
+	collection,
+	CollectionReference,
+	deleteDoc,
+	deleteField,
+	doc,
+	DocumentReference,
+	FieldPath,
+	getDocs,
+	getFirestore,
+	limit,
+	orderBy,
+	Query,
+	query,
+	setDoc,
+	Transaction,
+	where,
+	WithFieldValue,
+} from "firebase/firestore";
 import { v5 as uuidV5 } from "uuid";
 import { FileCustomMetadata } from "../utils/files";
-import { FileMetadata, deleteObject } from "../utils/storage";
-import { compartFid, extractDisplayName } from "../utils/strings";
+import { deleteObject, FileMetadata } from "../utils/storage";
+import { compartFid, extractDisplayName, extractExtension } from "../utils/strings";
 import { Warning } from "./links";
 import { OrderData } from "./order";
 import { UserSnapshot, UserSnapshotField } from "./users";
+import { FirebaseError } from "firebase/app";
 
 /**
  * Database structure:
@@ -44,6 +63,44 @@ export function getThumbnailKey(fid: string) {
 
 export function createCFID(fid: string) {
 	return uuidV5(fid, NAMESPACE_FILES);
+}
+
+/**
+ * Creates a canonical file key (CFK) of the provided file key. This key can later be destructured to obtain UID,
+ * file display name and file extension. See {@link compartCFK} for destructuring.
+ *
+ * Test here: http://tinyurl.com/mrywms3k
+ */
+export function createCFK(fileKey: string) {
+	const { uid, fileName  } = compartFid(fileKey);
+	const displayName = extractDisplayName(fileName);
+	const ext = extractExtension(fileName).substring(1);
+
+	let cfk = `${(2 + uid.length).toString().padStart(2, "0")}${uid}`;
+	cfk += `${(cfk.length + 2 + ext.length).toString().padStart(2, "0")}${ext}`;
+	cfk += `${(cfk.length + 2 + displayName.length).toString().padStart(2, "0")}${displayName}`;
+
+	return cfk;
+}
+
+export function compartCFK(cfk: string): FileKeyComponents {
+	let uid = "";
+	let ext = "";
+	let displayName = "";
+
+	const uidEnd = Number.parseInt(cfk.substring(0, 2));
+	if (Number.isNaN(uidEnd)) return { uid, ext, displayName };
+	uid = cfk.substring(2, uidEnd);
+
+	const extEnd = Number.parseInt(cfk.substring(uidEnd, uidEnd + 2));
+	if (Number.isNaN(extEnd)) return { uid, ext, displayName };
+	ext = cfk.substring(uidEnd + 2, extEnd);
+
+	const displayNameEnd = Number.parseInt(cfk.substring(extEnd, extEnd + 2));
+	if (Number.isNaN(displayNameEnd)) return { uid, ext, displayName };
+	displayName = cfk.substring(extEnd + 2, displayNameEnd);
+
+	return { uid, ext: ext.length ? "." + ext : ext, displayName };
 }
 
 export function getFileDocs(): CollectionReference<FileData>;
@@ -131,7 +188,12 @@ export async function deleteFile(fid: string) {
 	const docRef = getFileDocRef(createCFID(fid));
 
 	const dltObj = deleteObject(fileKey);
-	const dltDoc = deleteDoc(docRef);
+	const dltDoc = deleteDoc(docRef).catch(error => {
+		if (error instanceof FirebaseError && error.code === "permission-denied") {
+			// maybe the document doesn't exists
+			return;
+		}
+	});
 	return Promise.all([dltObj, dltDoc]);
 }
 
@@ -167,3 +229,9 @@ export type FileOverrides = Partial<Pick<FileMetadata, "contentDisposition" | "m
 }
 
 export type SettableFileOverrides = Pick<FileOverrides, "customMetadata">;
+
+export interface FileKeyComponents {
+	uid: string,
+	displayName: string,
+	ext: string,
+}

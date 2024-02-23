@@ -1,228 +1,25 @@
-import { useFirestoreInfiniteQuery } from "@react-query-firebase/firestore";
-import { formatDate } from "@thegoodcompany/common-utils-js";
-import {
-	collection,
-	FieldPath,
-	getFirestore,
-	limit,
-	orderBy,
-	Query,
-	query,
-	QueryDocumentSnapshot,
-	startAfter,
-	where,
-} from "firebase/firestore";
 import { NextPage } from "next";
-import Image from "next/image";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import Alert from "react-bootstrap/Alert";
-import Card from "react-bootstrap/Card";
 import Col from "react-bootstrap/Col";
-import Placeholder from "react-bootstrap/Placeholder";
 import Row from "react-bootstrap/Row";
-import { Button } from "../components/Button";
-import { CopyButton } from "../components/CopyButton";
-import { ExpandButton } from "../components/ExpandButton";
+import ToggleButton from "react-bootstrap/ToggleButton";
+import ToggleButtonGroup from "react-bootstrap/ToggleButtonGroup";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
-import { Icon } from "../components/Icon";
 import { Link } from "../components/Link";
 import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
-import { Shimmer } from "../components/Shimmer";
-import { ShortLoading } from "../components/ShortLoading";
-import { getFileKey, getThumbnailKey } from "../models/files";
-import { COLLECTION_LINKS, LinkData, LinkField } from "../models/links";
-import { UserSnapshotField } from "../models/users";
-import styles from "../styles/dashboard.module.scss";
-import { logClick } from "../utils/analytics";
-import { hasExpired } from "../utils/dates";
-import { findFileIcon, NON_PREVIEWABLE_IMAGE_TYPES } from "../utils/files";
-import { mergeNames } from "../utils/mergeNames";
-import { getDownloadURL, getMetadata, objectExists } from "../utils/storage";
-import { createAbsoluteUrl, createUrl, DOMAIN } from "../utils/urls";
 import { useUser } from "../utils/useUser";
-import { getSolidStallImage } from "../visuals/stallData";
+import { RecentLinks } from "../components/list/RecentLinks";
+import { RecentFiles } from "../components/list/RecentFiles";
+import { RecentListPlaceholder } from "../components/list/RecentListPlaceholder";
 
-const FETCH_LIMIT = 12;
-
-const NoPreview: React.FunctionComponent<
-	React.PropsWithChildren<
-		React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> & { icon?: string }
-	>
-> = ({ className, icon = "description", ...rest }) => {
-	return (
-		<div
-			className={mergeNames(
-				styles.noPreview,
-				"d-flex flex-column align-items-center justify-content-center text-muted",
-				className
-			)}
-			{...rest}
-		>
-			<Icon name={icon} size="lg" />
-			<p className="fs-5">Preview unavailable!</p>
-		</div>
-	);
-};
-
-const LoadingPreview: React.FunctionComponent<
-	React.PropsWithChildren<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>>
-> = ({ className, ...rest }) => {
-	return (
-		<div className={mergeNames(styles.loadingPreview, className)} {...rest}>
-			<ShortLoading />
-		</div>
-	);
-};
-
-const LinkListPlaceholder: React.FunctionComponent = () => {
-	return (
-		<Row className="g-4" xs={1} sm={2} md={3} lg={4}>
-			<LinkPlaceholderConcat />
-		</Row>
-	);
-};
-
-const LinkCardPlaceholder: React.FunctionComponent = () => {
-	return (
-		<Card className={mergeNames(styles.linkCard, "border-feedback")}>
-			<Card.Header>
-				<Link className="stretched-link text-decoration-none text-reset" href="#">
-					<Shimmer className="w-100 py-1" xs={1} pattern={<Placeholder className="w-75" />} size="lg" />
-				</Link>
-			</Card.Header>
-			<div className={mergeNames(styles.linkPreview)}>
-				<div className={styles.cardImg} />
-			</div>
-			<Card.Footer className="d-flex flex-row align-items-center">
-				<span className="d-block text-muted text-truncate w-50">
-					<Shimmer className="w-100 py-1" pattern={<Placeholder className="w-100" />} size="lg" />
-				</span>
-				<Button
-					className={mergeNames(styles.btnShare, "ms-auto")}
-					variant="outline-secondary"
-					left={<Icon name="" size="sm" />}
-					disabled
-				/>
-			</Card.Footer>
-		</Card>
-	);
-};
-
-const LinkCard: React.FunctionComponent<React.PropsWithChildren<{ link: QueryDocumentSnapshot<LinkData> }>> = ({
-	link,
-}) => {
-	const [thumbnail, setThumbnail] = useState<string | null>();
-
-	const data = link.data({ serverTimestamps: "estimate" });
-	const title = data[LinkField.TITLE];
-	const cover = data[LinkField.COVER];
-	const createTime = data[LinkField.CREATE_TIME];
-	const expireTime = data[LinkField.EXPIRE_TIME];
-
-	useEffect(() => {
-		const fid = cover?.fid;
-		if (!fid) return setThumbnail(null);
-		setThumbnail(undefined);
-
-		const coverKey = getFileKey(fid);
-		const thumbKey = getThumbnailKey(fid);
-		Promise.all([objectExists(thumbKey).catch(console.warn), getMetadata(coverKey).catch(console.warn)]).then(([thumb, metadata]) => {
-			if (thumb) return setThumbnail(getDownloadURL(thumbKey));
-			
-			const mimeType = metadata?.mimeType;
-			if (mimeType?.startsWith("image/") && !NON_PREVIEWABLE_IMAGE_TYPES.includes(mimeType)) {
-				const dl = getDownloadURL(coverKey);
-				setThumbnail(dl);
-			} else {
-				setThumbnail(mimeType && findFileIcon(mimeType) || null);
-			}
-		});
-	}, [cover?.fid]);
-
-	return (
-		<Card className={mergeNames(styles.linkCard, "border-feedback")}>
-			<Card.Header>
-				<Link className="stretched-link text-decoration-none text-reset" href={createUrl("v", link.id)}>
-					<span className="d-block text-truncate">
-						{title || link.id}
-					</span>
-				</Link>
-			</Card.Header>
-			<div className={mergeNames(styles.linkPreview)}>
-				{thumbnail ? (
-					<Image
-						className={mergeNames("card-img-top", styles.cardImg)}
-						placeholder="blur"
-						src={thumbnail}
-						alt="link preview"
-						objectFit="cover"
-						layout="fill"
-						sizes="(max-width: 576px) 100vw, (max-width: 768px) 50vw, (max-width: 992px) 33vw, 25vw"
-						quality={50}
-						blurDataURL={getSolidStallImage()}
-						onError={() => setThumbnail(null)}
-					/>
-				) : thumbnail === null ? (
-					<NoPreview />
-				) : (
-					<LoadingPreview />
-				)}
-			</div>
-			<Card.Footer className="d-flex flex-row align-items-center">
-				<span className="d-block text-muted text-truncate">
-					{createTime && formatDate(createTime.toDate(), "short", "year", "month", "day")}
-					{hasExpired(expireTime, createTime) && (
-						<>
-							{" "}
-							(<em>expired</em>)
-						</>
-					)}
-				</span>
-				<CopyButton
-					className={mergeNames(styles.btnShare, "ms-auto")}
-					variant="outline-secondary"
-					content={createAbsoluteUrl(DOMAIN, "v", link.id)}
-					left={<Icon name="link" size="sm" />}
-					onClick={() => logClick("share_file_card")}
-				/>
-			</Card.Footer>
-		</Card>
-	);
-};
-
-const LinkPlaceholderConcat: React.FunctionComponent = () => {
-	return (
-		<>
-			{new Array(FETCH_LIMIT).fill(null).map((_v, i) => (
-				<Col key={`col-${i}`}>
-					<LinkCardPlaceholder />
-				</Col>
-			))}
-		</>
-	);
-};
-
-const LinkConcat: React.FunctionComponent<React.PropsWithChildren<{ snapshot: QueryDocumentSnapshot<LinkData>[] }>> = ({
-	snapshot,
-}) => {
-	return (
-		<>
-			{snapshot.map((file) => (
-				<Col key={`col-${file.id}`}>
-					<LinkCard link={file} />
-				</Col>
-			))}
-		</>
-	);
-};
-
-const EmptyView: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
+const EmptyView: React.FunctionComponent<React.PropsWithChildren<{ mode: Mode }>> = ({ mode }) => {
 	return (
 		<Alert>
-			<Alert.Heading>No links generated yet!</Alert.Heading>
+			<Alert.Heading>No {mode} generated yet!</Alert.Heading>
 			Upload your first file{" "}
 			<Link variant="alert" href="/">
 				here
@@ -242,89 +39,38 @@ const ErrorView: React.FunctionComponent<React.PropsWithChildren<unknown>> = () 
 	);
 };
 
-const UserDashboardPlaceholder: React.FunctionComponent = () => {
-	return (
-		<div>
-			<LinkListPlaceholder />
-			<Row className="mt-4">
-				<Col className="mx-auto" md={5}>
-					<Shimmer
-						pattern={
-							<Placeholder.Button
-								className="w-100 justify-content-center placeholder"
-								variant="outline-secondary"
-								disabled
-							/>
-						}
-					/>
-				</Col>
-			</Row>
-		</div>
-	);
-};
-
-const UserDashboard: React.FunctionComponent<React.PropsWithChildren<{ uid: string }>> = ({ uid }) => {
-	const baseQuery: Query<LinkData> = useMemo(() => {
-		const db = getFirestore();
-		return query(
-			collection(db, COLLECTION_LINKS),
-			where(new FieldPath(LinkField.USER, UserSnapshotField.UID), "==", uid),
-			orderBy(LinkField.CREATE_TIME, "desc"),
-			limit(FETCH_LIMIT)
-		);
-	}, [uid]);
-
-	const links = useFirestoreInfiniteQuery(`links-${uid}`, baseQuery, (snapshot) => {
-		if (snapshot.size === 0 || snapshot.size % FETCH_LIMIT > 0) return undefined;
-
-		const endDoc = snapshot.docs[snapshot.size - 1];
-		return query(baseQuery, startAfter(endDoc));
-	});
-
-	if (!links.data?.pages[0]?.size) {
-		if (links.isLoading || links.isFetching) return <LinkListPlaceholder />;
-		if (links.isError) {
-			console.error(`fetch error: ${links.error}`);
-			return <ErrorView />;
-		}
-
-		return <EmptyView />;
-	}
-
-	return (
-		<div>
-			<Row className="g-4" xs={1} sm={2} md={3} lg={4}>
-				{links.data.pages.map((page, i) => (
-					<LinkConcat key={`page-${i}`} snapshot={page.docs} />
-				))}
-			</Row>
-			<ExpandButton
-				className="mt-4"
-				state={links.isLoading || links.isFetching ? "loading" : "none"}
-				onClick={() => links.fetchNextPage()}
-				disabled={!links.hasNextPage || !links.isSuccess}
-			>
-				{links.hasNextPage ? "Load more" : "End"}
-			</ExpandButton>
-		</div>
-	);
-};
-
 const Dashboard: NextPage = () => {
 	const { user, isLoading } = useUser();
+	const [mode, setMode] = useState<Mode>("links");
 
 	return (
 		<PageContainer>
 			<Metadata title="Dashboard - Get Link" description="See your upload history and more." />
 			<Header />
 			<PageContent>
-				<h1 className="mb-4">Recent links</h1>
+				<Row>
+					<Col className="me-auto" xs="auto">
+						<h1 className="mb-4">Recents</h1>
+					</Col>
+					<Col xs="auto">
+						<ToggleButtonGroup className="ms-auto" name="mode-btn-radio" value={mode} onChange={setMode} type="radio">
+							<ToggleButton id="mode-btn-links" variant="outline-secondary" value="links">
+								Links
+							</ToggleButton>
+							<ToggleButton id="mode-btn-files" variant="outline-secondary" value="files">
+								Files
+							</ToggleButton>
+						</ToggleButtonGroup>
+					</Col>
+				</Row>
 				{user?.uid ? (
-					<UserDashboard uid={user.uid} />
+					mode === "links"
+						? <RecentLinks uid={user.uid} emptyView={() => <EmptyView mode={"links"} />} errorView={() => <ErrorView />} />
+						: <RecentFiles uid={user.uid} emptyView={() => <EmptyView mode={"files"} />} errorView={() => <ErrorView />} />
 				) : isLoading ? (
-					<UserDashboardPlaceholder />
+					<RecentListPlaceholder />
 				) : (
-					<EmptyView />
+					<EmptyView mode={mode} />
 				)}
 			</PageContent>
 			<Footer />
@@ -333,3 +79,5 @@ const Dashboard: NextPage = () => {
 };
 
 export default Dashboard;
+
+type Mode = "files" | "links";

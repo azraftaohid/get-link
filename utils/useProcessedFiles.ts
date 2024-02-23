@@ -6,7 +6,7 @@ import { OrderField } from "../models/order";
 import { now } from "./dates";
 import { getDownloadURL, getMetadata } from "./storage";
 
-export async function makeProcessedFile(fid: string, lid: string, data?: FileData): Promise<ProcessedFileData> {
+export async function makeProcessedFile(fid: string, lid?: string, data?: FileData): Promise<ProcessedFileData> {
 	console.debug(`Making processed file [fid: ${fid}]`);
 	const startTime = now();
 
@@ -19,15 +19,22 @@ export async function makeProcessedFile(fid: string, lid: string, data?: FileDat
 	]).then(([directLink, metadata]) => {
 		console.debug(`File direct link and metadata received [fid: ${fid}; took: ${now() - startTime}ms]`);
 		const type = overrides.mimeType || metadata.mimeType || "application/octet-stream";
-		const pos = data?.[FileField.LINKS]?.[lid][OrderField.CREATE_ORDER];
+		const pos = lid ? data?.[FileField.LINKS]?.[lid][OrderField.CREATE_ORDER] : undefined;
+
+		let name = overrides.customMetadata?.name || metadata.customMetadata?.name;
+		if (!name) {
+			const disposition = metadata.contentDisposition;
+			const encodedName = disposition?.split("inline; filename*=utf-8''")[1];
+			if (encodedName) name = decodeURIComponent(encodedName);
+		}
 
 		return {
-			fid, directLink, type, pos,
+			fid, directLink, type, pos, name,
 			size: +(overrides.size || metadata.size || 0),
 			width: +(overrides.customMetadata?.[DimensionField.WIDTH] || metadata.customMetadata?.width || 0) || null,
 			height: +(overrides.customMetadata?.[DimensionField.HEIGHT] || metadata.customMetadata?.height || 0) || null,
 			warnings: data?.[FileField.WARNS] || null,
-			name: overrides.customMetadata?.name || metadata.customMetadata?.name,
+			uploadTimestamp: Number.isNaN(+metadata.uploadTimestamp) ? undefined : +metadata.uploadTimestamp,
 		};
 	});
 }
@@ -42,7 +49,7 @@ export function isProcessedFile(obj: unknown): obj is ProcessedFileData {
 
 }
 
-export const useProcessedFiles = (docs: FileData[], lid: string): UseProcessedFiles => {
+export const useProcessedFiles = (docs: FileData[], lid?: string): UseProcessedFiles => {
 	const [status, setStatus] = useState<UseProcessedFiles["status"]>("none");
 
 	const [mapping, setMapping] = useState<Record<string, ProcessedFileData>>({ });
@@ -115,4 +122,5 @@ export interface ProcessedFileData {
 	height?: number | null,
 	smThumbnailUrl?: string,
 	warnings?: Warning[] | null,
+	uploadTimestamp?: number,
 }

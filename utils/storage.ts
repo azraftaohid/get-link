@@ -1,6 +1,6 @@
 import { HttpRequest, HttpResponse } from "@smithy/protocol-http";
 import { HttpHandlerOptions, RequestHandlerOutput, StreamingBlobPayloadInputTypes } from "@smithy/types";
-import { Auth, User, getIdTokenResult } from "firebase/auth";
+import { Auth, getIdTokenResult, User } from "firebase/auth";
 import { IncomingMessage } from "http";
 import { Readable } from "stream";
 import { AppHttpHandler } from "./AppHttpHandler";
@@ -17,6 +17,7 @@ import { ErrorListener, ProgressListener, Upload, UploadParams } from "./upload/
 function requiresAuthToken(api: keyof StorageApis) {
 	const requiringApis: (keyof StorageApis)[] = [
 		"cancel_large_file", "finish_large_file", "start_large_file", "upload_file", "upload_part", "delete_file",
+		"list_file_names", 
 	];
 
 	return requiringApis.includes(api);
@@ -189,6 +190,7 @@ export class Storage {
 			console.error("Storage key update failed on post auth state settle: ", error);
 		});
 
+		let lastProcessedUid: string | undefined;
 		let thenKey: string | undefined;
 		auth.beforeAuthStateChanged(async (user) => {
 			console.debug("Auth state may change, updating storage key.");
@@ -196,12 +198,26 @@ export class Storage {
 			if (user) {
 				this.getStorageKeyPromise = getStorageKey(user);
 				this.storageKey = await this.getStorageKeyPromise;
+				lastProcessedUid = user.uid;
 			} else {
 				this.storageKey = undefined;
+				lastProcessedUid = undefined;
 			}
 		}, () => {
 			console.debug("Auth state change aborted, reverting storage key.");
 			this.storageKey = thenKey;
+		});
+
+		auth.onAuthStateChanged(user => {
+			if (lastProcessedUid === user?.uid) return;
+			if (user) {
+				this.getStorageKeyPromise = getStorageKey(user);
+				this.getStorageKeyPromise.then(v => this.storageKey = v);
+				lastProcessedUid = user.uid;
+			} else {
+				this.storageKey = undefined;
+				lastProcessedUid = undefined;
+			}
 		});
 	}
 }
@@ -361,6 +377,7 @@ export interface StorageApis {
 	"get_file_metadata": [GetFileMetadataOptions, GetFileMetadataResponse],
 	"delete_file": [DeleteFileOptions, DeleteFileResponse],
 	"head_file": [HeadFileOptions, HeadFileResponse],
+	"list_file_names": [ListFileNamesOptions, ListFileNamesResponse],
 }
 
 export interface RequestFailedResponse {
@@ -426,7 +443,7 @@ export interface UploadFileReponse {
 	contentSha1: string | null,
 	contentMd5: string | null,
 	contentType: string | null,
-	fileId: string | null,
+	fileId: string,
 	fileInfo: Record<string, string> | undefined,
 	fileName: string,
 	uploadTimestamp: number,
@@ -523,4 +540,19 @@ export interface DeleteFileOptions {
 export interface DeleteFileResponse {
 	fileId: string,
 	fileName: string,
+}
+
+export interface ListFileNamesOptions {
+	method: "GET",
+	query: {
+		bucket: string,
+		prefix: string,
+		startFileName?: string,
+		maxFileCount?: number,
+	}
+}
+
+export interface ListFileNamesResponse {
+	nextFileName: string | null,
+	files: UploadFileReponse[],
 }
