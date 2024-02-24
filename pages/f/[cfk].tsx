@@ -22,7 +22,7 @@ import { createAbsoluteUrl, DOMAIN } from "../../utils/urls";
 import { Icon } from "../../components/Icon";
 import { ClickEventContext, logClick } from "../../utils/analytics";
 import { useUser } from "../../utils/useUser";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "../../components/Button";
 import { AssurePrompt } from "../../components/AssurePrompt";
 import { useRouter } from "next/router";
@@ -33,6 +33,7 @@ import AccordionBody from "react-bootstrap/AccordionBody";
 import { RecentListPlaceholder } from "../../components/list/RecentListPlaceholder";
 import { Backlinks } from "../../components/list/Backlinks";
 import Alert from "react-bootstrap/Alert";
+import { shouldStepOutDownload } from "../../utils/downloads";
 
 function suppressError(error: unknown, cfk: string, subject: string) {
 	if (error instanceof NotFound) console.warn(`${subject} not found [cfid: ${cfk}]`);
@@ -80,6 +81,11 @@ const FileView: NextPage<Partial<StaticProps>> = ({
 	const [isDeleting, setDeleting] = useState(false);
 	const [showDeletePrompt, setShowDeletePrompt] = useState(false);
 	const [showBacklinks, setShowBacklinks] = useState(false);
+	const [stepOutDownload, setStepOutDownload] = useState(false);
+
+	useEffect(() => {
+		setStepOutDownload(shouldStepOutDownload());
+	}, []);
 
 	if (!cfk || !fileKey || !fileKeyComponents || !directLink || !type || typeof size !== "number") {
 		return <PageContainer>
@@ -132,6 +138,8 @@ const FileView: NextPage<Partial<StaticProps>> = ({
 				height={height}
 				size={size}
 				fileCount={1}
+				isOwner={isUser}
+				stepOutDownload={stepOutDownload}
 			/>
 			{isUser && <Accordion
 				className={"mt-3"}
