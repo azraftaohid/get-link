@@ -144,7 +144,7 @@ const FileView: NextPage<Partial<StaticProps>> = ({
 					<AccordionHeader>Backlinks</AccordionHeader>
 					<AccordionBody>
 						{showBacklinks
-							? <Backlinks fid={fileKey} emptyView={() => <EmptyBacklinks />} errorView={() => <BacklinksError />} />
+							? <Backlinks uid={user?.uid || ""} fid={fileKey} emptyView={() => <EmptyBacklinks />} errorView={() => <BacklinksError />} />
 							: <RecentListPlaceholder limit={3} />}
 					</AccordionBody>
 				</AccordionItem>
