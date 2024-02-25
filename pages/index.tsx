@@ -25,9 +25,7 @@ import TextField from "../components/forms/TextField";
 import { createFileDoc } from "../models/files";
 import { Link as LinkObject, MAX_LEN_LINK_TITLE } from "../models/links";
 import { OrderField } from "../models/order";
-import {
-	createViewLink
-} from "../utils/files";
+import { createViewLink } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
 import { useFeatures } from "../utils/useFeatures";
 

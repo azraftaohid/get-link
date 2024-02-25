@@ -1,10 +1,18 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { Dimension, DimensionField } from "../models/dimension";
-import { FileField, createFID, deleteFile, getFileKey, getThumbnailKey } from "../models/files";
+import { createFID, deleteFile, FileField, getFileKey, getThumbnailKey } from "../models/files";
 import { Link as LinkObject } from "../models/links";
 import { NotFound } from "../utils/errors/NotFound";
-import { FileCustomMetadata, FilesStatus, createFileNamePrefix, getFileType, getImageDimension, getPdfDimension, getVideoDimension } from "../utils/files";
+import {
+	createFileNamePrefix,
+	FileCustomMetadata,
+	FilesStatus,
+	getFileType,
+	getImageDimension,
+	getPdfDimension,
+	getVideoDimension,
+} from "../utils/files";
 import { uploadObject, uploadObjectResumable } from "../utils/storage";
 import { percEncoded } from "../utils/strings";
 import { Upload, UploadParams } from "../utils/upload/Upload";
@@ -47,7 +55,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 	onError,
 	...rest
 }) => {
-	const { fileDocs, files, add, remove, setCompleted, setCancelled, setFailed, hasFailed, resume } = useContext(BatchUploadContext);
+	const { fileDocs, pushOrders, files, add, remove, setCompleted, setCancelled, setFailed, hasFailed, resume } = useContext(BatchUploadContext);
 	const { disabled } = useContext(BatchUploadConfigContext);
 
 	const attempt = useRef(0);
@@ -97,7 +105,9 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 		}
 		
 		link.increaseDownloadSize(file.size);
-		if (order === 0) link.setCover({ fid });
+		if (order <= Math.min(...Array.from(pushOrders.values()))) { // check current file is the earliest ordered file
+			link.setCover({ fid });
+		}
 	};
 
 	const _stateless = { files, add, remove, associateWithLink, handleComplete, handleCancel, handleError };

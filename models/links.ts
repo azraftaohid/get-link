@@ -11,12 +11,13 @@ import {
 	getFirestore,
 	orderBy,
 	Query,
-	query, serverTimestamp,
+	query,
+	serverTimestamp,
 	setDoc,
 	Timestamp,
 	Transaction,
 	where,
-	WithFieldValue
+	WithFieldValue,
 } from "firebase/firestore";
 import { v4 as uuidV4 } from "uuid";
 import { now } from "../utils/dates";

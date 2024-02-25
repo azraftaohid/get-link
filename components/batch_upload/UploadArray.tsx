@@ -5,8 +5,8 @@ import { FileUpload, FileUploadProps } from "../FileUpload";
 import { BatchUploadConfigContext, BatchUploadContext } from "./BatchUpload";
 
 export const UploadArray: React.FunctionComponent<UploadArrayProps> = () => {
-	const { files } = useContext(BatchUploadContext);
-	const { link, method, startOrder = 0 } = useContext(BatchUploadConfigContext);
+	const { files, pushOrders } = useContext(BatchUploadContext);
+	const { link, method } = useContext(BatchUploadConfigContext);
 
 	const logError: FileUploadProps["onError"] = (file, err) => {
 		console.error(`error uploading file [filename: ${file.name}; cause: ${err}]`);
@@ -19,7 +19,7 @@ export const UploadArray: React.FunctionComponent<UploadArrayProps> = () => {
 				link={link}
 				file={file}
 				method={method}
-				order={startOrder + i}
+				order={pushOrders.has(file) ? pushOrders.get(file) : i}
 				onError={logError}
 			/>)}
 		</Stack>

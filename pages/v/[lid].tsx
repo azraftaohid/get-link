@@ -443,6 +443,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 	console.debug("Awaiting task complete");
 	await Promise.all(tasks);
 	console.debug("Props are prepared; returning...");
+	initFiles.sort((a, b) => a.pos - b.pos);
 
 	const baseFile = initFiles[0];
 	if (!baseFile) return notFound;
@@ -457,7 +458,7 @@ export const getStaticProps: GetStaticProps<StaticProps, Segments> = async ({ pa
 		// revalidation is done via the api route: /api/revalidate
 		props: {
 			isDynamic,
-			initFiles: initFiles.sort((a, b) => a.pos - b.pos), // NOSONAR
+			initFiles,
 			fileCount: fileCount || initFiles.length,
 			cover: {
 				type: coverType,

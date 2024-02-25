@@ -1,5 +1,5 @@
 import { DocumentReference } from "firebase/firestore";
-import { createContext, useEffect, useMemo, useRef } from "react";
+import React, { createContext, useEffect, useMemo, useRef } from "react";
 import { createFileDoc } from "../../models/files";
 import { Link as LinkObj } from "../../models/links";
 import { AuthStatus } from "../../utils/auths";
@@ -8,6 +8,7 @@ import { useParallelTracker } from "../../utils/useParallelTracker";
 import { useProgressTracker } from "../../utils/useProgressTracker";
 import { useStatus } from "../../utils/useStatus";
 import { FileUploadProps } from "../FileUpload";
+import { now } from "../../utils/dates";
 
 const MAX_CONCURRENT_UPLOAD = 2;
 
@@ -15,6 +16,7 @@ const methodNotImplemented = () => { throw new Error("Method not implemented"); 
 
 export const BatchUploadContext = createContext<BatchUploadContextInterface>({
 	fileDocs: new Map(),
+	pushOrders: new Map(),
 	files: [], add: methodNotImplemented, remove: methodNotImplemented, setCancelled: methodNotImplemented,
 	setCompleted: methodNotImplemented, setFailed: methodNotImplemented, resume: methodNotImplemented,
 	hasCompleted: methodNotImplemented, hasCancelled: methodNotImplemented, hasFailed: methodNotImplemented,
@@ -28,10 +30,17 @@ export const BatchUploadConfigContext = createContext<BatchUploadConfig>({
 
 export const BatchUpload: React.FunctionComponent<BatchUploadProps> = ({
 	children,
-	link, disabled, maxFiles, maxSize, method, observer, onCompleted, startOrder
+	link,
+	disabled,
+	maxFiles,
+	maxSize,
+	method,
+	observer,
+	onCompleted,
 }) => {
 	const { status, appendStatus, removeStatus } = useStatus<FilesStatus | AuthStatus>();
 	const fileDocs = useRef<BatchUploadContextInterface["fileDocs"]>(new Map);
+	const pushOrders = useRef<BatchUploadContextInterface["pushOrders"]>(new Map());
 
 	const {
 		keys: files, setKeys: setFiles, removeKey: removeFile,
@@ -42,8 +51,18 @@ export const BatchUpload: React.FunctionComponent<BatchUploadProps> = ({
 
 	const ctx = useMemo<BatchUploadContextInterface>(() => ({
 		fileDocs: fileDocs.current,
+		pushOrders: pushOrders.current,
 		files,
-		add: (...files) => setFiles(c => [...c, ...files]),
+		add: (...files) => setFiles(c => {
+			const currentTime = now();
+			const combined = [...c];
+			files.forEach((f, i) => {
+				pushOrders.current.set(f, currentTime + i);
+				combined.push(f);
+			});
+
+			return combined;
+		}),
 		remove: removeFile,
 		setCompleted: (file) => { markCompleted(file); markPCompleted(file); },
 		setCancelled: removeFile,
@@ -56,8 +75,8 @@ export const BatchUpload: React.FunctionComponent<BatchUploadProps> = ({
 	}), [files, removeFile, hasCompleted, hasFailed, completedCount, cancelledCount, failedCount, status, appendStatus, removeStatus, setFiles, markCompleted, markPCompleted, markFailed, markPPaused, runnings]);
 
 	const config = useMemo<BatchUploadConfig>(() => ({
-		link, disabled, maxFiles, maxSize, method, startOrder,
-	}), [disabled, link, maxFiles, maxSize, method, startOrder]);
+		link, disabled, maxFiles, maxSize, method,
+	}), [disabled, link, maxFiles, maxSize, method]);
 
 	const _stateless = { onCompleted, observer };
 	const stateless = useRef(_stateless);
@@ -86,6 +105,7 @@ export type BatchUploadState = "none" | "processing" | "error";
 
 export type BatchUploadContextInterface = {
 	fileDocs: Map<string, { name: string, order: number, extras?: Parameters<typeof createFileDoc>["3"] }>,
+	pushOrders: Map<File, number>, // uses timestamp and index to create the order of association of files (into links)
 	files: File[],
 	add: (...files: File[]) => unknown,
 	remove: (file: File) => unknown,
@@ -110,7 +130,6 @@ export type BatchUploadConfig = {
 	maxFiles?: number, // maximum number of files to be uploaded; enter 0 for no limites
 	maxSize?: number,
 	disabled?: boolean,
-	startOrder?: number,
 }
 
 export type BatchUploadProps = React.PropsWithChildren<BatchUploadConfig> & {

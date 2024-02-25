@@ -18,6 +18,7 @@ import { ExpandButton } from "../ExpandButton";
 import Col from "react-bootstrap/Col";
 import { LinkSquareCard } from "../cards/LinkSquareCard";
 import { RecentListPlaceholder } from "./RecentListPlaceholder";
+import { OrderField } from "../../models/order";
 
 const IMPLICIT_FETCH_LIMIT = 12;
 
@@ -36,8 +37,7 @@ export const Backlinks: React.FunctionComponent<BacklinksProps> = ({
 	// links from the link collection, that has reference to this fid
 	const implicitBacklinksQuery = query(
 		getLinks(),
-		orderBy(new FieldPath(LinkField.FILES, createCFID(fid))),
-		orderBy(LinkField.CREATE_TIME, "desc")
+		orderBy(new FieldPath(LinkField.FILES, createCFID(fid), OrderField.CREATE_ORDER), "desc"),
 	);
 	const implicitBacklinks = useFirestoreInfiniteQuery([`imp-bls-${fid}`], implicitBacklinksQuery, (snapshot) => {
 		if (snapshot.size === 0 || snapshot.size % IMPLICIT_FETCH_LIMIT > 0) return undefined;
