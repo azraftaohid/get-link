@@ -18,7 +18,6 @@ import { ExpandButton } from "../ExpandButton";
 import Col from "react-bootstrap/Col";
 import { LinkSquareCard } from "../cards/LinkSquareCard";
 import { RecentListPlaceholder } from "./RecentListPlaceholder";
-import { UserSnapshotField } from "../../models/users";
 
 const IMPLICIT_FETCH_LIMIT = 12;
 
@@ -37,7 +36,6 @@ export const Backlinks: React.FunctionComponent<BacklinksProps> = ({
 	// links from the link collection, that has reference to this fid
 	const implicitBacklinksQuery = query(
 		getLinks(),
-		where(new FieldPath(LinkField.USER, UserSnapshotField.UID), "==", uid),
 		orderBy(new FieldPath(LinkField.FILES, createCFID(fid))),
 		orderBy(LinkField.CREATE_TIME, "desc")
 	);
@@ -61,8 +59,7 @@ export const Backlinks: React.FunctionComponent<BacklinksProps> = ({
 		const firstThirty = lidList.slice(0, 30);
 		return onSnapshot(query(
 			getLinks(),
-			where(documentId(), "in", firstThirty),
-			where(new FieldPath(LinkField.USER, UserSnapshotField.UID), "==", uid),
+			where(documentId(), "in", firstThirty)
 		), snapshot => {
 			setDirectBacklinks(snapshot);
 			setDirectBacklinksError(false);
