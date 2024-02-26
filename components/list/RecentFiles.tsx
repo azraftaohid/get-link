@@ -10,7 +10,7 @@ import { createAbsoluteUrl, DOMAIN } from "../../utils/urls";
 import { ExpandButton } from "../ExpandButton";
 import { RecentListPlaceholder } from "./RecentListPlaceholder";
 
-const FILE_FETCH_LIMIT = 100;
+const FILE_FETCH_LIMIT = 12;
 
 export const RecentFiles: React.FunctionComponent<RecentFilesProps> = ({
 	uid,
