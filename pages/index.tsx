@@ -28,6 +28,7 @@ import { OrderField } from "../models/order";
 import { createViewLink } from "../utils/files";
 import { mergeNames } from "../utils/mergeNames";
 import { useFeatures } from "../utils/useFeatures";
+import { ScrollToTop } from "../components/ScrollToTop";
 
 const schema = Yup.object({
 	title: Yup.string()
@@ -170,6 +171,7 @@ const Home: NextPage = () => {
 				</Accordion>
 			</PageContent>
 			<Footer />
+			<ScrollToTop />
 		</PageContainer>
 	);
 };
