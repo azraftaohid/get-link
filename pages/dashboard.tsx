@@ -1,5 +1,5 @@
 import { NextPage } from "next";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
@@ -15,6 +15,15 @@ import { useUser } from "../utils/useUser";
 import { RecentLinks } from "../components/list/RecentLinks";
 import { RecentFiles } from "../components/list/RecentFiles";
 import { RecentListPlaceholder } from "../components/list/RecentListPlaceholder";
+
+function isValidMode(s: unknown): s is Mode {
+	return s === "files" || s === "links";
+}
+
+function detnModeFromHash(hash: string, fallback: Mode) {
+	const seg = hash.substring(1);
+	return isValidMode(seg) ? seg : fallback;
+}
 
 const EmptyView: React.FunctionComponent<React.PropsWithChildren<{ mode: Mode }>> = ({ mode }) => {
 	return (
@@ -41,7 +50,17 @@ const ErrorView: React.FunctionComponent<React.PropsWithChildren<unknown>> = () 
 
 const Dashboard: NextPage = () => {
 	const { user, isLoading } = useUser();
-	const [mode, setMode] = useState<Mode>("links");
+	const [mode, setMode] = useState(detnModeFromHash(typeof window !== "undefined" ? window.location.hash : "", "links"));
+
+	useEffect(() => {
+		const handler = (evt: HashChangeEvent) => {
+			const url = new URL(evt.newURL);
+			setMode(c => detnModeFromHash(url.hash, c));
+		};
+
+		window.addEventListener("hashchange", handler);
+		return () => window.removeEventListener("hashchange", handler);
+	}, []);
 
 	return (
 		<PageContainer>
@@ -53,7 +72,13 @@ const Dashboard: NextPage = () => {
 						<h1 className="mb-4">Recents</h1>
 					</Col>
 					<Col xs="auto">
-						<ToggleButtonGroup className="ms-auto" name="mode-btn-radio" value={mode} onChange={setMode} type="radio">
+						<ToggleButtonGroup
+							className="ms-auto"
+							name="mode-btn-radio"
+							value={mode}
+							onChange={(value) => window.location.hash = "#" + value}
+							type="radio"
+						>
 							<ToggleButton id="mode-btn-links" variant="outline-secondary" value="links">
 								Links
 							</ToggleButton>
