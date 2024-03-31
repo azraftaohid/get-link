@@ -16,6 +16,7 @@ ensureEnvVariablesDefined([
 	"API_KEY", "EDGE_CONFIG", "NEXT_PUBLIC_APP_URL",
 	"NEXT_PUBLIC_FIREBASE_API_KEY",
 	"NEXT_PUBLIC_STORAGE_API_URL", "NEXT_PUBLIC_STORAGE_FILE_URL", "NEXT_PUBLIC_STORAGE_DEFAULT_BUCKET",
+	"NEXT_PUBLIC_OTP_LEN",
 ]);
 
 /**
@@ -58,6 +59,23 @@ const nextConfig = {
 			source: "/(.*)",
 			headers: securities,
 		},
+	],
+	redirects: () => [
+		{
+			source: "/profile",
+			destination: "/account/profile",
+			permanent: true,
+		},
+		{
+			source: "/account",
+			destination: "/account/profile",
+			permanent: false,
+		},
+		{
+			source: "/continue-signin",
+			destination: "/continue/signin",
+			permanent: true,
+		}
 	],
 	images: {
 		domains: [

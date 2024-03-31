@@ -87,7 +87,7 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 							logClick("toggle_theme", { to: newTheme });
 						}}
 					/>
-					{user && !user.isAnonymous && <Link href="/profile" prefetch={false} passHref>
+					{user && !user.isAnonymous && <Link href="/account/profile" prefetch={false} passHref>
 						<a role="button"
 							className="btn btn-outline-secondary d-flex flex-row gap-1 align-items-center order-1 order-md-4 me-2 me-md-0"
 							aria-label="profile"

@@ -95,7 +95,16 @@ ol {
   }
 
   #nav {
-	@extend .bg-dark;
+    @extend .bg-dark;
+  }
+
+  .nav {
+    --#{$prefix}nav-link-color: #{$nav-link-color-dark};
+    --#{$prefix}nav-link-hover-color: #{$nav-link-hover-color-dark};
+  }
+
+  .nav-pills {
+    --#{$prefix}nav-pills-link-active-bg: #{$nav-pills-link-active-bg-dark};
   }
 
   .file-preview {
@@ -127,7 +136,7 @@ ol {
 
 @include color-mode(light) {
   #nav {
-	@extend .bg-light;
+    @extend .bg-light;
   }
 
   .file-preview {

@@ -5,3 +5,11 @@ $primary: #0078d4;
 $secondary: rgba(101, 110, 119, 80%);
 
 $body-bg-dark: $dark;
+
+$nav-link-color-dark: rgba($light, .6);
+$nav-link-hover-color-dark: $light;
+$nav-pills-link-active-bg-dark: $secondary;
+
+$nav-link-color: rgba($dark, .8);
+$nav-link-hover-color: $dark;
+$nav-pills-link-active-bg: $secondary;

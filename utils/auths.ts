@@ -1,14 +1,69 @@
-import { EmailAuthProvider, User, UserCredential, fetchSignInMethodsForEmail, getAuth, isSignInWithEmailLink, linkWithCredential, signInWithEmailLink } from "firebase/auth";
+import {
+	EmailAuthProvider,
+	fetchSignInMethodsForEmail,
+	getAuth,
+	isSignInWithEmailLink,
+	linkWithCredential,
+	reauthenticateWithCredential,
+	signInWithEmailLink,
+	User,
+	UserCredential,
+} from "firebase/auth";
 import { HttpsCallable, httpsCallable } from "firebase/functions";
 import { AppError } from "./errors/AppError";
 import { getFunctions } from "./functions";
 
 export const KEY_SIGN_IN_EMAIL = "passwordless_sign_in.last_email";
+export const KEY_EMAIL_TO_UPDATE = "email_update.last_email";
+
+export const AUTH_SIGN_IN_OTP_LENGTH = +(process.env.NEXT_PUBLIC_SIGN_IN_OTP_LEN || process.env.NEXT_PUBLIC_OTP_LEN || 15);
+export const AUTH_REAUTH_OTP_LEN = +(process.env.NEXT_PUBLIC_REAUTH_OTP_LEN || AUTH_SIGN_IN_OTP_LENGTH);
+export const AUTH_EMAIL_CONFIRM_OTP_LEN = +(process.env.NEXT_PUBLIC_EMAIL_CONFIRM_OTP_LEN || AUTH_SIGN_IN_OTP_LENGTH);
 
 let authSendSignInLinkToEmailFunc: HttpsCallable<EmailSignInLinkRequestData, void>;
 let authObtainSignInLinkFunc: HttpsCallable<ObtainSignInLinkRequestData, string>;
 let authSendOtpToEmailFunc: HttpsCallable<EmailOTPRequestData, void>;
 let authVerifyEmailOtpFunc: HttpsCallable<EmailOTPSignInRequestData, string>;
+let authSendReauthLinkFunc: HttpsCallable<EmailReauthLinkRequestData, void>;
+let authObtainReauthLinkFunc: HttpsCallable<ObtainReauthLinkRequestData, string>;
+let authEmailConfirmationLinkFunc: HttpsCallable<EmailConfirmationLinkRequestData, void>;
+let authUpdateEmailFunc: HttpsCallable<UpdateEmailRequestData, UpdateEmailResponseData>;
+let authRecoverEmailFunc: HttpsCallable<EmailRecoveryRequestData, EmailRecoveryResponseData>;
+
+export async function sendEmailConfirmationLink(uid: string, newEmail: string, redirectUrl: string) {
+	if (!authEmailConfirmationLinkFunc)
+		authEmailConfirmationLinkFunc = httpsCallable(getFunctions(), "auth-sendemailconfirmationlink");
+
+	await authEmailConfirmationLinkFunc({ uid, redirectUrl, email: newEmail });
+}
+
+export async function updateEmail(uid: string, newEmail: string, otp: string, recoverUrl: string) {
+	if (!authUpdateEmailFunc)
+		authUpdateEmailFunc = httpsCallable(getFunctions(), "auth-updateemail");
+
+	return (await authUpdateEmailFunc({ uid, otp, recoverUrl, email: newEmail })).data || { };
+}
+
+export async function recoverEmail(oobCode: string, redirectUrl: string) {
+	if (!authRecoverEmailFunc)
+		authRecoverEmailFunc = httpsCallable(getFunctions(), "auth-recoveremail");
+
+	return (await authRecoverEmailFunc({ oobCode, redirectUrl })).data || { };
+}
+
+export async function sendReauthLink(uid: string, redirectUrl: string) {
+	if (!authSendReauthLinkFunc)
+		authSendReauthLinkFunc = httpsCallable(getFunctions(), "auth-sendreauthlinktoemail");
+
+	await authSendReauthLinkFunc({ uid, redirectUrl });
+}
+
+export async function obtainReauthLink(uid: string, vcode: string) {
+	if (!authObtainReauthLinkFunc)
+		authObtainReauthLinkFunc = httpsCallable(getFunctions(), "auth-obtainreauthlink");
+
+	return await authObtainReauthLinkFunc({ uid, otp: vcode });
+}
 
 export async function sendSignInLinkToEmail(email: string, redirectUrl: string) {
 	if (!authSendSignInLinkToEmailFunc) 
@@ -38,6 +93,16 @@ export async function verifyEmailOtp(email: string, otp: string, linkCurrentUser
 	return await authVerifyEmailOtpFunc({
 		email, otp, linkCurrentUser,
 	});
+}
+
+export async function reauthWithLink(user: User & { email: NonNullable<User["email"]> }, reauthLink: string) {
+	const auth = getAuth();
+	if (!isSignInWithEmailLink(auth, reauthLink)) {
+		throw new AppError("reauth/invalid-link", "Provided reauth link is not valid.");
+	}
+
+	const authCred = EmailAuthProvider.credentialWithLink(user.email, reauthLink);
+	return await reauthenticateWithCredential(user, authCred);
 }
 
 export async function signInWithLink(email: string, signInLink: string, currentUser?: User | null): Promise<UserCredential> {
@@ -92,9 +157,47 @@ export async function signInWithLink(email: string, signInLink: string, currentU
 export type AuthStatus = "auth:sign-in-error" |
 	"auth:signing-in";
 
+interface EmailConfirmationLinkRequestData {
+	uid: string,
+	email: string,
+	redirectUrl: string,
+}
+
+interface UpdateEmailRequestData {
+	uid: string,
+	email: string,
+	otp: string,
+	recoverUrl: string,
+}
+
+interface UpdateEmailResponseData {
+	signInLink?: string | null,
+}
+
+interface EmailRecoveryRequestData {
+	oobCode: string,
+	redirectUrl: string,
+}
+
+interface EmailRecoveryResponseData {
+	uid?: string | null,
+	email?: string | null,
+	signInLink?: string | null,
+}
+
+interface EmailReauthLinkRequestData {
+	uid: string,
+	redirectUrl: string,
+}
+
+interface ObtainReauthLinkRequestData {
+	uid?: string,
+	otp?: string,
+}
+
 interface EmailSignInLinkRequestData {
-	email?: string,
-	redirectUrl?: string,
+	email: string,
+	redirectUrl: string,
 }
 
 interface ObtainSignInLinkRequestData {

@@ -1,9 +1,7 @@
 import { FirebaseError } from "firebase/app";
 import { getAdditionalUserInfo } from "firebase/auth";
 import { Formik } from "formik";
-import { useRouter } from "next/router";
-import React, { useEffect, useRef, useState } from "react";
-import Alert from "react-bootstrap/Alert";
+import React, { useRef, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Modal, { ModalProps } from "react-bootstrap/Modal";
 import ModalBody from "react-bootstrap/ModalBody";
@@ -11,116 +9,73 @@ import ModalFooter from "react-bootstrap/ModalFooter";
 import ModalHeader from "react-bootstrap/ModalHeader";
 import ModalTitle from "react-bootstrap/ModalTitle";
 import * as yup from "yup";
-import { KEY_SIGN_IN_EMAIL, obtainSignInLink, sendSignInLinkToEmail, signInWithLink } from "../utils/auths";
-import { isLocalHost } from "../utils/common";
+import {
+	AUTH_SIGN_IN_OTP_LENGTH,
+	KEY_SIGN_IN_EMAIL,
+	obtainSignInLink,
+	sendSignInLinkToEmail,
+	signInWithLink,
+} from "../utils/auths";
 import { useStatus } from "../utils/useStatus";
 import { useToast } from "../utils/useToast";
 import { useUser } from "../utils/useUser";
 import { Button } from "./Button";
 import { Conditional } from "./Conditional";
 import TextField from "./forms/TextField";
+import { SendCodeButton } from "./SendCodeButton";
+import { makeContinueUrl } from "../utils/urls";
+import { AlertArray, AlertArraySource } from "./AlertArray";
 
 enum State {
 	NONE, CODE_REQUESTED, P1, SENT, SUBMITTED, P2, COMPLETED
 }
-
-const otpLen = +(process.env.NEXT_PUBLIC_OTP_LEN || 15);
 
 const schema = yup.object().shape({
 	email: yup.string()
 		.email("Must be a valid email address")
 		.required("Email address is required."),
 	code: yup.string()
-		.length(otpLen, `The one time password is a ${otpLen} characters long code sent to your email.`)
+		.length(AUTH_SIGN_IN_OTP_LENGTH, `The one time password is a ${AUTH_SIGN_IN_OTP_LENGTH} characters long code sent to your email.`)
 		.required("One time password is required.")
 });
 
-const statusMssgMapping: Record<StatusCode, { variant: string, mssg: React.ReactNode, dismissable?: boolean }> = {
+const statusMssgMapping: AlertArraySource<StatusCode> = {
 	"err:send-otp-to-email": {
 		variant: "danger",
-		mssg: <>There was an error while sending the one time password to your email. Please try again after some time.</>,
-		dismissable: true,
+		body: <>There was an error while sending the one time password to your email. Please try again after some time.</>,
+		dismissible: true,
 	},
 	"err:send-sign-in-link-to-email": {
 		variant: "danger",
-		mssg: <>There was an error while sending the sign in link to your email. Please try again after some time.</>
+		body: <>There was an error while sending the sign in link to your email. Please try again after some time.</>
 	},
 	"err:invalid-otp": {
 		variant: "danger",
-		mssg: <>Provided one time password is invalid. Please try again.</>,
-		dismissable: true,
+		body: <>Provided one time password is invalid. Please try again.</>,
+		dismissible: true,
 	},
 	"err:otp-expired": {
 		variant: "danger",
-		mssg: <>Your one time password is expired. Try sending another one.</>,
-		dismissable: true,
+		body: <>Your one time password is expired. Try sending another one.</>,
+		dismissible: true,
 	},
 	"err:sign-in": {
 		variant: "danger",
-		mssg: <>There was an error signing you in. Please try again after some time.</>,
-		dismissable: true,
+		body: <>There was an error signing you in. Please try again after some time.</>,
+		dismissible: true,
 	},
 	"signed-in:new-user": {
 		variant: "success",
-		mssg: <>Thanks for signing up. You can now close this dialog.</>,
+		body: <>Thanks for signing up. You can now close this dialog.</>,
 	},
 	"signed-in:existing-user": {
 		variant: "success",
-		mssg: <>Welcome back. You can now close this dialog.</>,
+		body: <>Welcome back. You can now close this dialog.</>,
 	},
 	"signed-in:user-linked": {
 		variant: "success",
-		mssg: <>Your current account has been linked to your email address. You can now close this dialog</>,
+		body: <>Your current account has been linked to your email address. You can now close this dialog</>,
 	}
-};
-
-const SendSignInLinkEmailButton: React.FunctionComponent<SendOtpToEmailButtonProps> = ({
-	onSent,
-	onSendFailed,
-	email,
-	error,
-	disabled
-}) => {
-	const router = useRouter();
-
-	const [resendCountdown, setResendCountdown] = useState(0);
-	const [state, setState] = useState<"none" | "sending" | "sent">("none");
-
-	useEffect(() => {
-		setTimeout(() => setResendCountdown(c => Math.max(0, c - 1)), 1000);
-	}, [resendCountdown]);
-
-	return <Button
-		variant={state === "none" ? "outline-primary" : "outline-secondary"}
-		state={state === "sending" ? "loading" : "none"}
-		disabled={!email || !!error || resendCountdown > 0 || disabled}
-		onClick={async () => {
-			if (!email || error) return console.debug("Not eligible to send OTP.");
-
-			setState("sending");
-			try {
-				await sendSignInLinkToEmail(email, `${isLocalHost() ? "http://" : "https://"}${window.location.host}/continue-signin?path=${router.asPath}`);
-				setState("sent");
-				setResendCountdown(60);
-
-				onSent?.();
-			} catch (error) {
-				console.error(`Failed to send OTP to email [email: ${email}; cause: ${error}]`);
-				setState("none");
-
-				onSendFailed?.();
-			}
-		}}
-	>
-		{(() => {switch (state) {
-			case "none":
-				return "Send code";
-			case "sending":
-				return "Sending";
-			default:
-				return `Resend${resendCountdown > 0 ? ` (${resendCountdown}s)` : ""}`;
-		}})()}
-	</Button>;
 };
 
 export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) => {
@@ -213,32 +168,25 @@ export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) 
 								/>
 							</Conditional>
 						</fieldset>
-						{(Object.keys(statusMssgMapping) as StatusCode[]).map(key => <Conditional key={key} in={status.includes(key)}>
-							<Alert 
-								className="mt-3 mb-0" 
-								variant={statusMssgMapping[key].variant}
-								onClose={() => removeStatus(key)}
-								dismissible={statusMssgMapping[key].dismissable}
-							>
-								{statusMssgMapping[key].mssg}
-							</Alert>
-						</Conditional>)}
+						<AlertArray source={statusMssgMapping} present={status} onDismiss={removeStatus} />
 					</ModalBody>
 					<ModalFooter>
 						<Button variant="outline-secondary" onClick={props.onHide} disabled={[State.P1, State.P2].includes(state)}>
 							{state === State.COMPLETED ? "Close" : "Cancel"}
 						</Button>
-						<SendSignInLinkEmailButton
-							email={values.email}
-							error={errors.email}
+						<SendCodeButton
+							sender={() => sendSignInLinkToEmail(values.email, makeContinueUrl("signin"))}
 							onSent={() => {
 								setState(c => Math.max(c, State.SENT));
 								makeToast(`An email with the one time password has been sent to ${values.email}`, "info");
 								
 								localStorage.setItem(KEY_SIGN_IN_EMAIL, values.email);
 							}}
-							onSendFailed={() => appendStatus("err:send-otp-to-email")}
-							disabled={state > State.SENT}
+							onSendFailed={(error) => {
+								console.error("Sign in link send failed: ", error);
+								appendStatus("err:send-otp-to-email");
+							}}
+							disabled={!!errors.email || !values.email || state > State.SENT}
 						/>
 						<Conditional in={state >= State.SENT}>
 							<Button
@@ -267,11 +215,3 @@ type StatusCode = "err:send-otp-to-email" |
 	"signed-in:user-linked";
 
 export type SignInDialogProps = ModalProps;
-
-interface SendOtpToEmailButtonProps {
-	onSent?: () => unknown,
-	onSendFailed?: () => unknown,
-	email?: string,
-	error?: string,
-	disabled?: boolean,
-}

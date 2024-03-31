@@ -7,7 +7,7 @@ import { useRef, useState } from "react";
  * const { status,  setStatus, ... } = useStatus<T>();
  * ```
  * 
- * @return A React hook to manage componenet status.
+ * @return A React hook to manage component status.
  */
 export const useStatus: <T> () => UseStatus<T> = <T> () => {
 	const [value, setValue] = useState<T[]>([]);
@@ -38,7 +38,7 @@ export const useStatus: <T> () => UseStatus<T> = <T> () => {
 
 export interface UseStatus<T> {
 	status: T[],
-	setStatus: (ts: T[]) => unknown,
+	setStatus: (ts: T[] | ((current: T[]) => T[])) => unknown,
 	appendStatus: (t: T) => void,
 	removeStatus: (t: T) => void,
 }

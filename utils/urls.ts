@@ -18,3 +18,7 @@ export function mapQueryParams(searchParams: URLSearchParams) {
 	Array.from(searchParams.entries()).forEach(([key, value]) => mapping[key] = value);
 	return mapping;
 }
+
+export function makeContinueUrl(mode: string, then = window.location.pathname) {
+	return `${window.location.origin}/continue/${mode}?path=${encodeURIComponent(then)}`;
+}

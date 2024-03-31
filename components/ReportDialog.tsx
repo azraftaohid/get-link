@@ -1,4 +1,4 @@
-import { WithFieldValue, serverTimestamp } from "firebase/firestore";
+import { serverTimestamp, WithFieldValue } from "firebase/firestore";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useRef, useState } from "react";
@@ -15,7 +15,7 @@ import ModalHeader from "react-bootstrap/ModalHeader";
 import ModalTitle from "react-bootstrap/ModalTitle";
 import * as yup from "yup";
 import { NameField } from "../models/name";
-import { ReportData, ReportField, captureReport } from "../models/report";
+import { captureReport, ReportData, ReportField } from "../models/report";
 import { createTicketId } from "../models/tickets";
 import { KEY_SID } from "../utils/analytics";
 import { Button } from "./Button";
