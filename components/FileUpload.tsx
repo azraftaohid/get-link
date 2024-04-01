@@ -156,6 +156,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 							await uploadObject(getThumbnailKey(fid), thumbnail, {
 								mimeType: "image/png",
 								customMetadata: {
+									name: percEncoded(file.name + " (thumbnail)"),
 									width: dimension[DimensionField.WIDTH],
 									height: dimension[DimensionField.HEIGHT],
 								} as FileCustomMetadata,

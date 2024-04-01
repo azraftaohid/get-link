@@ -54,11 +54,16 @@ export function getFileKey(fid: string) {
 	return fid;
 }
 
+/**
+ * Gets the thumbnail key of the file referenced by {@link fid}.
+ * @param { string } fid Actual file's FID
+ */
 export function getThumbnailKey(fid: string) {
 	const { uid, fileName } = compartFid(fid);
 	const displayName = extractDisplayName(fileName);
 
-	return `users_v3/${uid}/thumbs/${displayName}.png`;
+	// We are using display name as a sub folder to ensure that the monotonic file name order is never broken.
+	return `users_v3/${uid}/${displayName}/thumb.png`;
 }
 
 export function createCFID(fid: string) {

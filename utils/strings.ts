@@ -17,10 +17,17 @@ export function extractDisplayName(fileName: string) {
 	return i !== -1 && i + 1 < fileName.length ? fileName.substring(0, i) : fileName;
 }
 
+/**
+ * Breaks down the {@link fid} to extract FID components.
+ * E.g.,
+ * 	users/unique_id/filename.ext -> { uid: unique_id, fileName: filename.ext }
+ * 	users/unique_id/sub/filename.ext -> { uid: unique_id, fileName: sub/filename.ext }
+ *
+ * @param { string } fid Target file's FID
+ */
 export function compartFid(fid: string): FIDComponents {
-	const segments = fid.split("/");
-	const uid = segments[1] || "";
-	const fileName = segments[2] || "";
+	const [f1, uid] = fid.split("/", 2);
+	const fileName = fid.substring(f1?.length + uid?.length + 2);
 
 	return { uid, fileName };
 }

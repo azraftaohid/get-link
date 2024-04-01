@@ -21,6 +21,7 @@ export async function makeProcessedFile(fid: string, lid?: string, data?: FileDa
 		const type = overrides.mimeType || metadata.mimeType || "application/octet-stream";
 		const pos = lid ? data?.[FileField.LINKS]?.[lid][OrderField.CREATE_ORDER] : undefined;
 
+		// TODO: metadata#customMetadata#name may produce spaces as '+' character; find a workaround
 		let name = overrides.customMetadata?.name || metadata.customMetadata?.name;
 		if (!name) {
 			const disposition = metadata.contentDisposition;
