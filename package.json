@@ -83,5 +83,5 @@
     "./utils/runtimeConfig": "./utils/runtimeConfig.browser",
     "fs": false
   },
-  "packageManager": "yarn@3.2.3"
+  "packageManager": "yarn@1.22.22"
 }

@@ -40,6 +40,7 @@ yarn-error.log*
 .vercel
 .yarn
 .yarnrc.yml
+.yarnrc
 
 /ui-debug.log
 /firestore-debug.log
