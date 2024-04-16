@@ -9,6 +9,8 @@ export const Metadata: React.FunctionComponent<React.PropsWithChildren<MetadataP
 	description: _description,
 	image: _image,
 	tags,
+	noIndex,
+	noFollow,
 	children,
 }) => {
 	const router = useRouter();
@@ -41,6 +43,8 @@ export const Metadata: React.FunctionComponent<React.PropsWithChildren<MetadataP
 			{tags?.map((tag) => (
 				<meta key={tag} property="tag" content={tag} />
 			))}
+			{noIndex && <meta name="robots" content="noindex" />}
+			{noFollow && <meta name="robots" content="nofollow" />}
 			{children}
 		</Head>
 	);
@@ -51,4 +55,6 @@ export interface MetadataProps {
 	description?: string | Falsy;
 	image?: string | Falsy;
 	tags?: string[];
+	noIndex?: boolean,
+	noFollow?: boolean,
 }

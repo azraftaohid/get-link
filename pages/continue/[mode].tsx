@@ -1,3 +1,4 @@
+import { FirebaseError } from "firebase/app";
 import { getAdditionalUserInfo, getAuth, onAuthStateChanged } from "firebase/auth";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
@@ -7,8 +8,10 @@ import { Conditional } from "../../components/Conditional";
 import { Footer } from "../../components/Footer";
 import { Header } from "../../components/Header";
 import { Loading } from "../../components/Loading";
+import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
 import { PageContent } from "../../components/PageContent";
+import { UserWithEmail } from "../../components/ReauthDialog";
 import {
 	KEY_EMAIL_TO_UPDATE,
 	KEY_SIGN_IN_EMAIL,
@@ -17,10 +20,8 @@ import {
 	signInWithLink,
 	updateEmail,
 } from "../../utils/auths";
-import { useToast } from "../../utils/useToast";
-import { UserWithEmail } from "../../components/ReauthDialog";
 import { makeContinueUrl } from "../../utils/urls";
-import { FirebaseError } from "firebase/app";
+import { useToast } from "../../utils/useToast";
 
 const completeMessage: Partial<Record<State, { variant?: string, body: React.ReactNode }>> = {
 	"existing-user": {
@@ -209,6 +210,7 @@ const ContinuePage: NextPage = () => {
 	}, [makeToast, router]);
 
 	return <PageContainer>
+		<Metadata title="Continue operation" noIndex />
 		<Header />
 		<PageContent>
 			{state === "none" && <Loading />}

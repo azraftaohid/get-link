@@ -8,6 +8,7 @@ import { DownloadProgress } from "../components/DownloadProgress";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { Loading } from "../components/Loading";
+import { Metadata } from "../components/Meta";
 import { PageContainer } from "../components/PageContainer";
 import { PageContent } from "../components/PageContent";
 import { ClickEventContext } from "../utils/analytics";
@@ -67,6 +68,7 @@ const Download: NextPage = () => {
 
 	return (
 		<PageContainer>
+			<Metadata title="Download file" noIndex />
 			<Header />
 			<PageContent>
 				<Conditional in={displayError}>

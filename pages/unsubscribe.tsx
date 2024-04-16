@@ -67,6 +67,7 @@ const Unsubscribe: NextPage = () => {
 		<Metadata
 			title="Unsubscribe - Get Link"
 			description="Unsubscribe to services offered by Get Link"
+			noIndex
 		/>
 		<Header />
 		<PageContent>
