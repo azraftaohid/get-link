@@ -88,22 +88,44 @@ const About: NextPage = () => {
 					</div>
 				</Section>
 				<Section>
-					<Lead>Original quality</Lead>
+					<Lead>Experience True Quality</Lead>
 					<Proposition>
-						Photos along with any other types of files are shared without any level of compressions.
-						Meaning, when shared, viewers will be able to see the exact copy of the file you originally
-						uploaded. This is one of the main motives behind this project.
+						Say goodbye to file compression woes! With Get-Link, your photos and files are shared in their 
+						original, pristine quality. Whether it&apos;s high-resolution images or important documents, 
+						rest assured that your recipients will receive an exact copy of what you uploaded. We&apos;re 
+						committed to preserving the integrity of your files, making us the go-to choice for those who 
+						demand the best.
 					</Proposition>
 				</Section>
 				<Section>
-					<Lead>Security</Lead>
+					<Lead>Seamless Security</Lead>
 					<Proposition>
-						By default, links are generated with random, and unguessable characters &mdash; making it
-						extremely hard for unintended users to find your files.
+						Your privacy is our top priority. We don&apos;t peek, poke, or prod. On top, Get-Link generates 
+						links with random, unguessable characters by default, ensuring that only intended recipients have 
+						access to your files. Our robust security measures make it virtually impossible for unauthorized 
+						users to intercept or access your sensitive data. Share with confidence, knowing that your files 
+						are safe and secure.
+					</Proposition>
+				</Section>
+				<Section>
+					<Lead>Lightning-fast and Intuitive</Lead>
+					<Proposition>
+						Get-Link is designed for speed and simplicity. With just a few taps, you can effortlessly create 
+						shareable links for your files. Our user-friendly interface makes the process quick and intuitive
+						&nbsp;&mdash;&nbsp;no unnecessary steps or complications. Get in, get your link, and get on with 
+						your day. It&apos;s that easy.
+					</Proposition>
+				</Section>
+				<Section>
+					<Lead>Accessibility</Lead>
+					<Proposition>
+						With Get-Link, there&apos;s no need to download or install any additional apps. Our web-based 
+						platform ensures seamless access from most devices with an internet connection. Whether you&apos;re 
+						on a smartphone, tablet, laptop, or desktop computer, you can create and share links with ease.
 					</Proposition>
 				</Section>
 				<Section noSep>
-					<Lead>Frequently asked questions</Lead>
+					<Lead>Frequently Asked Questions</Lead>
 					<Proposition>
 						While Get-Link is built in a way enabling anyone to start using it, we prepared answers to some{" "}
 						<abbr title="Frequently Asked Questions">FAQs</abbr>.
@@ -146,7 +168,7 @@ const About: NextPage = () => {
 						question="What type of files are supported?"
 						answer={
 							<>
-								Essentially any type of file is supported by Get Link. However, most of the common format of the 
+								Essentially any type of file is supported by Get-Link. However, most of the common format of the 
 								following type of files are available for previews:
 								<Standout>
 									image, video, audio, text, pdf, markup/code.
