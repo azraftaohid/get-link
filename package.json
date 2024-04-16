@@ -17,8 +17,8 @@
   "resolutions": {
     "@types/react": "17.0.38",
     "pdfjs-dist": "2.13.216",
-    "minimist": "1.2.6",
-    "protobufjs": "6.11.3"
+    "minimist": "^1.2.6",
+    "protobufjs": "^6.11.3"
   },
   "dependencies": {
     "@aws-sdk/xhr-http-handler": "^3.485.0",
