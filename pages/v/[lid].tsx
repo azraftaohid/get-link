@@ -17,13 +17,19 @@ import { useRouter } from "next/router";
 import { ParsedUrlQuery } from "querystring";
 import { useEffect, useState } from "react";
 import Alert from "react-bootstrap/Alert";
+import ButtonGroup from "react-bootstrap/ButtonGroup";
+import Dropdown from "react-bootstrap/Dropdown";
+import DropdownItem from "react-bootstrap/DropdownItem";
+import DropdownMenu from "react-bootstrap/DropdownMenu";
+import DropdownToggle from "react-bootstrap/DropdownToggle";
+import Spinner from "react-bootstrap/Spinner";
 import Masonry, { MasonryProps } from "react-masonry-css";
 import { AssurePrompt } from "../../components/AssurePrompt";
 import { Button } from "../../components/Button";
+import { FileCard } from "../../components/cards/FileCard";
 import { Conditional } from "../../components/Conditional";
 import { CopyButton } from "../../components/CopyButton";
 import { ExpandButton } from "../../components/ExpandButton";
-import { FileCard } from "../../components/cards/FileCard";
 import { Footer } from "../../components/Footer";
 import { Header } from "../../components/Header";
 import { Icon } from "../../components/Icon";
@@ -32,6 +38,7 @@ import { Loading } from "../../components/Loading";
 import { Metadata } from "../../components/Meta";
 import { PageContainer } from "../../components/PageContainer";
 import { PageContent } from "../../components/PageContent";
+import { ViewHeader } from "../../components/ViewHeader";
 import { createCFID, FileData, FileField, getFileDocs, getFileKey, getThumbnailKey } from "../../models/files";
 import { getLinkRef, LinkData, LinkField, releaseLink, Warning } from "../../models/links";
 import { OrderField } from "../../models/order";
@@ -47,13 +54,14 @@ import { initModernizr } from "../../utils/modernizr";
 import { descriptiveNumber } from "../../utils/numbers";
 import { whenTruthy } from "../../utils/objects";
 import { quantityString } from "../../utils/quantityString";
+import { makeShortlink } from "../../utils/shortlinks";
 import { getDownloadURL, getMetadata, requireObject } from "../../utils/storage";
+import { copyToClipboard } from "../../utils/system";
 import { makeProcessedFile, ProcessedFileData } from "../../utils/useProcessedFiles";
 import { useToast } from "../../utils/useToast";
 import { useUser } from "../../utils/useUser";
 import { StaticSnapshot, toStatic } from "../api/staticSnapshot";
 import { makeDownloadParams } from "../d";
-import { ViewHeader } from "../../components/ViewHeader";
 
 const FETCH_LIMIT = 12;
 
@@ -113,6 +121,8 @@ const View: NextPage<Partial<StaticProps>> = ({
 
 	const [showDownloadPrompt, setShowDownloadPrompt] = useState(false);
 	const [stepOutDownload, setStepOutDownload] = useState(false);
+
+	const [shortlinkState, setShortlinkState] = useState<"none" | "loading">("none");
 
 	const [files, setFiles] = useState(initFiles);
 	const [status, setStatus] = useState<"none" | "fetching" | "end" | "error">(files.length === fileCount ? "end" : "none");
@@ -196,8 +206,8 @@ const View: NextPage<Partial<StaticProps>> = ({
 				title={title || "Files - Get Link"}
 				description="Create and instantly share link of files and images."
 				image={
-					whenTruthy(thumbnail || (cover.type.startsWith("image/") && cover.url), 
-					url => `/_next/image?url=${url}&w=1200&q=75`) || findFileIcon(cover.type)
+					whenTruthy(thumbnail || (cover.type.startsWith("image/") && cover.url),
+						url => `/_next/image?url=${url}&w=1200&q=75`) || findFileIcon(cover.type)
 				}
 			/>
 			<Header />
@@ -207,29 +217,65 @@ const View: NextPage<Partial<StaticProps>> = ({
 					secondaryText={strCreateTime}
 					tertiaryText={descriptiveNumber(fileCount) + " " + quantityString("file", "files", fileCount)}
 					actions={<>
-						<CopyButton
-							variant="outline-vivid"
-							content={createViewLink(lid, true)}
-							left={<Icon name="link" size="sm" />}
-							onClick={() => logClick("share")}
-						>
-							<span className="d-none d-md-inline">Share</span>
-						</CopyButton>
-						<Button
-							className="ms-2"
-							variant="outline-vivid"
-							left={<Icon name="download" size="sm" />}
-							href={fileCount === 1 && files[0]
-								? `d?${makeDownloadParams(files[0].directLink, files[0].name || "", files[0].size < THRESHOLD_DIRECT_DOWNLOAD ? "built-in" : "browser_default")}`
-								: undefined}
-							target="_blank"
-							onClick={() => {
-								if (fileCount === 1 && files[0]) return;
-								setShowDownloadPrompt(true);
-							}}
-						>
-							<span className="d-none d-md-inline">Download</span>
-						</Button>
+						<Dropdown as={ButtonGroup} autoClose={"outside"} onSelect={async (key) => {
+							if (key === "shortlink") {
+								setShortlinkState("loading");
+
+								let shortlink: string;
+								try {
+									shortlink = await makeShortlink(createViewLink(lid));
+								} catch (error) {
+									console.error("Shortlink create failed:", error);
+									makeToast("Sorry, we couldn't make that shortlink!", "error");
+									setShortlinkState("none");
+									return;
+								}
+
+								try {
+									await copyToClipboard(shortlink);
+								} catch (error) {
+									console.error("Copy to clipboard failed:", error);
+									makeToast("Here is your shortlink: " + shortlink);
+									return;
+								} finally {
+									setShortlinkState("none");
+								}
+
+								makeToast("Shortlink copied to clipboard.");
+							}
+						}}>
+							<CopyButton
+								variant="outline-vivid"
+								content={createViewLink(lid, true)}
+								left={<Icon name="link" size="sm" />}
+								onClick={() => logClick("share")}
+							>
+								<span className="d-none d-md-inline">Share</span>
+							</CopyButton>
+							<Button
+								variant="outline-vivid"
+								left={<Icon name="download" size="sm" />}
+								href={fileCount === 1 && files[0]
+									? `d?${makeDownloadParams(files[0].directLink, files[0].name || "", files[0].size < THRESHOLD_DIRECT_DOWNLOAD ? "built-in" : "browser_default")}`
+									: undefined}
+								target="_blank"
+								onClick={() => {
+									if (fileCount === 1 && files[0]) return;
+									setShowDownloadPrompt(true);
+								}}
+							>
+								<span className="d-none d-md-inline">Download</span>
+							</Button>
+							<DropdownToggle split variant="outline-vivid" id="share-options-dropdown" />
+							<DropdownMenu>
+								<DropdownItem eventKey={"shortlink"}>
+									{shortlinkState === "none" 
+										? <Icon className="align-middle" name="content_copy" size="sm" />
+										: <Spinner as="span" role="output" animation="border" size="sm" aria-hidden />}{" "}
+									Copy shortlink
+								</DropdownItem>
+							</DropdownMenu>
+						</Dropdown>
 						{isUser && <Button
 							className="ms-2"
 							variant="outline-danger"
