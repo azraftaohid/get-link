@@ -9,12 +9,15 @@ export function getFunctions(app?: FirebaseApp, region: Region = Region.ASIA_SOU
 	return getInstance(app, region);
 }
 
-export function connectFunctionsEmulator(functionsInstance: Functions, host: string, port: number) {
+export function setupFunctionParams(host: string, port: number) {
 	globalThis.funcHost = host;
 	globalThis.funcPort = port;
 	mHost = host;
 	mPort = port;
+}
 
+export function connectFunctionsEmulator(functionsInstance: Functions, host: string, port: number) {
+	setupFunctionParams(host, port);
 	connectEmulator(functionsInstance, host, port);
 }
 

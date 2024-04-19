@@ -6,7 +6,7 @@ import {
 	setUserId,
 } from "firebase/analytics";
 import { getApps, initializeApp } from "firebase/app";
-import { CustomProvider, ReCaptchaEnterpriseProvider, initializeAppCheck } from "firebase/app-check";
+import { AppCheck, CustomProvider, ReCaptchaEnterpriseProvider, initializeAppCheck } from "firebase/app-check";
 import {
 	browserLocalPersistence,
 	browserSessionPersistence,
@@ -24,6 +24,13 @@ import { appcheckDebugToken, firebaseConfig, siteKey } from "./configs";
 import { connectFunctionsEmulator, getFunctions } from "./functions";
 
 export const FIREBASE_APP_NAME = "[DEFAULT]";
+
+let appCheck: AppCheck;
+
+export function requireAppCheck() {
+	if (!appCheck) throw new Error("AppCheck instance not found. You must call #initFirebase function first.");
+	return appCheck;
+}
 
 export function initFirebase() {
 	const apps = getApps();
@@ -85,7 +92,7 @@ export function initFirebase() {
 		});
 	}
 
-	initializeAppCheck(app, {
+	appCheck = initializeAppCheck(app, {
 		provider: appCheckProvider,
 		isTokenAutoRefreshEnabled: true,
 	});
