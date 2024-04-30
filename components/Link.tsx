@@ -15,25 +15,22 @@ export const Link: React.FunctionComponent<React.PropsWithChildren<LinkProps>> =
 	children,
 	...rest
 }) => {
-	return (
-		<NextLink href={href}>
-			<a
-				className={mergeNames(variant && (variantMapping[variant] || `link-${variant}`), className)}
-				target={newTab ? "_blank" : undefined}
-				{...rest}
-			>
-				{children}
-			</a>
-		</NextLink>
-	);
+	return <NextLink
+		href={href}
+        className={mergeNames(variant && (variantMapping[variant] || `link-${variant}`), className)}
+        target={newTab ? "_blank" : undefined}
+        {...rest}
+	>
+		{children}
+    </NextLink>;
 };
 
 export default Link;
 
 export type LinkVariant = "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "reset" | "alert";
 
-export interface LinkProps
-	extends React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement> {
+export type LinkProps = Parameters<typeof NextLink>[0] & {
+	className?: string,
 	href: string;
 	newTab?: boolean;
 	target?: never;

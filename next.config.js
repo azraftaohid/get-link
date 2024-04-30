@@ -48,7 +48,7 @@ const nextConfig = {
 	basePath: "",
 	trailingSlash: false,
 	distDir: "./.next",
-	reactStrictMode: true,
+	reactStrictMode: false,
 	compiler: {
 		removeConsole: process.env.NODE_ENV === "production" && {
 			exclude: ["error"],

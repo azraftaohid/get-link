@@ -117,8 +117,7 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 									on{" "}
 									<cite title="Facebook is an American online social media and social networking service owned by Meta Platforms.">
 										Facebook
-									</cite>
-									.
+									</cite>.
 								</p>
 								<small className="d-block mb-3">
 									<Required /> Required

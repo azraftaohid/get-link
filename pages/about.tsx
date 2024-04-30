@@ -1,5 +1,5 @@
 import { NextPage } from "next";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import React, { useState } from "react";
 import Figure from "react-bootstrap/Figure";
 import { Conditional } from "../components/Conditional";

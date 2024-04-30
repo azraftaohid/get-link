@@ -95,15 +95,15 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 		>
 			{(!useFallback &&
 				((type?.startsWith("image/") && (
-					<a className="mx-auto" href={src} title={name || "Orginal image"} target="_blank" rel="noreferrer">
+					<a href={src} title={name || "Original image"} target="_blank" rel="noreferrer">
 						<Image
+							className="fit-contain w-100 h-100"
 							src={src}
 							alt={name || "Image"}
 							placeholder={imageLoaded ? "empty" : "blur"}
 							width={width}
 							height={height}
 							sizes={`(max-width: 576px) 100vw, (max-width: 992px) ${100 / Math.min(fileCount, 2)}vw, ${Math.ceil(100 / Math.min(fileCount, 3))}vw`}
-							objectFit="contain"
 							blurDataURL={placeholderDataUrl || getSolidStallImage()}
 							onLoadingComplete={() => {
 								setImageLoaded(true);

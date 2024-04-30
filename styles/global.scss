@@ -89,7 +89,19 @@ ol {
   @extend .my-3;
 }
 
+[data-display-theme="dark"] {
+  display: none;
+}
+
 @include color-mode(dark) {
+  [data-display-theme="light"] {
+    display: none;
+  }
+
+  [data-display-theme="dark"] {
+    display: unset;
+  }
+
   #root {
     background-color: $black;
   }

@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { Dimension, DimensionField } from "../models/dimension";
-import { createFID, deleteFile, FileField, getFileKey, getThumbnailKey } from "../models/files";
+import { FileField, createFID, deleteFile, getFileKey, getThumbnailKey } from "../models/files";
 import { Link as LinkObject } from "../models/links";
 import { NotFound } from "../utils/errors/NotFound";
 import {
-	createFileNamePrefix,
 	FileCustomMetadata,
 	FilesStatus,
+	createFileNamePrefix,
 	getFileType,
 	getImageDimension,
 	getPdfDimension,
@@ -120,8 +120,10 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 
 	// attempts to upload file, whenever uid or file reference has changed
 	useEffect(() => {
+		console.debug("Checking file...");
 		if (!file || !uid || pendingCancel.current) return;
 
+		console.debug("Preparing file for upload: " + file.name);
 		const handler = async () => {
 			attempt.current++;
 			
@@ -231,7 +233,10 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 		else task = handler();
 
 		return () => {
-			task?.then(({ upload }) => {
+			if (!task) return;
+
+			console.debug("Cancelling previous upload.");
+			task.then(({ upload }) => {
 				upload.cancel();
 				upload.removeAllListeners();
 			});
@@ -245,6 +250,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 	}, [control, file, resume]);
 
 	useEffect(() => {
+		console.debug(`File change detected [name: ${file?.name}]`);
 		if (file) {
 			if (!stateless.current.files.includes(file)) stateless.current.add(file);
 			

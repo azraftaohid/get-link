@@ -2,7 +2,7 @@ import { getAnalytics, logEvent } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 import type { AppProps, NextWebVitalsMetric } from "next/app";
 import Head from "next/head";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import Script from "next/script";
 import React, { useEffect, useMemo, useState } from "react";
 import Toast from "react-bootstrap/Toast";
