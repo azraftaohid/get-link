@@ -8,7 +8,7 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 
 function ensureEnvVariablesDefined(names) {
 	for (const name of names) {
-		if (!process.env[name]) throw new Error(`Environmetnal variabel '${name}' is missing.`);
+		if (!process.env[name]) throw new Error(`Environment variable '${name}' is missing.`);
 	}
 }
 
@@ -48,7 +48,7 @@ const nextConfig = {
 	basePath: "",
 	trailingSlash: false,
 	distDir: "./.next",
-	reactStrictMode: false,
+	reactStrictMode: true,
 	compiler: {
 		removeConsole: process.env.NODE_ENV === "production" && {
 			exclude: ["error"],

@@ -88,7 +88,7 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 
 	const [progress, setProgress] = useState(0);
 
-	// stateless function: assiciateWithLink; binds the uploaded file with provided link
+	// stateless function: associateWithLink; binds the uploaded file with provided link
 	const associateWithLink = async (fid: string, file: File) => {
 		if (!link) return;
 
@@ -190,8 +190,8 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 			setControl(upload);
 
 			upload.on("progress", ({ uploadedBytes, totalBytes = uploadedBytes }) => {
-				const perct = Math.floor((uploadedBytes / totalBytes) * 100);
-				setProgress(perct);
+				const perc = Math.floor((uploadedBytes / totalBytes) * 100);
+				setProgress(perc);
 			}).on("state_changed", ({ state }) => {
 				console.debug(`Upload state changed to ${state}.`);
 				switch (state) {
@@ -249,16 +249,6 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 		else control?.pause();
 	}, [control, file, resume]);
 
-	useEffect(() => {
-		console.debug(`File change detected [name: ${file?.name}]`);
-		if (file) {
-			if (!stateless.current.files.includes(file)) stateless.current.add(file);
-			
-			const remover = stateless.current.remove;
-			return () => { remover(file); };
-		}
-	}, [file]);
-
 	return <div>
 		<FilePreview
 			className="border border-secondary border-bottom-0 rounded-0 rounded-top"
@@ -267,12 +257,14 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 				switch (control?.getState()) {
 					case "paused":
 						control.cancel();
+						// rest will be handled by upload event (cancel) listener
 						return;
 					case "error":
 						control.cancel();
-						if (file) stateless.current.handleCancel(file);
-						return;
-					case "success": {
+						// event emitter may not emit failed event given the status is already error
+						// hence, we are handling part of cancel here, afterwards
+						break;
+					case "success":
 						if (uploadedFile) {
 							deleteFile(uploadedFile.fid).catch(err => {
 								console.error(`Error deleting file from the server [file: ${file?.name}; err: ${err}]`);
@@ -284,19 +276,14 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 							link?.increaseDownloadSize(-uploadedFile.size);
 							fileDocs.delete(uploadedFile.fid);
 						}
-
-						if (file) stateless.current.handleCancel(file);
-						
-						setStatus("files:upload-cancelled");
 						break;
-					}
 					default:
 						if (control) return control.cancel();
 				}
 
 				pendingCancel.current = true;
 				if (file) stateless.current.handleCancel(file);
-
+				
 				setStatus("files:upload-cancelled");
 			}}
 			closable={!disabled && !!(uploadedFile || progress < 100 || (file && hasFailed(file)))}

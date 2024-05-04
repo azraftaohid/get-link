@@ -3,12 +3,12 @@ import React, { createContext, useEffect, useMemo, useRef } from "react";
 import { createFileDoc } from "../../models/files";
 import { Link as LinkObj } from "../../models/links";
 import { AuthStatus } from "../../utils/auths";
+import { now } from "../../utils/dates";
 import { FilesStatus } from "../../utils/files";
 import { useParallelTracker } from "../../utils/useParallelTracker";
 import { useProgressTracker } from "../../utils/useProgressTracker";
 import { useStatus } from "../../utils/useStatus";
 import { FileUploadProps } from "../FileUpload";
-import { now } from "../../utils/dates";
 
 const MAX_CONCURRENT_UPLOAD = 2;
 
@@ -125,10 +125,10 @@ export type BatchUploadContextInterface = {
 };
 
 export type BatchUploadConfig = {
-	link: LinkObj,
+	link: LinkObj, // uploaded files will be linked to this link reference
 	method?: FileUploadProps["method"],
-	maxFiles?: number, // maximum number of files to be uploaded; enter 0 for no limites
-	maxSize?: number,
+	maxFiles?: number, // maximum number of files to be uploaded; enter 0 for no limits
+	maxSize?: number, // max size of each file
 	disabled?: boolean,
 }
 
