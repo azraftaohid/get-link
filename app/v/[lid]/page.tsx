@@ -149,8 +149,9 @@ export async function generateMetadata({ params }: { params: { lid: string } }):
 	const data = await getData(params.lid);
 	const { thumbnail, cover } = data;
 
+	// Encode url value because the Metadata API converts https:// to https:/
 	const image = whenTruthy(thumbnail || (cover.type.startsWith("image/") && cover.url),
-		url => `/_next/image?url=${url}&w=1200&q=75`) || findFileIcon(cover.type);
+		url => `/_next/image?url=${encodeURIComponent(url)}&w=1200&q=75`) || findFileIcon(cover.type);
 
 	return {
 		title: data.documentData[LinkField.TITLE] || "Files",
