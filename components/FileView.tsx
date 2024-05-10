@@ -1,3 +1,5 @@
+"use client";
+
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -11,7 +13,7 @@ import { Link } from "./Link";
 import { RawText } from "./RawText";
 import { Video } from "./Video";
 
-const PDF = dynamic(() => import("./PDFView"), { ssr: false });
+const Pdf = dynamic(() => import("./PdfView"), { ssr: false });
 
 const NoPreview: React.FunctionComponent<React.PropsWithChildren<{ src: string; name?: string | null, type?: string | null }>> = ({
 	type,
@@ -105,7 +107,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 							height={height}
 							sizes={`(max-width: 576px) 100vw, (max-width: 992px) ${100 / Math.min(fileCount, 2)}vw, ${Math.ceil(100 / Math.min(fileCount, 3))}vw`}
 							blurDataURL={placeholderDataUrl || getSolidStallImage()}
-							onLoadingComplete={() => {
+							onLoad={() => {
 								setImageLoaded(true);
 								setUseFallback(false);
 							}}
@@ -126,7 +128,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 							src={src}
 						/>
 					)) || (type === "application/pdf" && (
-						<PDF file={src} width={width} height={height} size={size} />
+						<Pdf file={src} width={width} height={height} size={size} />
 					)))) || <NoPreview src={src} name={name} type={type} />}
 		</div>
 	);

@@ -27,6 +27,7 @@
 .stall {
   .progress {
     height: 0.4rem;
+    --#{$prefix}progress-bar-transition: width .3s ease;
   }
 }
 
@@ -107,7 +108,7 @@ ol {
   }
 
   #nav {
-    @extend .bg-dark;
+    background-color: $dark;
   }
 
   .nav {
@@ -120,56 +121,52 @@ ol {
   }
 
   .file-preview {
-    @extend .bg-dark;
+    background-color: $dark;
   }
 
   .btn-outline-vivid {
-    @extend .btn-outline-light;
+    @include button-outline-variant($light);
   }
 
   .border-vivid {
-    @extend .border-light;
-  }
-
-  .page-link {
-    @extend .border, .border-secondary, .bg-gray-900;
+    border-color: $light;
   }
 
   .standout {
-    @extend .bg-gray-900;
+    background-color: $gray-900;
   }
 
   .border-feedback {
     &:active {
-      @extend .border, .border-light;
+      border: var(--#{$prefix}border-width) var(--#{$prefix}border-style) var(--#{$prefix}light);
     }
   }
 }
 
 @include color-mode(light) {
   #nav {
-    @extend .bg-light;
+    background-color: $light;
   }
 
   .file-preview {
-    @extend .bg-light;
+    background-color: $light;
   }
 
   .btn-outline-vivid {
-    @extend .btn-outline-dark;
+    @include button-outline-variant($dark);
   }
 
   .border-vivid {
-    @extend .border-dark;
+    border-color: $dark;
   }
 
   .standout {
-    @extend .bg-gray-100;
+    background-color: $gray-100;
   }
 
   .border-feedback {
     &:active {
-      @extend .border, .border-dark;
+      border: var(--#{$prefix}border-width) var(--#{$prefix}border-style) var(--#{$prefix}dark);
     }
   }
 }

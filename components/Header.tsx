@@ -1,10 +1,11 @@
+"use client";
+
+import { Theme } from "@/utils/theme";
 import { getAuth } from "firebase/auth";
-import Link from "next/link";
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
-import NavLink from "react-bootstrap/NavLink";
 import Navbar from "react-bootstrap/Navbar";
 import NavbarBrand from "react-bootstrap/NavbarBrand";
 import NavbarCollapse from "react-bootstrap/NavbarCollapse";
@@ -12,12 +13,12 @@ import NavbarToggle from "react-bootstrap/NavbarToggle";
 import styles from "../styles/header.module.scss";
 import { logClick } from "../utils/analytics";
 import { mergeNames } from "../utils/mergeNames";
-import { Theme, useTheme } from "../utils/useTheme";
+import { useTheme } from "../utils/useTheme";
 import { useUser } from "../utils/useUser";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
 import { Image } from "./Image";
-import { RouteIndicator } from "./RouteIndicator";
+import Link from "./Link";
 import { SignInDialog } from "./SignInDialog";
 
 const navs: { title: string; pathname: string }[] = [
@@ -36,7 +37,8 @@ const navs: { title: string; pathname: string }[] = [
 ];
 
 export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
-	const router = useRouter();
+	const pathname = usePathname();
+
 	const { user } = useUser();
 	const { current: theme, setTheme } = useTheme();
 
@@ -66,17 +68,17 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 							styles.navItems,
 							"position-md-absolute top-md-50 start-md-50 translate-middle-md"
 						)}
-						activeKey={router.pathname}
+						activeKey={pathname || undefined}
 					>
 						{navs.map((nav) => (
 							<Link
 								key={nav.pathname}
 								href={nav.pathname}
+								data-rr-ui-event-key={nav.pathname}
+								variant="nav"
 								prefetch={false}
-								passHref
-								legacyBehavior
 							>
-								<NavLink eventKey={nav.pathname}>{nav.title}</NavLink>
+								{nav.title}
 							</Link>
 						))}
 					</Nav>
@@ -115,6 +117,5 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 			</Container>
 		</Navbar>
 		<SignInDialog show={showSignIn} onHide={() => setSignIn(false)} />
-		<RouteIndicator />
 	</>;
 };

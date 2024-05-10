@@ -1,6 +1,6 @@
 import { getAnalytics, logEvent } from "firebase/analytics";
 import { nanoid } from "nanoid";
-import { Theme } from "./useTheme";
+import { Theme } from "./theme";
 
 export const KEY_EID = "experience.id";
 export const KEY_SID = "experience.sid";

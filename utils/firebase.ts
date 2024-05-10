@@ -40,6 +40,7 @@ export function initFirebase() {
 		return currentApp;
 	}
 
+	console.debug("Initializing Firebase app.");
 	const app = initializeApp(firebaseConfig);
 
 	const firestore = getFirestore(app);

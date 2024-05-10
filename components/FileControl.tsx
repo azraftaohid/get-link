@@ -1,5 +1,5 @@
+import { makeDownloadParams } from "@/app/d/helpers";
 import { useState } from "react";
-import { makeDownloadParams } from "../pages/d";
 import { ClickEventContext, logClick } from "../utils/analytics";
 import { THRESHOLD_DIRECT_DOWNLOAD, directDownloadFromUrl } from "../utils/downloads";
 import { FetchError } from "../utils/errors/FetchError";

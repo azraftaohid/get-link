@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ProgressBar, { ProgressBarProps } from "react-bootstrap/ProgressBar";
 import { mergeNames } from "../utils/mergeNames";
 
@@ -11,20 +11,22 @@ export const ShortLoading: React.FunctionComponent<React.PropsWithChildren<Short
 	striped = true,
 	animated,
 	variant,
-	reset,
+	initPercentage = 0,
+	stale,
 	...rest
 }) => {
-	const iteration = useRef(0);
-	const [percentage, setPercentage] = useState(0);
+	const [iteration, setIteration] = useState(0);
+	const [percentage, setPercentage] = useState(Math.max(0, initPercentage));
 
 	useEffect(() => {
-		if (reset) return;
+		if (stale) return;
 
 		const setter = () => {
-			const i = iteration.current++;
+			const i = iteration;
+			setIteration(c => ++c);
 			setPercentage(
 				i === 0
-					? 60
+					? 30
 					: (current) => {
 							const proposed = calcNext(current, i);
 							return proposed - current < 0.1 ? current : proposed;
@@ -32,10 +34,16 @@ export const ShortLoading: React.FunctionComponent<React.PropsWithChildren<Short
 			);
 		};
 
-		const delay = 3000 * (iteration.current / (10 + 6 * (iteration.current - 1)));
+		const delay = 3000 * (iteration / (10 + 6 * (iteration - 1)));
 		const id = setTimeout(setter, delay);
 		return () => clearTimeout(id);
-	});
+	}, [iteration, stale]);
+
+	useEffect(() => {
+		const newPerc = Math.min(100, Math.max(0, initPercentage));
+		setPercentage(newPerc);
+		if (newPerc === 0) setIteration(0);
+	}, [initPercentage]);
 
 	return (
 		<div className={mergeNames("stall", className)} {...rest}>
@@ -47,5 +55,6 @@ export const ShortLoading: React.FunctionComponent<React.PropsWithChildren<Short
 export interface ShortLoadingProps
 	extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>,
 		Pick<ProgressBarProps, "striped" | "animated" | "variant"> {
-	reset?: boolean;
+	initPercentage?: number, // Starting progress percentage. Value below 0 and above 100 will be counted as 0 and 100 respectively
+	stale?: boolean, // Stop increasing progress
 }

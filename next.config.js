@@ -127,6 +127,9 @@ const nextConfig = {
 			})
 		);
 
+		// required by react-pdf on nextjs
+		config.resolve.alias.canvas = false;
+
 		return config;
 	},
 };

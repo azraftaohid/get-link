@@ -1,6 +1,6 @@
 import { serverTimestamp, WithFieldValue } from "firebase/firestore";
 import { Formik } from "formik";
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 import React, { useRef, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import Form from "react-bootstrap/Form";
@@ -39,7 +39,7 @@ const schema = yup.object().shape({
 });
 
 const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialogProps>> = (props) => {
-	const { asPath } = useRouter();
+	const pathname = usePathname();
 
 	const inputState = useRef({
 		name: "",
@@ -77,7 +77,7 @@ const ReportDialog: React.FunctionComponent<React.PropsWithChildren<ReportDialog
 						[ReportField.NAME]: { [NameField.SURNAME]: values.name },
 						[ReportField.EMAIL]: values.email,
 						[ReportField.MESSAGE]: values.message,
-						[ReportField.PATH]: asPath,
+						[ReportField.PATH]: pathname || "",
 						[ReportField.SESSION]: sessionStorage.getItem(KEY_SID) || "",
 						[ReportField.CREATE_TIME]: serverTimestamp(),
 						[ReportField.TICKET]: newTicketId,

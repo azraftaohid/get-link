@@ -127,16 +127,22 @@ $utilities: map-merge(
             responsive: true,
           )
       ),
+      "z-index": map-merge(map-get($utilities, z-index), (
+        values: map-merge(map-get(map-get($utilities, z-index), values), (
+          10000: 10000,
+        ))
+      ))
     )
 );
 
 // Configuration
 @import "~bootstrap/scss/mixins";
 
+// Override bootstrap color-mode
+@import "utils/app-theme.scss";
+
 // Helpers
 @import "~bootstrap/scss/helpers";
 
 // Utilities
 @import "~bootstrap/scss/utilities/api";
-
-@import "utils/app-theme";

@@ -1,12 +1,14 @@
+"use client";
+
+import { mergeNames } from "@/utils/mergeNames";
+import { useToast } from "@/utils/useToast";
 import { getAuth, signOut } from "firebase/auth";
-import Link from "next/link";
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 import React from "react";
 import Nav from "react-bootstrap/Nav";
 import NavItem from "react-bootstrap/NavItem";
-import { mergeNames } from "../../utils/mergeNames";
-import { useToast } from "../../utils/useToast";
 import { Button } from "../Button";
+import Link from "../Link";
 
 const navs: { title: string, pathname: string }[] = [
 	{
@@ -23,14 +25,14 @@ export const AccountNavigation: React.FunctionComponent<AccountNavigationProps> 
 	className,
 	...rest
 }) => {
-	const router = useRouter();
+	const pathname = usePathname();
 	const { makeToast } = useToast();
 
 	return (
         <div className={mergeNames("d-flex flex-row flex-md-column w-md-25 overflow-x-scroll overflow-x-md-auto", className)} {...rest}>
             <Nav className={"flex-nowrap flex-md-column"} variant={"pills"}>
                 {navs.map((nav, i) => <NavItem key={nav.pathname} className={mergeNames(i !== navs.length - 1 && "mb-md-2")}>
-                    <Link className={mergeNames("nav-link", router.pathname === nav.pathname && "active")} href={nav.pathname}>
+                    <Link className={mergeNames("nav-link", pathname === nav.pathname && "active")} href={nav.pathname}>
                         {nav.title}
                     </Link>
                 </NavItem>)}

@@ -1,14 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { hasWindow } from "./common";
+import { Theme } from "./theme";
 import { useMediaQuery } from "./useMediaQuery";
 
 const KEY_THEME = "theme";
-
-export enum Theme {
-	LIGHT = "light",
-	DARK = "dark",
-	DEFAULT = LIGHT,
-}
 
 export const useTheme = (): ThemePops => {
 	const savedTheme: Theme | null = hasWindow ? (localStorage.getItem(KEY_THEME) as Theme | null) : null;
