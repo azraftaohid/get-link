@@ -5,10 +5,11 @@ import { Loading } from "@/components/Loading";
 import { UserWithEmail } from "@/components/ReauthDialog";
 import { KEY_EMAIL_TO_UPDATE, KEY_SIGN_IN_EMAIL, reauthWithLink, recoverEmail, signInWithLink, updateEmail } from "@/utils/auths";
 import { makeContinueUrl } from "@/utils/urls";
+import { useAppRouter } from "@/utils/useAppRouter";
 import { useToast } from "@/utils/useToast";
 import { FirebaseError } from "firebase/app";
 import { getAdditionalUserInfo, getAuth, onAuthStateChanged } from "firebase/auth";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "react-bootstrap";
 
@@ -50,7 +51,7 @@ const completeMessage: Partial<Record<State, { variant?: string, body: React.Rea
 };
 
 export default function Page({ params }: Readonly<{ params: { mode: string } }>) {
-	const router = useRouter();
+	const router = useAppRouter();
 	const search = useSearchParams();
 	const { makeToast } = useToast();
 

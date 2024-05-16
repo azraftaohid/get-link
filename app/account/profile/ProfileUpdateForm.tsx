@@ -2,10 +2,10 @@ import { AssurePrompt } from "@/components/AssurePrompt";
 import { ReauthDialog, UserWithEmail } from "@/components/ReauthDialog";
 import { CardicForm } from "@/components/forms/CardicForm";
 import TextField from "@/components/forms/TextField";
+import { useAppRouter } from "@/utils/useAppRouter";
 import { useToast } from "@/utils/useToast";
 import { FirebaseError } from "firebase/app";
 import { User, deleteUser, updateProfile } from "firebase/auth";
-import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import * as yup from "yup";
 
@@ -21,7 +21,7 @@ const nameSchema = yup.object().shape({
 export default function ProfileUpdateForm({
 	user,
 }: Readonly<ProfileUpdateFormProps>) {
-	const router = useRouter();
+	const router = useAppRouter();
 	const { makeToast } = useToast();
 
 	const [state, setState] = useState<"none" | "loading">("none");

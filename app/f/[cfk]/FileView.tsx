@@ -14,10 +14,10 @@ import { shouldStepOutDownload } from "@/utils/downloads";
 import { ProcessedFileData } from "@/utils/processedFiles";
 import { formatSize } from "@/utils/strings";
 import { DOMAIN, createAbsoluteUrl } from "@/utils/urls";
+import { useAppRouter } from "@/utils/useAppRouter";
 import { useToast } from "@/utils/useToast";
 import { useUser } from "@/utils/useUser";
 import { formatDate } from "@thegoodcompany/common-utils-js";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Accordion from "react-bootstrap/Accordion";
 import AccordionBody from "react-bootstrap/AccordionBody";
@@ -37,7 +37,7 @@ export default function FileView({
 	width,
 	uploadTimestamp,
 }: Readonly<FileViewProps>) {
-	const router = useRouter();
+	const router = useAppRouter();
 	const { makeToast } = useToast();
 	const { user } = useUser();
 

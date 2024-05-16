@@ -1,5 +1,6 @@
 "use client";
 
+import { isDifferentPage } from "@/utils/urls";
 import NextLink from "next/link";
 import React, { useContext } from "react";
 import { mergeNames } from "../utils/mergeNames";
@@ -27,14 +28,9 @@ export const Link: React.FunctionComponent<React.PropsWithChildren<LinkProps>> =
 		className={mergeNames(variant && (variantMapping[variant] || `link-${variant}`), className)}
 		target={newTab ? "_blank" : undefined}
 		onClick={(evt) => {
-			const current = new URL(window.location.href);
-			const url = new URL(href, current.href);
-
 			const sameTab = !newTab && rest.target !== "_blank" && !evt.ctrlKey && !evt.altKey && !evt.shiftKey && !evt.metaKey; 
-			const differentPage = url.host === current.host && 
-				(url.pathname !== current.pathname || url.search !== current.search);
-			
-			if (sameTab && differentPage) routeIndicator.start();
+			if (sameTab && isDifferentPage(href)) routeIndicator.start();
+
 			onClick?.(evt);
 		}}
 		{...rest}

@@ -4,7 +4,6 @@ import { Button } from "@/components/Button";
 import { Conditional } from "@/components/Conditional";
 import { PageContent } from "@/components/PageContent";
 import { QuotaOverview } from "@/components/QuotaOverview";
-import { RouteIndicatorContext } from "@/components/RouteIndicatorProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { BatchUpload, BatchUploadContext } from "@/components/batch_upload/BatchUpload";
 import { BatchUploadAlert } from "@/components/batch_upload/BatchUploadAlert";
@@ -17,11 +16,11 @@ import { Link as LinkObject, MAX_LEN_LINK_TITLE } from "@/models/links";
 import { OrderField } from "@/models/order";
 import { createViewLink } from "@/utils/files";
 import { mergeNames } from "@/utils/mergeNames";
+import { useAppRouter } from "@/utils/useAppRouter";
 import { useFeatures } from "@/utils/useFeatures";
 import { getFirestore, runTransaction } from "firebase/firestore";
 import { Formik, FormikProps } from "formik";
-import { useRouter } from "next/navigation";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Accordion from "react-bootstrap/Accordion";
 import AccordionBody from "react-bootstrap/AccordionBody";
 import AccordionHeader from "react-bootstrap/AccordionHeader";
@@ -44,8 +43,7 @@ function extractTitle(file: File) {
 }
 
 export default function Page() {
-	const router = useRouter();
-	const routeIndicator = useContext(RouteIndicatorContext);
+	const router = useAppRouter();
 	const features = useFeatures();
 
 	const link = useRef(new LinkObject());
@@ -58,11 +56,8 @@ export default function Page() {
 	const [state, setState] = useState<"none" | "uploading" | "processing" | "submitted">("none");
 
 	useEffect(() => {
-		if (url) {
-			router.push(url);
-			routeIndicator.start();
-		}
-	}, [routeIndicator, router, url]);
+		if (url) router.push(url);
+	}, [router, url]);
 
 	return <PageContent>
 		<BatchUpload

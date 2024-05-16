@@ -22,11 +22,11 @@ import { ProcessedFileData, makeProcessedFile } from "@/utils/processedFiles";
 import { quantityString } from "@/utils/quantityString";
 import { makeShortlink } from "@/utils/shortlinks";
 import { copyToClipboard } from "@/utils/system";
+import { useAppRouter } from "@/utils/useAppRouter";
 import { useToast } from "@/utils/useToast";
 import { useUser } from "@/utils/useUser";
 import { Query, getDocs, limit, query } from "firebase/firestore";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import ButtonGroup from "react-bootstrap/ButtonGroup";
@@ -59,7 +59,7 @@ export default function LinkView({
 	createTime,
 	isDynamic,
 }: Readonly<LinkViewProps>) {
-	const router = useRouter();
+	const router = useAppRouter();
 	const { makeToast } = useToast();
 	const { user } = useUser();
 
