@@ -78,35 +78,16 @@ const nextConfig = {
 		}
 	],
 	images: {
-		domains: [
-			"localhost", "firebasestorage.googleapis.com", "getlink-dev.s3.eu-central-003.backblazeb2.com", 
-			"getlink.s3.eu-central-003.backblazeb2.com"
-		],
 		remotePatterns: [
+			{
+				protocol: "http",
+				hostname: "localhost",
+				pathname: "/**"
+			},
 			{
 				protocol: "https",
 				hostname: "storage.getlinksoft.workers.dev",
 				pathname: "/file/**"
-			},
-			{
-				protocol: "https",
-				hostname: "f003.backblazeb2.com",
-				pathname: "/file/getlink-dev/**"
-			},
-			{
-				protocol: "https",
-				hostname: "f003.backblazeb2.com",
-				pathname: "/file/getlink/**"
-			},
-			{
-				protocol: "https",
-				hostname: "s3.eu-central-003.backblazeb2.com",
-				pathname: "/getlink-dev/**"
-			},
-			{
-				protocol: "https",
-				hostname: "s3.eu-central-003.backblazeb2.com",
-				pathname: "/getlink/**"
 			},
 		]
 	},
