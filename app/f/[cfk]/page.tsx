@@ -13,8 +13,8 @@ import FileView from "./FileView";
 export const dynamicParams = true;
 
 function suppressError(error: unknown, cfk: string, subject: string) {
-	if (error instanceof NotFound) console.warn(`${subject} not found [cfid: ${cfk}]`);
-	else console.error(`Error getting ${subject} [cfid: ${cfk}]: `, error);
+	if (error instanceof NotFound) console.warn(`${subject} not found [cfk: ${cfk}]`);
+	else console.error(`Error getting ${subject} [cfk: ${cfk}]: `, error);
 	return undefined;
 }
 
@@ -50,7 +50,7 @@ const getData = cache(async (cfk: string) => {
 });
 
 export async function generateMetadata({ params }: { params: { cfk: string } }): Promise<Metadata> {
-	const { name, fileKey, thumbnail, directLink, type } = await getData(params.cfk);
+	const { name, fileKey, thumbnail, directLink, type } = await getData(decodeURIComponent(params.cfk));
 
 	const image = whenTruthy(thumbnail || (type.startsWith("image/") && directLink),
 		url => `/_next/image?url=${url}&w=1200&q=75`) || findFileIcon(type);
@@ -67,6 +67,8 @@ export async function generateMetadata({ params }: { params: { cfk: string } }):
 }
 
 export default async function Page({ params }: Readonly<{ params: { cfk: string } }>) {
-	const data = await getData(params.cfk);
-	return <FileView cfk={params.cfk} {...data} />;
+	const cfk = decodeURIComponent(params.cfk);
+	const data = await getData(cfk);
+
+	return <FileView cfk={cfk} {...data} />;
 };
