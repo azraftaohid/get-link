@@ -1,3 +1,5 @@
+"use client";
+
 export function initModernizr() {
 	if (typeof window === "undefined") return;
 	require("./modernizr-custom");

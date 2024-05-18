@@ -46,7 +46,7 @@ export const FileControl: React.FunctionComponent<FileControlProps> = ({
 					variant="outline-vivid"
 					href={
 						stepOutDownload
-							? `d?${makeDownloadParams(directLink, name || "", downloadMechanism)}`
+							? `/d?${makeDownloadParams(directLink, name || "", downloadMechanism)}`
 							: directLink
 					}
 					onClick={async (evt) => {

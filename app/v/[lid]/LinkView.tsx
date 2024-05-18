@@ -181,12 +181,13 @@ export default function LinkView({
 					<Button
 						variant="outline-vivid"
 						left={<Icon name="download" size="sm" />}
-						href={fileCount === 1 && files[0]
-							? `/d?${makeDownloadParams(files[0].directLink, files[0].name || "", files[0].size < THRESHOLD_DIRECT_DOWNLOAD ? "built-in" : "browser_default")}`
-							: undefined}
+						href={files[0] && `/d?${makeDownloadParams(files[0].directLink, files[0].name || "", files[0].size < THRESHOLD_DIRECT_DOWNLOAD ? "built-in" : "browser_default")}`}
 						target="_blank"
-						onClick={() => {
+						download={stepOutDownload ? files[0]?.name || true : false} // step out download is only true when download is not supported by browser
+						onClick={(evt) => {
 							if (fileCount === 1 && files[0]) return;
+
+							evt.preventDefault();
 							setShowDownloadPrompt(true);
 						}}
 					>
