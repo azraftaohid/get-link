@@ -23,7 +23,7 @@ import Accordion from "react-bootstrap/Accordion";
 import AccordionBody from "react-bootstrap/AccordionBody";
 import AccordionHeader from "react-bootstrap/AccordionHeader";
 import AccordionItem from "react-bootstrap/AccordionItem";
-import { BacklinksError, EmptyBacklinks } from "./helperComponents";
+import { BacklinksError, EmptyBacklinks } from "./helpers";
 
 export default function FileView({
 	cfk,

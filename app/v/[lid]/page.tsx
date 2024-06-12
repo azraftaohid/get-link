@@ -6,6 +6,7 @@ import { hasExpired } from "@/utils/dates";
 import { NotFound } from "@/utils/errors/NotFound";
 import { findFileIcon } from "@/utils/files";
 import { initFirebase } from "@/utils/firebase";
+import { compressImage } from "@/utils/images";
 import { whenTruthy } from "@/utils/objects";
 import { ProcessedFileData, makeProcessedFile } from "@/utils/processedFiles";
 import { getDownloadURL, getMetadata, requireObject } from "@/utils/storage";
@@ -15,8 +16,9 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import LinkView from "./LinkView";
-import { FETCH_LIMIT, makeFilesQuery } from "./helperComponents";
+import { FETCH_LIMIT, makeFilesQuery } from "./helpers";
 
+export const dynamic = "force-static";
 export const dynamicParams = true;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,7 +52,7 @@ const getData = cache(async (lid: string): Promise<Data> => {
 	} = data;
 
 	if (hasExpired(expireTime, createTime)) notFound();
-	
+
 	let isDynamic = false;
 	let fileCount = 0;
 
@@ -149,9 +151,8 @@ export async function generateMetadata({ params }: { params: { lid: string } }):
 	const data = await getData(params.lid);
 	const { thumbnail, cover } = data;
 
-	// Encode url value because the Metadata API converts https:// to https:/
-	const image = whenTruthy(thumbnail || (cover.type.startsWith("image/") && cover.url),
-		url => `/_next/image?url=${encodeURIComponent(url)}&w=1200&q=75`) || findFileIcon(cover.type);
+	const image = whenTruthy(thumbnail || (cover.type.startsWith("image/") && cover.url), compressImage) ||
+		findFileIcon(cover.type);
 
 	return {
 		title: data.documentData[LinkField.TITLE] || "Files",
@@ -174,7 +175,7 @@ export default async function Page({ params }: Readonly<{ params: { lid: string 
 	const downloadSize = data.documentData[LinkField.DOWNLOAD_SIZE];
 
 	const createSeconds = data.documentData[LinkField.CREATE_TIME]?.seconds;
-	const strCreateTime = createSeconds !== undefined 
+	const strCreateTime = createSeconds !== undefined
 		? formatDate(new Date(createSeconds * 1000), "short", "year", "month", "day")
 		: undefined;
 

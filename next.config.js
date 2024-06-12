@@ -51,7 +51,7 @@ const nextConfig = {
 	reactStrictMode: true,
 	compiler: {
 		removeConsole: process.env.NODE_ENV === "production" && {
-			exclude: ["error"],
+			exclude: ["error", "warn", "info"],
 		},
 	},
 	headers: async () => [
@@ -90,6 +90,11 @@ const nextConfig = {
 				pathname: "/file/**"
 			},
 		]
+	},
+	logging: {
+		fetches: {
+			fullUrl: true,
+		}
 	},
 	webpack: (config) => {
 		config.devServer = {

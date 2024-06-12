@@ -30,6 +30,8 @@ import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import * as Yup from "yup";
 
+export const dynamic = "force-static";
+
 const schema = Yup.object({
 	title: Yup.string()
 		.optional()

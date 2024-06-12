@@ -1,13 +1,13 @@
 import { Image } from "@/components/Image";
 import Link from "@/components/Link";
-import { Loading } from "@/components/Loading";
 import { Standout } from "@/components/Standout";
 import { Metadata } from "next";
-import { Suspense } from "react";
 import Figure from "react-bootstrap/Figure";
 import FigureCaption from "react-bootstrap/FigureCaption";
 import ExpandableFAQ from "./ExpandableFAQ";
 import { Lead, Proposition, QAndA, Section } from "./helperComponents";
+
+export const dynamic = "force-static";
 
 export const metadata: Metadata = {
 	title: "About",
@@ -140,9 +140,7 @@ export default function Page() {
 					</>
 				}
 			/>
-			<Suspense fallback={<Loading />}>
-				<ExpandableFAQ />
-			</Suspense>
+			<ExpandableFAQ />
 		</Section>
 	</>;
 }
