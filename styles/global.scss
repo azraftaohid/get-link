@@ -26,8 +26,8 @@
 
 .stall {
   .progress {
-    height: 0.4rem;
-    --#{$prefix}progress-bar-transition: width .3s ease;
+    height: 0.2rem;
+    --#{$prefix}progress-bar-transition: width .3s linear;
   }
 }
 
