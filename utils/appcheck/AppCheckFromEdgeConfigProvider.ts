@@ -35,7 +35,10 @@ export class AppCheckFromEdgeConfigProvider extends CustomProvider {
 					};
 				} else {
 					console.debug("Getting appcheck token from database.");
-					const options = await get("appCheck");
+					const startTime = now();
+					const options: AppCheckOptions | undefined = await get("appCheck");
+					console.info("App check token fetch took " + (now() - startTime) + "ms");
+					
 					if (!options || typeof options !== "object" || Array.isArray(options)) 
 						throw new Error("AppCheck object is malformed or missing from database.");
 	
@@ -58,4 +61,9 @@ export class AppCheckFromEdgeConfigProvider extends CustomProvider {
 			}
 		});
 	}
+}
+
+interface AppCheckOptions {
+	token?: string,
+	expireTime?: number,
 }
