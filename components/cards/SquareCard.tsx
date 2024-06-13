@@ -4,7 +4,7 @@ import styles from "../../styles/cards/square-card.module.scss";
 import { Icon } from "../Icon";
 import { ShortLoading } from "../ShortLoading";
 import Card from "react-bootstrap/Card";
-import Image, { ImageProps } from "next/image";
+import Image, { ImageProps } from "next/legacy/image";
 import { getSolidStallImage } from "../../visuals/stallData";
 import { formatDate } from "@thegoodcompany/common-utils-js";
 import { hasExpired } from "../../utils/dates";

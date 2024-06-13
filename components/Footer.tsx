@@ -1,3 +1,5 @@
+"use client";
+
 import dynamic from "next/dynamic";
 import React, { useState } from "react";
 import Container from "react-bootstrap/Container";

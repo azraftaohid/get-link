@@ -22,3 +22,11 @@ export function mapQueryParams(searchParams: URLSearchParams) {
 export function makeContinueUrl(mode: string, then = window.location.pathname) {
 	return `${window.location.origin}/continue/${mode}?path=${encodeURIComponent(then)}`;
 }
+
+export function isDifferentPage(href: string) {
+	const current = new URL(window.location.href);
+	const url = new URL(href, current.href);
+
+	return url.host === current.host && 
+		(url.pathname !== current.pathname || url.search !== current.search);
+}

@@ -1,3 +1,5 @@
+"use client";
+
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -11,7 +13,7 @@ import { Link } from "./Link";
 import { RawText } from "./RawText";
 import { Video } from "./Video";
 
-const PDF = dynamic(() => import("./PDFView"), { ssr: false });
+const Pdf = dynamic(() => import("./PdfView"), { ssr: false });
 
 const NoPreview: React.FunctionComponent<React.PropsWithChildren<{ src: string; name?: string | null, type?: string | null }>> = ({
 	type,
@@ -95,17 +97,17 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 		>
 			{(!useFallback &&
 				((type?.startsWith("image/") && (
-					<a className="mx-auto" href={src} title={name || "Orginal image"} target="_blank" rel="noreferrer">
+					<a href={src} title={name || "Original image"} target="_blank" rel="noreferrer">
 						<Image
+							className="fit-contain w-100 h-100"
 							src={src}
 							alt={name || "Image"}
 							placeholder={imageLoaded ? "empty" : "blur"}
 							width={width}
 							height={height}
 							sizes={`(max-width: 576px) 100vw, (max-width: 992px) ${100 / Math.min(fileCount, 2)}vw, ${Math.ceil(100 / Math.min(fileCount, 3))}vw`}
-							objectFit="contain"
 							blurDataURL={placeholderDataUrl || getSolidStallImage()}
-							onLoadingComplete={() => {
+							onLoad={() => {
 								setImageLoaded(true);
 								setUseFallback(false);
 							}}
@@ -126,7 +128,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 							src={src}
 						/>
 					)) || (type === "application/pdf" && (
-						<PDF file={src} width={width} height={height} size={size} />
+						<Pdf file={src} width={width} height={height} size={size} />
 					)))) || <NoPreview src={src} name={name} type={type} />}
 		</div>
 	);

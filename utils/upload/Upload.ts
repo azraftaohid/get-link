@@ -15,7 +15,7 @@ export class Upload extends EventEmitter {
 	public static readonly MAX_PARALLEL = 4;
 
 	private storage: Storage;
-	private params: UploadParams;
+	public readonly params: UploadParams;
 
 	private totalBytes: number | undefined;
 	private uploadedBytes: number;

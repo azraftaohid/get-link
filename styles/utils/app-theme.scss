@@ -1,9 +1,10 @@
-/**
-  This has been deprecated in favor of the mixin color-theme that comes with bootstrap 5.3 and above.
-*/
-@mixin app-theme($theme) {
-  html {
-    &[data-theme="#{$theme}"] {
+@mixin color-mode($mode: light, $root: false) {
+  [data-bs-theme="#{$mode}"] {
+    @content;
+  }
+
+  @media (prefers-color-scheme: $mode) {
+    [data-bs-theme="system"] {
       @content;
     }
   }

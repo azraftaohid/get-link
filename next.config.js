@@ -8,7 +8,7 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 
 function ensureEnvVariablesDefined(names) {
 	for (const name of names) {
-		if (!process.env[name]) throw new Error(`Environmetnal variabel '${name}' is missing.`);
+		if (!process.env[name]) throw new Error(`Environment variable '${name}' is missing.`);
 	}
 }
 
@@ -51,7 +51,7 @@ const nextConfig = {
 	reactStrictMode: true,
 	compiler: {
 		removeConsole: process.env.NODE_ENV === "production" && {
-			exclude: ["error"],
+			exclude: ["error", "warn", "info"],
 		},
 	},
 	headers: async () => [
@@ -78,37 +78,23 @@ const nextConfig = {
 		}
 	],
 	images: {
-		domains: [
-			"localhost", "firebasestorage.googleapis.com", "getlink-dev.s3.eu-central-003.backblazeb2.com", 
-			"getlink.s3.eu-central-003.backblazeb2.com"
-		],
 		remotePatterns: [
+			{
+				protocol: "http",
+				hostname: "localhost",
+				pathname: "/**"
+			},
 			{
 				protocol: "https",
 				hostname: "storage.getlinksoft.workers.dev",
 				pathname: "/file/**"
 			},
-			{
-				protocol: "https",
-				hostname: "f003.backblazeb2.com",
-				pathname: "/file/getlink-dev/**"
-			},
-			{
-				protocol: "https",
-				hostname: "f003.backblazeb2.com",
-				pathname: "/file/getlink/**"
-			},
-			{
-				protocol: "https",
-				hostname: "s3.eu-central-003.backblazeb2.com",
-				pathname: "/getlink-dev/**"
-			},
-			{
-				protocol: "https",
-				hostname: "s3.eu-central-003.backblazeb2.com",
-				pathname: "/getlink/**"
-			},
 		]
+	},
+	logging: {
+		fetches: {
+			fullUrl: true,
+		}
 	},
 	webpack: (config) => {
 		config.devServer = {
@@ -126,6 +112,9 @@ const nextConfig = {
 				],
 			})
 		);
+
+		// required by react-pdf on nextjs
+		config.resolve.alias.canvas = false;
 
 		return config;
 	},

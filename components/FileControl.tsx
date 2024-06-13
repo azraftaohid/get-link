@@ -1,5 +1,5 @@
+import { makeDownloadParams } from "@/app/d/helpers";
 import { useState } from "react";
-import { makeDownloadParams } from "../pages/d";
 import { ClickEventContext, logClick } from "../utils/analytics";
 import { THRESHOLD_DIRECT_DOWNLOAD, directDownloadFromUrl } from "../utils/downloads";
 import { FetchError } from "../utils/errors/FetchError";
@@ -46,7 +46,7 @@ export const FileControl: React.FunctionComponent<FileControlProps> = ({
 					variant="outline-vivid"
 					href={
 						stepOutDownload
-							? `d?${makeDownloadParams(directLink, name || "", downloadMechanism)}`
+							? `/d?${makeDownloadParams(directLink, name || "", downloadMechanism)}`
 							: directLink
 					}
 					onClick={async (evt) => {

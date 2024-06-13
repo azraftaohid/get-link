@@ -1,3 +1,4 @@
+import { ProcessedFileData } from "@/utils/processedFiles";
 import { getDocs } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
 import Alert from "react-bootstrap/Alert";
@@ -10,7 +11,6 @@ import { FileField, getFileDocs } from "../models/files";
 import { now } from "../utils/dates";
 import { DownloadAsZipParams, downloadAsZip } from "../utils/downloads";
 import { Falsy } from "../utils/falsy";
-import { ProcessedFileData } from "../utils/useProcessedFiles";
 import { Button } from "./Button";
 import { Conditional } from "./Conditional";
 

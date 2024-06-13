@@ -1,4 +1,3 @@
-import { get } from "@vercel/edge-config";
 import {
 	initializeAnalytics,
 	isSupported as isAnalyticsSupported,
@@ -19,6 +18,7 @@ import {
 	getFirestore,
 } from "firebase/firestore";
 import { acquireExperienceOptions } from "./analytics";
+import { AppCheckFromEdgeConfigProvider } from "./appcheck/AppCheckFromEdgeConfigProvider";
 import { hasWindow } from "./common";
 import { appcheckDebugToken, firebaseConfig, siteKey } from "./configs";
 import { connectFunctionsEmulator, getFunctions } from "./functions";
@@ -40,6 +40,7 @@ export function initFirebase() {
 		return currentApp;
 	}
 
+	console.debug("Initializing Firebase app.");
 	const app = initializeApp(firebaseConfig);
 
 	const firestore = getFirestore(app);
@@ -63,33 +64,7 @@ export function initFirebase() {
 		console.debug("Using recaptcha enterprise for appcheck purposes.");
 		appCheckProvider = new ReCaptchaEnterpriseProvider(siteKey);
 	} else {
-		appCheckProvider = new CustomProvider({
-			getToken: async () => {
-				if (process.env.NODE_ENV === "development") {
-					console.debug("Using AppCheck debug token");
-					return {
-						token: appcheckDebugToken,
-						expireTimeMillis: new Date().getTime() + 60 * 60 * 1000,
-					};
-				}
-
-				console.debug("Getting appcheck token from database.");
-				const options = await get("appCheck");
-				if (!options || typeof options !== "object" || Array.isArray(options)) 
-					throw new Error("AppCheck object is malformed or missing from database.");
-
-				const token = options.token;
-				const expireTime = options.expireTime;
-
-				if (typeof token !== "string" || typeof expireTime !== "number" || expireTime < new Date().getTime())
-					throw new Error("Invalid token or expire time of AppCheck object.");
-
-				return {
-					token,
-					expireTimeMillis: expireTime,
-				};
-			}
-		});
+		appCheckProvider = new AppCheckFromEdgeConfigProvider();
 	}
 
 	appCheck = initializeAppCheck(app, {

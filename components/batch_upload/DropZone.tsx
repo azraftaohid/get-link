@@ -1,5 +1,5 @@
 import { getAuth, signInAnonymously } from "firebase/auth";
-import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
 import React, { useContext, useEffect, useRef } from "react";
 import { DropzoneOptions, useDropzone } from "react-dropzone";
 import styles from "../../styles/batch_upload/dropzone.module.scss";
@@ -19,7 +19,7 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 	continous = false,
 	...rest
 }) => {
-	const router = useRouter();
+	const search = useSearchParams();
 	const { user, isLoading: authLoading } = useUser();
 	const { makeToast } = useToast();
 
@@ -73,7 +73,7 @@ export const DropZone: React.FunctionComponent<DropZoneProps> = ({
 	const refs = useRef(statelessObjs);
 	refs.current = statelessObjs;
 
-	const triggerChooser = router.query.open_chooser;
+	const triggerChooser = search?.get("open_chooser");
 	useEffect(() => {
 		if (triggerChooser !== "true") return;
 		refs.current.open();

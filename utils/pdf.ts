@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
 export function canInitPdfWorker() {
 	return typeof window !== "undefined";
 }
@@ -11,7 +14,7 @@ export function initPdfWorker<T extends PdfJs | undefined>(
 ): undefined extends T ? Promise<PdfJs | undefined> : PdfJs {
 	if (!pdfjs) {
 		if (!canInitPdfWorker()) return Promise.resolve(undefined) as any;
-		return import("react-pdf/dist/esm/entry.webpack").then((value) => {
+		return import("react-pdf").then((value) => {
 			initPdfWorker0(value.pdfjs);
 			return value.pdfjs;
 		}) as any;
