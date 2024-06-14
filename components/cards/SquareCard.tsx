@@ -1,20 +1,20 @@
-import React from "react";
-import { mergeNames } from "../../utils/mergeNames";
-import styles from "../../styles/cards/square-card.module.scss";
-import { Icon } from "../Icon";
-import { ShortLoading } from "../ShortLoading";
-import Card from "react-bootstrap/Card";
-import Image, { ImageProps } from "next/legacy/image";
-import { getSolidStallImage } from "../../visuals/stallData";
 import { formatDate } from "@thegoodcompany/common-utils-js";
-import { hasExpired } from "../../utils/dates";
-import { CopyButton } from "../CopyButton";
-import { logClick } from "../../utils/analytics";
 import { Timestamp } from "firebase/firestore";
+import Image, { ImageProps } from "next/legacy/image";
+import React from "react";
+import Card from "react-bootstrap/Card";
+import Placeholder from "react-bootstrap/Placeholder";
+import styles from "../../styles/cards/square-card.module.scss";
+import { logClick } from "../../utils/analytics";
+import { hasExpired } from "../../utils/dates";
+import { mergeNames } from "../../utils/mergeNames";
+import { getSolidStallImage } from "../../visuals/stallData";
+import { Button } from "../Button";
+import { CopyButton } from "../CopyButton";
+import { Icon } from "../Icon";
 import Link from "../Link";
 import { Shimmer } from "../Shimmer";
-import Placeholder from "react-bootstrap/Placeholder";
-import { Button } from "../Button";
+import { ShortLoading } from "../ShortLoading";
 
 const NoPreview: React.FunctionComponent<
 	React.PropsWithChildren<
@@ -92,7 +92,7 @@ export const SquareCard: React.FunctionComponent<SquareCardProps> = ({
 			<div className={mergeNames(styles.cardPreview)}>
 				{thumbnail ? (
 					<Image
-						className={mergeNames("card-img-top", styles.cardImg)}
+						className={styles.cardImg}
 						placeholder="blur"
 						src={thumbnail}
 						alt="link preview"

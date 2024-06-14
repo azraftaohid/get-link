@@ -17,6 +17,7 @@ export const FileCard: React.FunctionComponent<FileCardProps> = ({
 }) => {
 	return <Card className="border-feedback">
 		<FileView
+			className="card-img-top" // puts rounded top corner when rendered as image; otherwise no visible effects
 			src={directLink}
 			placeholderUrl={placeholderUrl}
 			name={name}
