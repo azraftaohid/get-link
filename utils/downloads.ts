@@ -106,7 +106,7 @@ export async function downloadAsZip(params: DownloadAsZipParams): Promise<Downlo
 				}
 
 				return controller.enqueue({
-					name: `/${friendlyName}`,
+					name: friendlyName,
 					stream: () => fileRes.body,
 				});
 			}
