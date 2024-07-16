@@ -1,7 +1,7 @@
-import { get } from "@vercel/edge-config";
 import { AppCheckToken, CustomProvider } from "firebase/app-check";
 import { appcheckDebugToken } from "../configs";
 import { now } from "../dates";
+import { getEdgeConfig } from "../edgeConfig";
 import { MaxFetchRateExceededError } from "../errors/MaxFetchRateExceededError";
 
 export class AppCheckFromEdgeConfigProvider extends CustomProvider {
@@ -36,7 +36,9 @@ export class AppCheckFromEdgeConfigProvider extends CustomProvider {
 				} else {
 					console.debug("Getting appcheck token from database.");
 					const startTime = now();
-					const options: AppCheckOptions | undefined = await get("appCheck");
+					
+					const config = getEdgeConfig();
+					const options: AppCheckOptions | undefined = await config.get("appCheck");
 					console.info("App check token fetch took " + (now() - startTime) + "ms");
 					
 					if (!options || typeof options !== "object" || Array.isArray(options)) 

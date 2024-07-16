@@ -2207,10 +2207,10 @@
     "@testing-library/dom" "^10.0.0"
     "@types/react-dom" "^18.0.0"
 
-"@thegoodcompany/common-utils-js@^1.4.4":
-  version "1.4.4"
-  resolved "https://registry.yarnpkg.com/@thegoodcompany/common-utils-js/-/common-utils-js-1.4.4.tgz#c89d39d22325a15421139c50d0d62c3a80004ef9"
-  integrity sha512-vET7SCtCLD3vRrmmBETkx3hhnOm/q/oIsBBBw1/Z6IfmduMtGXrpdK2BNZvsQ+m9z6S6xupm+r0ReKnk75vOXg==
+"@thegoodcompany/common-utils-js@^1.4.5":
+  version "1.4.5"
+  resolved "https://registry.yarnpkg.com/@thegoodcompany/common-utils-js/-/common-utils-js-1.4.5.tgz#d2e8094b1ab450068cc2447511c20d6f3a205e50"
+  integrity sha512-jJNG7vGXKWzASA3n1swdErPAiWdQ6BdTxr9xj5jesPDAaJoS6j88IqRkjMy0xwNQrFVpkq7lAduUskgnbpDSlg==
 
 "@tokenizer/token@^0.3.0":
   version "0.3.0"

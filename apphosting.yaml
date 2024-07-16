@@ -1,0 +1,9 @@
+env:
+  - variable: API_KEY
+    secret: GETLINK_WEB_APP_API_KEY
+  
+  - variable: EDGE_CONFIG_TOKEN
+    secret: EDGE_CONFIG_READ_TOKEN
+
+  - variable: EDGE_CONFIG_ID
+    secret: EDGE_CONFIG_GETLINK_PRIVATE_ID
