@@ -75,7 +75,22 @@ const nextConfig = {
 			source: "/continue-signin",
 			destination: "/continue/signin",
 			permanent: true,
-		}
+		},
+		{
+			source: "/sign-in",
+			destination: "/account/profile",
+			permanent: false,
+		},
+		{
+			source: "/premium",
+			destination: "/tiers",
+			permanent: false,
+		},
+		{
+			source: "/upgrade",
+			destination: "/tiers",
+			permanent: false,
+		},
 	],
 	images: {
 		remotePatterns: [

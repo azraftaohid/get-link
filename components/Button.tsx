@@ -10,12 +10,14 @@ export const Button: BsPrefixRefForwardingComponent<"button", ButtonProps> = (pr
 		left,
 		right,
 		state,
+		behavior = "row",
+		gap = 1,
 		children,
 		...rest
 	} = props;
 
 	return (
-		<BSButton className={mergeNames("d-flex flex-row gap-1 align-items-center", className)} {...rest as ButtonProps}>
+		<BSButton className={mergeNames(`d-flex flex-${behavior} gap-${gap} align-items-center`, className)} {...rest as ButtonProps}>
 			{state !== "loading" ? left : <Spinner as="span" role="status" animation="border" size="sm" aria-hidden />}
 			{children}
 			{right}
@@ -28,4 +30,6 @@ export interface ButtonProps extends BSButtonProps {
 	right?: React.ReactNode;
 	download?: string | boolean;
 	state?: "none" | "loading";
+	behavior?: "row" | "column",
+	gap?: number | string,
 }

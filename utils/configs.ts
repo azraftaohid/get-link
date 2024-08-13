@@ -3,6 +3,8 @@ import { StorageConfig } from "./storage";
 
 export const EXPIRE_DAYS = 14;
 
+export const FLAG_OFFLINE = true;
+
 export const firebaseConfig: FirebaseOptions = {
 	apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
 	authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -21,3 +23,5 @@ export const storageConfig: StorageConfig = {
 
 export const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_KEY_ID || "";
 export const appcheckDebugToken = process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN || "";
+
+export const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL_ADDRESS || "";

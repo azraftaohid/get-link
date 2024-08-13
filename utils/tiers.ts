@@ -1,6 +1,7 @@
-export type Tier = "tier_0" | "tier_1";
+export type Tier = "tier1-cedf" | "tier2-fdab" | "tier3-efca";
 
 export const friendlyTier: Record<Tier, string> = {
-	"tier_0": "Tier 0",
-	"tier_1": "Tier 1",
+	"tier1-cedf": "Tier 1",
+	"tier2-fdab": "Tier 2",
+	"tier3-efca": "Tier 3"
 };
