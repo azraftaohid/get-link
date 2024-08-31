@@ -1,6 +1,6 @@
 "use client";
 
-import { makeDownloadParams } from "@/app/d/helpers";
+import { makeDownloadParams } from "@/app/(main)/d/helpers";
 import { AssurePrompt } from "@/components/AssurePrompt";
 import { Button } from "@/components/Button";
 import { Conditional } from "@/components/Conditional";
