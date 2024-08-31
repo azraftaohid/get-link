@@ -1,4 +1,4 @@
-import { InvoiceData } from "@/models/billings.ts/invoice";
+import { InvoiceData } from "@/models/billings/invoice";
 import { HttpsCallable, httpsCallable } from "firebase/functions";
 import { getFunctions } from "./functions";
 

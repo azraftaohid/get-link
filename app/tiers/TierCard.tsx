@@ -16,6 +16,7 @@ export const TierCard: React.FunctionComponent<TierCardProps> = ({
 	pricing,
 	isCurrent,
 	onChose,
+	disabled,
 	children,
 }) => {
 	const [btnState, setBtnState] = useState<ButtonProps["state"]>("none");
@@ -40,7 +41,7 @@ export const TierCard: React.FunctionComponent<TierCardProps> = ({
 				<Button 
 					className="ms-auto" 
 					state={btnState} 
-					disabled={isCurrent}
+					disabled={isCurrent || disabled}
 					onClick={() => {
 						setBtnState("loading");
 						Promise.resolve(onChose?.(id)).finally(() => {
@@ -63,5 +64,6 @@ export interface TierCardProps {
 	pricing: React.ReactNode,
 	onChose?: (id: Tier) => unknown,
 	isCurrent?: boolean,
+	disabled?: boolean,
 	children?: React.ReactNode,
 }

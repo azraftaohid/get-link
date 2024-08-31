@@ -4,7 +4,7 @@ import { AlertArray, AlertArraySource } from "@/components/AlertArray";
 import { Conditional } from "@/components/Conditional";
 import { ExpandButton } from "@/components/ExpandButton";
 import { Loading } from "@/components/Loading";
-import { processPayment } from "@/models/billings.ts/payment";
+import { processPayment } from "@/models/billings/payment";
 import { contactEmail } from "@/utils/configs";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";

@@ -2,14 +2,15 @@
 
 import { Conditional } from "@/components/Conditional";
 import Link from "@/components/Link";
-import { createInvoice } from "@/models/billings.ts/invoice";
-import { getPaymentUrl } from "@/models/billings.ts/payment";
-import { ProductMetadataField } from "@/models/billings.ts/product";
-import { RecurrenceField } from "@/models/billings.ts/recurrence";
+import { createInvoice } from "@/models/billings/invoice";
+import { getAppPaymentUrl } from "@/models/billings/payment";
+import { ProductMetadataField } from "@/models/billings/product";
+import { createSubscription } from "@/models/billings/subscription";
 import { quantityString } from "@/utils/quantityString";
 import { Tier, friendlyTier } from "@/utils/tiers";
-import { useAddons } from "@/utils/useAddons";
+import { useAppRouter } from "@/utils/useAppRouter";
 import { useSignInPrompt } from "@/utils/useSignInPrompt";
+import { useSubscriptions } from "@/utils/useSubscription";
 import { useToast } from "@/utils/useToast";
 import { useUser } from "@/utils/useUser";
 import { useState } from "react";
@@ -22,10 +23,11 @@ import { StorageSlider } from "./StorageSlider";
 import { TierCard, TierCardProps } from "./TierCard";
 
 export default function Page() {
-	const { user } = useUser();
+	const router = useAppRouter();
+	const { isLoading: isAuthLoading, user } = useUser();
 	const { makeToast } = useToast();
 	const { showSignInPrompt } = useSignInPrompt();
-	const { groupKeys: subscriptions } = useAddons(user?.uid);
+	const { isLoading: isSubscriptionLoading, subscriptions } = useSubscriptions(user?.uid, "active");
 
 	const [[addedCostT2, reservationGbT2], setAddedCostT2] = useState([0, 20]);
 	const [[addedCostT3, reservationGbT3], setAddedCostT3] = useState([0, 20]);
@@ -48,36 +50,39 @@ export default function Page() {
 		if (id.startsWith("tier2")) additionalSpaceGb = reservationGbT2 - 20;
 		else if (id.startsWith("tier3")) additionalSpaceGb = reservationGbT3 - 20;
 
-		return createInvoice(user, {
+		const tierName = friendlyTier[id];
+		return createSubscription(user, {
+			name: tierName,
 			products: {
 				[`bundle:${id}`]: {
-					[ProductMetadataField.NAME]: friendlyTier[id],
-					[ProductMetadataField.DURATION]: 2592000, // 30 days
-					[ProductMetadataField.RECURRENCE]: {
-						[RecurrenceField.TAG]: id,
-					}
+					[ProductMetadataField.NAME]: tierName,
 				},
 				...(additionalSpaceGb !== undefined && {
 					[`addon:quota:storage:space:${additionalSpaceGb * Math.pow(2, 30)}`]: {
 						[ProductMetadataField.NAME]: `Reserve ${additionalSpaceGb + 20} GB storage`,
-						[ProductMetadataField.DURATION]: 2592000,
-						[ProductMetadataField.RECURRENCE]: {
-							[RecurrenceField.TAG]: id,
-						}
 					}
-				})
+				}),
 			},
+			cycle: 2592000,
 		}).then(ref => {
-			return getPaymentUrl(ref.id);
-		}).then(({ data }) => {
-			const url = data.paymentUrl;
-			window.open(url, "_self");
-			setStatus("none");
+			const sid = ref.id;
+			return createInvoice(user, {
+				products: {
+					[`subscription:${sid}`]: {
+						[ProductMetadataField.NAME]: `${tierName} subscription`,
+					}
+				}
+			});
+		}).then(ref => {
+			const url = getAppPaymentUrl(ref.id);
+			router.push(url);
 		}).catch(error => {
 			console.error("Error getting payment URL:", error);
 			setStatus("failed");
 		});
 	};
+
+	const isCurrent = (id: Tier) => subscriptions.productIds.includes(`bundle:${id}`);
 
 	return <>
 		<h1>Feature tiers</h1>
@@ -109,6 +114,8 @@ export default function Page() {
 						]}
 						pricing="Free of cost"
 						onChose={onChose}
+						isCurrent={isCurrent("tier1-cedf")}
+						disabled={isAuthLoading || isSubscriptionLoading}
 					/>
 				</Col>
 				<Col>
@@ -124,6 +131,8 @@ export default function Page() {
 						]}
 						pricing={<>{t2Pricing} BDT/month</>}
 						onChose={onChose}
+						isCurrent={isCurrent("tier2-fdab")}
+						disabled={isAuthLoading || isSubscriptionLoading}
 					>
 						<StorageSlider className="mt-3" onSettled={setAddedCostT2} />
 					</TierCard>
@@ -140,6 +149,8 @@ export default function Page() {
 						]}
 						pricing={<>{t3Pricing} BDT/month</>}
 						onChose={onChose}
+						isCurrent={isCurrent("tier3-efca")}
+						disabled={isAuthLoading || isSubscriptionLoading}
 					>
 						<StorageSlider className="mt-3" onSettled={setAddedCostT3} />
 					</TierCard>
@@ -147,13 +158,10 @@ export default function Page() {
 			</Row>
 		</fieldset>
 		<hr className="mt-4" />
-		<Conditional in={subscriptions.length > 0}>
+		<Conditional in={subscriptions.names.length > 0}>
 			<Alert className="mt-3" variant="info">
-				You&apos;re currently subscribed to: <i>{subscriptions.reduce((prev, current) => {
-					if (prev) prev += ", ";
-					return prev + (friendlyTier[current as Tier] || current);
-				}, "")}</i>.
-				You can extend {quantityString("its", "their", subscriptions.length)} expiration date in advance by 
+				You&apos;re currently subscribed to: <i>{subscriptions.names.join(", ")}</i>.
+				You can extend {quantityString("its", "their", subscriptions.names.length)} expiration date in advance by 
 				purchasing again.
 			</Alert>
 		</Conditional>

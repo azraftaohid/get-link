@@ -14,6 +14,18 @@ export enum InvoiceField {
 	EXPIRE_TIME = "expire_time",
 }
 
+export enum InvoiceSnapshotField {
+	ID = "id",
+	CREATE_TIME = "create_time",
+	PRODUCTS = "products",
+	USER = "user",
+}
+
+export enum InvoicePaymentObjField {
+	DUE_TIME = "due_time",
+	STATUS = "status",
+}
+
 export const COLLECTION_INVOICE = "invoices";
 
 export function getInvoices(): CollectionReference<InvoiceData> {
@@ -28,7 +40,7 @@ export async function createInvoice(user: User, options: InvoiceCreateOptions) {
 	const data: WithFieldValue<InvoiceData> = {
 		[InvoiceField.PRODUCTS]: options.products,
 		[InvoiceField.CREATE_TIME]: serverTimestamp(),
-		[InvoiceField.EXPIRE_TIME]: Timestamp.fromMillis(now() + 2592000000), // 30 days from now
+		[InvoiceField.EXPIRE_TIME]: Timestamp.fromMillis(now() + 86400000), // 24 hours from now
 		[InvoiceField.USER]: {
 			[UserSnapshotField.UID]: user.uid,
 		}
@@ -40,14 +52,19 @@ export async function createInvoice(user: User, options: InvoiceCreateOptions) {
 }
 
 export interface InvoiceCreateOptions {
-	products: Record<string, Pick<ProductMetadata, ProductMetadataField.RECURRENCE> & 
-		Required<Pick<ProductMetadata, ProductMetadataField.NAME | ProductMetadataField.DURATION>>>,
+	products: Record<string, Required<Pick<ProductMetadata, ProductMetadataField.NAME>> 
+		& Pick<ProductMetadata, ProductMetadataField.DURATION>>,
+}
+
+export interface InvoicePaymentObj extends Price {
+	[InvoicePaymentObjField.DUE_TIME]?: Timestamp,
+	[InvoicePaymentObjField.STATUS]?: "awaiting" | "paid" | "cancelled",
 }
 
 export interface InvoiceData {
 	// product ids: quota:tier1-xyz, quota:scope:dim:limit, quota:storage:space:50, quota:filedocs:write:1
 	[InvoiceField.PRODUCTS]?: Record<string, ProductMetadata>,
-	[InvoiceField.PAYMENT]?: Price & { status?: "awaiting" | "paid" | "canceled" },
+	[InvoiceField.PAYMENT]?: InvoicePaymentObj,
 	[InvoiceField.USER]?: UserSnapshot,
 	[InvoiceField.CREATE_TIME]?: Timestamp,
 	[InvoiceField.EXPIRE_TIME]?: Timestamp,
@@ -55,8 +72,13 @@ export interface InvoiceData {
 
 export interface ComputedInvoiceData {
 	[InvoiceField.PRODUCTS]: Record<string, ComputedProductMetadata>,
-	[InvoiceField.PAYMENT]: Required<Price>,
+	[InvoiceField.PAYMENT]: Required<Price> & InvoicePaymentObj,
 	[InvoiceField.USER]?: UserSnapshot,
 	[InvoiceField.CREATE_TIME]?: Timestamp,
 	[InvoiceField.EXPIRE_TIME]?: Timestamp,
+}
+
+export interface InvoiceSnapshot {
+	[InvoiceSnapshotField.ID]?: string,
+	[InvoiceSnapshotField.PRODUCTS]?: Record<string, ProductMetadata>,
 }

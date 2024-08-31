@@ -31,6 +31,10 @@ const navs: { title: string; pathname: string }[] = [
 		pathname: "/dashboard",
 	},
 	{
+		title: "Upgrade",
+		pathname: "/tiers",
+	},
+	{
 		title: "About",
 		pathname: "/about",
 	},

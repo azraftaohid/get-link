@@ -19,6 +19,10 @@ const navs: { title: string, pathname: string }[] = [
 		title: "Security",
 		pathname: "/account/security",
 	},
+	{
+		title: "Billing",
+		pathname: "/account/billing",
+	},
 ];
 
 export const AccountNavigation: React.FunctionComponent<AccountNavigationProps> = ({
