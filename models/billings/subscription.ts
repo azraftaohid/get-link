@@ -73,3 +73,8 @@ export type ComputedSubscription = Subscription & {
 	[SubscriptionField.PRICE]: Required<Price>,
 	[SubscriptionField.PRODUCTS]: Record<string, ComputedProductMetadata>,
 }
+
+export type SubscriptionSnapshot = {
+	[SubscriptionField.PRODUCTS]?: Record<string, ProductMetadata>,
+	[SubscriptionField.BILLING]?: BillingInfo,
+}

@@ -1,5 +1,7 @@
 import { ExpandButton } from "@/components/ExpandButton";
 import { Loading } from "@/components/Loading";
+import { QueryEmptyView } from "@/components/QueryEmptyView";
+import { QueryErrorView } from "@/components/QueryErrorView";
 import { PaymentData, PaymentField, getPaymentViewUrl, getPayments } from "@/models/billings/payment";
 import { strPrice } from "@/models/billings/price";
 import { useFirestoreInfiniteQuery } from "@react-query-firebase/firestore";
@@ -7,7 +9,6 @@ import { formatDate } from "@thegoodcompany/common-utils-js";
 import { QueryDocumentSnapshot, QuerySnapshot, limit, orderBy, query, startAfter } from "firebase/firestore";
 import React, { useMemo } from "react";
 import Table from "react-bootstrap/Table";
-import { EmptyView, ErrorView } from "./helperComponents";
 
 const INIT_FETCH_LIMIT = 4;
 const SUBS_FETCH_LIMIT = 8;
@@ -56,17 +57,18 @@ export const PaymentList: React.FunctionComponent<PaymentListProps> = ({
 
 	if (payments.isError) {
 		console.error("Error fetching payments:", payments.error);
-		return <ErrorView />;
+		return <QueryErrorView />;
 	}
 
 	if (!payments.data?.pages[0].size) {
-		return <EmptyView>
+		return <QueryEmptyView>
 			Once you make a payment, it&apos;ll show up here.
-		</EmptyView>;
+		</QueryEmptyView>;
 	}
 
 	return <>
 		<Table className="mb-0" bordered hover>
+			<caption>Click to open receipt.</caption>
 			<thead>
 				<tr>
 					<th scope="col">Date</th>

@@ -1,6 +1,8 @@
 import { Button, ButtonProps } from "@/components/Button";
 import { ExpandButton } from "@/components/ExpandButton";
 import { Loading } from "@/components/Loading";
+import { QueryEmptyView } from "@/components/QueryEmptyView";
+import { QueryErrorView } from "@/components/QueryErrorView";
 import { BillingInfoField } from "@/models/billings/billingInfo";
 import { PriceField } from "@/models/billings/price";
 import { ProductMetadataField } from "@/models/billings/product";
@@ -13,7 +15,6 @@ import { Seconds } from "@thegoodcompany/common-utils-js";
 import { FieldPath, QueryDocumentSnapshot, QuerySnapshot, deleteField, limit, orderBy, query, serverTimestamp, setDoc, startAfter, where } from "firebase/firestore";
 import React, { useMemo, useState } from "react";
 import { Card, CardBody, CardText, CardTitle, Col, Row } from "react-bootstrap";
-import { EmptyView, ErrorView } from "./helperComponents";
 
 const INIT_FETCH_LIMIT = 4;
 const SUBS_FETCH_LIMIT = 8;
@@ -124,13 +125,13 @@ export const SubscriptionList: React.FunctionComponent<SubscriptionListProps> = 
 
 	if (subscriptions.isError) {
 		console.error("Error fetching subscriptions:", subscriptions.error);
-		return <ErrorView />;
+		return <QueryErrorView />;
 	}
 
 	if (!subscriptions.data?.pages[0].size) {
-		return <EmptyView>
+		return <QueryEmptyView>
 			Once you subscribe to one of our feature tiers, they&apos;ll show up here.
-		</EmptyView>;
+		</QueryEmptyView>;
 	}
 
 	return <>

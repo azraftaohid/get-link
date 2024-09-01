@@ -90,6 +90,10 @@ ol {
   @extend .my-3;
 }
 
+.eight-em {
+  width: 8em;
+}
+
 [data-display-theme="dark"] {
   display: none;
 }
