@@ -55,11 +55,11 @@ export default function Page() {
 			name: tierName,
 			products: {
 				[`bundle:${id}`]: {
-					[ProductMetadataField.NAME]: tierName,
+					[ProductMetadataField.NAME]: `${tierName} bundle`,
 				},
-				...(additionalSpaceGb !== undefined && {
+				...(additionalSpaceGb && {
 					[`addon:quota:storage:space:${additionalSpaceGb * Math.pow(2, 30)}`]: {
-						[ProductMetadataField.NAME]: `Reserve ${additionalSpaceGb + 20} GB storage`,
+						[ProductMetadataField.NAME]: `Reserved ${additionalSpaceGb} GB storage`,
 					}
 				}),
 			},
