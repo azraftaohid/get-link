@@ -4,34 +4,47 @@ import { Loading } from "@/components/Loading";
 import { QueryEmptyView } from "@/components/QueryEmptyView";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { BillingInfoField } from "@/models/billings/billingInfo";
+import { getAppPaymentUrl } from "@/models/billings/payment";
 import { PriceField } from "@/models/billings/price";
 import { ProductMetadataField } from "@/models/billings/product";
-import { Subscription, SubscriptionField, friendlySubscriptionState, getSubscriptions } from "@/models/billings/subscription";
+import { Subscription, SubscriptionField, SubscriptionState, friendlySubscriptionState, getSubscriptions } from "@/models/billings/subscription";
 import { UserSnapshotField } from "@/models/users";
 import { now } from "@/utils/dates";
+import { useAppRouter } from "@/utils/useAppRouter";
 import { useToast } from "@/utils/useToast";
 import { useFirestoreInfiniteQuery } from "@react-query-firebase/firestore";
-import { Seconds } from "@thegoodcompany/common-utils-js";
-import { FieldPath, QueryDocumentSnapshot, QuerySnapshot, deleteField, limit, orderBy, query, serverTimestamp, setDoc, startAfter, where } from "firebase/firestore";
+import { Seconds, formatDate } from "@thegoodcompany/common-utils-js";
+import { FieldPath, FieldValue, QueryDocumentSnapshot, QuerySnapshot, Timestamp, deleteField, limit, orderBy, query, serverTimestamp, setDoc, startAfter, where } from "firebase/firestore";
 import React, { useMemo, useState } from "react";
 import { Card, CardBody, CardText, CardTitle, Col, Row } from "react-bootstrap";
 
 const INIT_FETCH_LIMIT = 4;
 const SUBS_FETCH_LIMIT = 8;
 
-const SubscriptionCard: React.FunctionComponent<{ snapshot: QueryDocumentSnapshot<Subscription> }> = ({
+const SubscriptionCard: React.FunctionComponent<SubscriptionCardProps> = ({
 	snapshot,
 }) => {
+	const router = useAppRouter();
 	const { makeToast } = useToast();
-	const [btnState, setBtnState] = useState<ButtonProps["state"]>("none");
+
+	const [renewBtnState, setRenewBtnState] = useState<ButtonProps["state"]>("none");
+	const [stateBtnState, setStateBtnState] = useState<ButtonProps["state"]>("none");
 
 	const data = snapshot.data();
 	const name = data[SubscriptionField.NAME];
+	const _state = data[SubscriptionField.STATE];
+	const price = data[SubscriptionField.PRICE];
+	
+	const [currentState, setCurrentState] = useState(_state);
+
+	const products = data[SubscriptionField.PRODUCTS] || {};
+
+	const billing = data[SubscriptionField.BILLING] || {};
 	const cycle = data[SubscriptionField.BILLING]?.[BillingInfoField.CYCLE];
 	const nextPayment = data[SubscriptionField.BILLING]?.[BillingInfoField.NEXT_PAYMENT_TIME];
-	const state = data[SubscriptionField.STATE];
-	const price = data[SubscriptionField.PRICE];
-	const products = data[SubscriptionField.PRODUCTS] || {};
+	const nextInvoice = billing[BillingInfoField.NEXT_PAYMENT_INVOICE_ID];
+
+	const isNextPaymentPayable = nextPayment && nextPayment.seconds > (now() / 1000);
 
 	let priceStr: string | undefined;
 	if (price) {
@@ -43,6 +56,7 @@ const SubscriptionCard: React.FunctionComponent<{ snapshot: QueryDocumentSnapsho
 		}
 	}
 
+	const enabledRenewBtn = renewBtnState === "none" && currentState === "active";
 	return <Col key={snapshot.id}>
 		<Card>
 			<CardBody>
@@ -53,47 +67,70 @@ const SubscriptionCard: React.FunctionComponent<{ snapshot: QueryDocumentSnapsho
 					}).join(", ")}
 				</CardText>
 				<CardText>
-					State: {state ? friendlySubscriptionState[state] : "N/A"}<br />
-					Price: {priceStr || "N/A"}
+					State: {currentState ? friendlySubscriptionState[currentState] : "N/A"}<br />
+					Price: {priceStr || "N/A"}<br />
+					Next payment: {currentState === "active" 
+						? nextPayment ? formatDate(nextPayment.toDate(), "short", "year", "month", "day") : "N/A"
+						: "Not applicable"}
 				</CardText>
-				<Button
-					variant="secondary"
-					disabled={!(btnState === "none" && (
-						(state === "cancelled" && nextPayment && nextPayment.seconds < (now() / 1000)) ||
-						(state === "active")
-					))}
-					state={btnState}
-					onClick={() => {
-						setBtnState("loading");
+				<div className="d-flex flex-row">
+					{nextInvoice && <Button
+						className="me-2"
+						variant="outline-primary"
+						state={renewBtnState}
+						href={enabledRenewBtn ? getAppPaymentUrl(nextInvoice) : "#"}
+						disabled={!enabledRenewBtn}
+						onClick={(evt) => {
+							evt.preventDefault();
+							setRenewBtnState("loading");
+							router.push(getAppPaymentUrl(nextInvoice));
+						}}
+					>
+						Renew
+					</Button>}
+					<Button
+						variant="outline-secondary"
+						disabled={!(stateBtnState === "none" && (
+							(currentState === "cancelled" && isNextPaymentPayable) ||
+							(currentState === "active")
+						))}
+						state={stateBtnState}
+						onClick={() => {
+							setStateBtnState("loading");
 
-						const ref = snapshot.ref;
-						let setPromise: Promise<unknown>;
-						if (state === "active") {
-							setPromise = setDoc(ref, {
-								[SubscriptionField.STATE]: "cancelled",
-								[SubscriptionField.CANCEL_TIME]: serverTimestamp(),
-							}, { merge: true });
-						} else {
-							setPromise = setDoc(ref, {
-								[SubscriptionField.STATE]: "active",
-								[SubscriptionField.CANCEL_TIME]: deleteField(),
-							}, { merge: true });
-						}
+							const ref = snapshot.ref;
+							
+							let newState: SubscriptionState;
+							let cancelTime: FieldValue | Timestamp;
+							if (currentState === "active") {
+								newState = "cancelled";
+								cancelTime = serverTimestamp();
+							} else {
+								newState = "active";
+								cancelTime = deleteField();
+							}
 
-						setPromise.catch(error => {
-							console.error("Unable to set subscription:", error);
-							makeToast("Unable to update subscription", "error");
-						}).finally(() => setBtnState("none"));
-					}}
-				>
-					{state === "active" ? "Cancel" : "Reactivate"}
-				</Button>
+							setDoc(ref, {
+								[SubscriptionField.STATE]: newState,
+								[SubscriptionField.CANCEL_TIME]: cancelTime,
+							}, { merge: true }).catch(error => {
+								console.error("Unable to set subscription:", error);
+								makeToast("Unable to update subscription", "error");
+							}).finally(async () => {
+								setCurrentState(newState);
+								setStateBtnState("none");
+							});
+						}}
+					>
+						{currentState === "active" ? "Cancel" : "Reactivate"}
+					</Button>
+				</div>
 			</CardBody>
 		</Card>
 	</Col>;
 };
 
-const SubscriptionCardList: React.FunctionComponent<{ snapshot: QuerySnapshot<Subscription> }> = ({
+const SubscriptionCardList: React.FunctionComponent<SubscriptionCardListProps> = ({
 	snapshot,
 }) => {
 	return <>
@@ -136,7 +173,10 @@ export const SubscriptionList: React.FunctionComponent<SubscriptionListProps> = 
 
 	return <>
 		<Row className="g-4" xs={1} xl={2} >
-			{subscriptions.data.pages.map((page, i) => <SubscriptionCardList key={`page-${i}`} snapshot={page} />)}
+			{subscriptions.data.pages.map((page, i) => <SubscriptionCardList 
+				key={`page-${i}`} 
+				snapshot={page}
+			/>)}
 		</Row>
 		<ExpandButton
 			className="mt-4"
@@ -152,4 +192,12 @@ export const SubscriptionList: React.FunctionComponent<SubscriptionListProps> = 
 export interface SubscriptionListProps {
 	uid: string,
 	state: string,
+}
+
+interface SubscriptionCardProps {
+	snapshot: QueryDocumentSnapshot<Subscription>,
+}
+
+interface SubscriptionCardListProps {
+	snapshot: QuerySnapshot<Subscription>,
 }
