@@ -75,7 +75,9 @@ export function createLink(title: string, ref: DocumentReference<LinkData> = get
 		[LinkField.TITLE]: title,
 		[LinkField.USER]: { [UserSnapshotField.UID]: uid },
 		[LinkField.CREATE_TIME]: serverTimestamp(),
-		[LinkField.EXPIRE_TIME]: Timestamp.fromMillis(now() + 1209600000), // 14 days
+		...((!data?.[LinkField.EXPIRE_TIME] || (data[LinkField.EXPIRE_TIME] instanceof FieldValue)) && {
+			[LinkField.EXPIRE_TIME]: Timestamp.fromMillis(now() + 1209600000)
+		}),
 	};
 
 	console.debug(`creating link with data: ${JSON.stringify(d)}`);
@@ -142,6 +144,10 @@ export class Link {
 	public getCover(): WithFieldValue<LinkCover> | undefined {
 		const value = this.data[LinkField.COVER];
 		return value instanceof FieldValue ? undefined : value;
+	}
+
+	public setExpireTime(time: Timestamp) {
+		this.data[LinkField.EXPIRE_TIME] = time;
 	}
 
 	public pushFile(fid: string, pos: number, data?: Omit<InlineFileData, OrderField.CREATE_ORDER>) {

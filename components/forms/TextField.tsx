@@ -9,12 +9,13 @@ import { BsPrefixRefForwardingComponent } from "react-bootstrap/helpers";
 const TextField: BsPrefixRefForwardingComponent<"input", TextFieldProps> = ({
 	className,
 	label,
+	tooltip,
 	helperText,
 	...rest
 }) => {
 	const [ fieldProps, meta ] = useField(rest as unknown as FieldHookConfig<unknown>);
 
-	return <FormGroup className={className} controlId={fieldProps.name}>
+	return <FormGroup className={className} controlId={fieldProps.name} title={tooltip}>
 		{label && <FormLabel>{label}</FormLabel>}
 		{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
 		<FormControl isInvalid={meta.touched && !!meta.error} {...fieldProps} {...rest as any} />
@@ -28,5 +29,6 @@ export default TextField;
 export interface TextFieldProps extends FormControlProps {
 	name: string,
 	label?: React.ReactNode,
+	tooltip?: string,
 	helperText?: React.ReactNode,
 }

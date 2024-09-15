@@ -101,8 +101,8 @@ export default function Page() {
 				question="Will the links ever expire?"
 				answer={
 					<>
-						Get-Link is designed to be a share &amp; forget type of solution. It eventually deletes
-						any file older than 14 days. For longer and persistable storage, consider{" "}
+						Get-Link is designed to be a share &amp; forget type of solution. By default, links are deleted 
+						after 14 days on an eventual basis. For persistent storage, consider{" "}
 						<Link href="https://onedrive.live.com/" newTab>
 							OneDrive
 						</Link>

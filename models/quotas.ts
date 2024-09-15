@@ -75,5 +75,6 @@ export interface Quotas {
 	},
 	links?: {
 		inlinefids?: QuotaMetric,
+		validity?: QuotaMetric,
 	}
 }

@@ -14,31 +14,27 @@ import TextField from "@/components/forms/TextField";
 import { createFileDoc } from "@/models/files";
 import { Link as LinkObject, MAX_LEN_LINK_TITLE } from "@/models/links";
 import { OrderField } from "@/models/order";
+import { now } from "@/utils/dates";
 import { createViewLink } from "@/utils/files";
 import { mergeNames } from "@/utils/mergeNames";
+import { quantityString } from "@/utils/quantityString";
 import { useAppRouter } from "@/utils/useAppRouter";
 import { useFeatures } from "@/utils/useFeatures";
-import { getFirestore, runTransaction } from "firebase/firestore";
+import { Millis } from "@thegoodcompany/common-utils-js";
+import { Timestamp, getFirestore, runTransaction } from "firebase/firestore";
 import { Formik, FormikProps } from "formik";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Accordion from "react-bootstrap/Accordion";
 import AccordionBody from "react-bootstrap/AccordionBody";
 import AccordionHeader from "react-bootstrap/AccordionHeader";
 import AccordionItem from "react-bootstrap/AccordionItem";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
+import FormLabel from "react-bootstrap/FormLabel";
 import Row from "react-bootstrap/Row";
 import * as Yup from "yup";
 
 export const dynamic = "force-static";
-
-const schema = Yup.object({
-	title: Yup.string()
-		.optional()
-		.max(MAX_LEN_LINK_TITLE, `Link title can't be more than ${MAX_LEN_LINK_TITLE} characters long.`)
-		.min(1, "Title must be greater than 1 character long.")
-		.trim(),
-});
 
 function extractTitle(file: File) {
 	return file.name.substring(0, MAX_LEN_LINK_TITLE);
@@ -51,11 +47,35 @@ export default function Page() {
 	const link = useRef(new LinkObject());
 	const [url, setUrl] = useState<string>();
 
-	const initValues = useRef({ title: "" });
-
 	const formRef = useRef<FormikProps<typeof initValues.current>>(null);
-
 	const [state, setState] = useState<"none" | "uploading" | "processing" | "submitted">("none");
+
+	const [schema, minExpireTimeStr, maxExpireTimeStr] = useMemo(() => {
+		const currentTime = now();
+		const maxValidity = features.quotas.links?.validity?.limit || 1209600000; // ? 14days
+		const minValidity = 86400000; // 24hrs
+		const maxExpireTimeStr = new Date(currentTime + maxValidity).toISOString().split("T")[0];
+		const minExpireTimeStr = new Date(currentTime + minValidity).toISOString().split("T")[0];
+
+		const maxValidityDays = new Millis(maxValidity).toDays().value;
+		const minValidityDays = new Millis(minValidity).toDays().value;
+		return [Yup.object({
+			title: Yup.string()
+				.optional()
+				.max(MAX_LEN_LINK_TITLE, `Link title can't be more than ${MAX_LEN_LINK_TITLE} characters long.`)
+				.min(1, "Title must be greater than 1 character long.")
+				.trim(),
+			expires: Yup.date()
+				.required("Expiration time is required.")
+				.max(maxExpireTimeStr, 
+					`Your current feature tier allows maximum validity of ${maxValidityDays} ${quantityString("day", "days", maxValidityDays)}.`)
+				.min(minExpireTimeStr, 
+					`Must have at least ${minValidityDays} ${quantityString("day", "days", minValidityDays)} validity.`)
+		}), minExpireTimeStr, maxExpireTimeStr];
+	}, [features.quotas.links?.validity?.limit]);
+
+	// todo: use local cache to set default expire time to infinity for users with such quota available.
+	const initValues = useRef({ title: "", expires: maxExpireTimeStr });
 
 	useEffect(() => {
 		if (url) router.push(url);
@@ -96,6 +116,12 @@ export default function Page() {
 							actions.setFieldValue("title", title, false);
 						}
 
+						const cDate = new Date();
+						const timeOffset = ((cDate.getHours() * 60 + cDate.getMinutes()) * 60 + cDate.getSeconds()) * 1000;
+						
+						const expireDate = new Date(values.expires);
+						link.current.setExpireTime(Timestamp.fromMillis(expireDate.getTime() + timeOffset));
+
 						try {
 							const value = await runTransaction(getFirestore(), async transaction => {
 								const ref = link.current.create(title, transaction);
@@ -121,25 +147,41 @@ export default function Page() {
 					}}
 				>{({ handleSubmit, errors }) => <Form noValidate onSubmit={handleSubmit}>
 					<BatchUploadAlert />
-					<Row className="g-3" xs={1} md={2}>
-						<Col md={10}><TextField
-							className="me-auto"
-							name="title"
-							label="Title"
-							placeholder="Short but meaningful. When left empty, file name will be used."
-							disabled={state === "submitted" || state === "processing"}
-						/></Col>
-						<Col className="align-self-end" md={2}><Button
-							className="w-100 justify-content-center"
-							variant="outline-vivid"
-							type="submit"
-							state={state === "processing" ? "loading" : "none"}
-							disabled={(ctx.files?.length ?? 0) === 0 ||
-								state === "uploading" || state === "processing" || state === "submitted" ||
-								Object.values(errors).some((v) => !!v)}
-						>
-							Continue
-						</Button></Col>
+					<Row className="g-3" xs={1} lg={3}>
+						<Col lg={7}>
+							<TextField
+								name="title"
+								label="Title"
+								placeholder="Short but meaningful. When left empty, file name will be used."
+								disabled={state === "submitted" || state === "processing"}
+							/>
+						</Col>
+						<Col lg={3}>
+							<TextField
+								type="date"
+								name="expires"
+								label="Expire date"
+								tooltip="Link will be deleted after this date."
+								max={maxExpireTimeStr}
+								min={minExpireTimeStr}
+								step={1}
+								disabled={state === "submitted" || state === "processing"}
+							/>
+						</Col>
+						<Col lg={2}>
+							<FormLabel className="invisible d-none d-lg-inline-block">Placeholder</FormLabel>
+							<Button
+								className="w-100 justify-content-center"
+								variant="outline-vivid"
+								type="submit"
+								state={state === "processing" ? "loading" : "none"}
+								disabled={(ctx.files?.length ?? 0) === 0 ||
+									state === "uploading" || state === "processing" || state === "submitted" ||
+									Object.values(errors).some((v) => !!v)}
+							>
+								Continue
+							</Button>
+						</Col>
 					</Row>
 					<hr />
 					<BatchUploadProgress redirectUrl={url} />
@@ -152,6 +194,7 @@ export default function Page() {
 						<Col md={ctx.files.length === 0 && 12}>
 							<DropZone
 								className={mergeNames(ctx.files.length > 0 && "mt-3 mt-md-0 h-25 h-md-100 mh-md-unset")}
+								subtext={"Links expire after validity period"}
 								continous
 							/>
 						</Col>
