@@ -18,7 +18,6 @@ import Alert from "react-bootstrap/Alert";
 import Badge from "react-bootstrap/Badge";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
-import { Flag, Tba } from "./Flag";
 import { StorageSlider } from "./StorageSlider";
 import { TierCard, TierCardProps } from "./TierCard";
 
@@ -30,12 +29,10 @@ export default function Page() {
 	const { isLoading: isSubscriptionLoading, subscriptions } = useSubscriptions(user?.uid, "active");
 
 	const [[addedCostT2, reservationGbT2], setAddedCostT2] = useState([0, 20]);
-	const [[addedCostT3, reservationGbT3], setAddedCostT3] = useState([0, 20]);
 
 	const [status, setStatus] = useState<"none" | "processing" | "failed">("none");
 
 	const t2Pricing = 49 + addedCostT2;
-	const t3Pricing = 99 + addedCostT3;
 
 	const onChose: TierCardProps["onChose"] = (id) => {
 		if (!user || user.isAnonymous) {
@@ -48,7 +45,6 @@ export default function Page() {
 
 		let additionalSpaceGb: number | undefined;
 		if (id.startsWith("tier2")) additionalSpaceGb = reservationGbT2 - 20;
-		else if (id.startsWith("tier3")) additionalSpaceGb = reservationGbT3 - 20;
 
 		const tierName = friendlyTier[id];
 		return createSubscription(user, {
@@ -104,7 +100,6 @@ export default function Page() {
 							"Unlimited links",
 							"Short links",
 							"File previews",
-							<>Cloud storage integration <Flag><Tba /></Flag></>,
 							"1 GB of storage"
 						]}
 						limits={[
@@ -126,7 +121,7 @@ export default function Page() {
 							<>Everything from <i>Tier 1</i></>,
 							"Unlimited files per link",
 							"Unlimited file size",
-							<>Arbitrary link expiration time <Flag><Tba /></Flag></>,
+							"Arbitrary link expiration time",
 							"Adjustable storage capacity",
 						]}
 						pricing={<>{t2Pricing} BDT/month</>}
@@ -135,24 +130,6 @@ export default function Page() {
 						disabled={isAuthLoading || isSubscriptionLoading}
 					>
 						<StorageSlider className="mt-3" onSettled={setAddedCostT2} />
-					</TierCard>
-				</Col>
-				<Col>
-					<TierCard
-						id="tier3-efca"
-						subtitle="Unlock your true potentials"
-						features={[
-							<>Everything from <i>Tier 2</i></>,
-							<>Password protected links <Flag><Tba /></Flag></>,
-							<>File requests <Flag><Tba /></Flag></>,
-							<>Analytics <Flag><Tba /></Flag></>,
-						]}
-						pricing={<>{t3Pricing} BDT/month</>}
-						onChose={onChose}
-						isCurrent={isCurrent("tier3-efca")}
-						disabled={isAuthLoading || isSubscriptionLoading}
-					>
-						<StorageSlider className="mt-3" onSettled={setAddedCostT3} />
 					</TierCard>
 				</Col>
 			</Row>
