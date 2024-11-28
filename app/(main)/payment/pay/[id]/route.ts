@@ -15,9 +15,11 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 		paymentUrl = res.data.paymentUrl;
 	} catch (error) {
 		if (error instanceof FirebaseError && error.code === "functions/not-found")
-			return NextResponse.json({ code: "not_found", message: "Invoice doesn't exist!" });
+			return NextResponse.json({ code: "not_found", message: "Invoice doesn't exist!" }, { status: 404 });
 
-		return NextResponse.json({ code: "internal_error", message: "Something went wrong internally! Please try again." });
+		console.error("Error occurred while getting payment URL:", error);
+		return NextResponse.json({ code: "internal_error", message: "Something went wrong internally! Please try again." }, 
+			{ status: 500 });
 	}
 
 	return NextResponse.redirect(paymentUrl);
