@@ -4,6 +4,7 @@ import { CollectionReference, FieldPath, Query, Timestamp, collection, doc, getF
 import { HttpsCallable, httpsCallable } from "firebase/functions";
 import { UserSnapshot, UserSnapshotField } from "../users";
 import { InvoiceSnapshot } from "./invoice";
+import { PaymentMethod } from "./paymentMethod";
 import { Price } from "./price";
 import { ProductMetadata } from "./product";
 
@@ -46,11 +47,15 @@ export function getPayment(pid: string) {
 	return doc(getPayments(), pid);
 }
 
-export function getPaymentUrl(invoiceId: string) {
+export function getPaymentUrl(invoiceId: string, paymentMethod = PaymentMethod.BKASH) {
 	if (!getPaymentUrlFunc)
 		getPaymentUrlFunc = httpsCallable(getFunctions(), "payment-geturl");
 
-	return getPaymentUrlFunc({ invoiceId });
+	return getPaymentUrlFunc({ invoiceId, paymentMethod });
+}
+
+export function getCheckoutUrl(invoiceId: string) {
+	return `${DOMAIN}/payment/checkout/${invoiceId}`;
 }
 
 export function getAppPaymentUrl(invoiceId: string) {
@@ -70,6 +75,7 @@ export function processPayment(paymentId: string) {
 
 interface GetPaymentUrlRequestData {
 	invoiceId: string,
+	paymentMethod: PaymentMethod,
 }
 
 interface ProcessPaymentRequestData {

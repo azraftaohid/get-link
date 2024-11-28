@@ -1,12 +1,12 @@
-import { InvoiceData } from "@/models/billings/invoice";
+import { ComputedInvoiceData } from "@/models/billings/invoice";
 import { HttpsCallable, httpsCallable } from "firebase/functions";
 import { getFunctions } from "./functions";
 
-let requireFunc: HttpsCallable<RequireInvoiceRequestData, Required<InvoiceData>>;
+let requireFunc: HttpsCallable<RequireInvoiceRequestData, ComputedInvoiceData>;
 
 export async function requireInvoice(invoiceId: string) {
 	if (!requireFunc)
-		requireFunc = httpsCallable(getFunctions(), "invoices-require");
+		requireFunc = httpsCallable(getFunctions(), "invoice-compute");
 
 	return requireFunc({ invoiceId });
 }

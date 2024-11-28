@@ -3,6 +3,8 @@ export enum PriceField {
 	AMOUNT_CENTS = "amount_cents",
 }
 
+export function strPrice(price: Required<Price>): string;
+export function strPrice(price: Price): string | null;
 export function strPrice(price: Price): string | null {
 	const amount = price[PriceField.AMOUNT_CENTS];
 	const currency = price[PriceField.CURRENCY] || "BDT";

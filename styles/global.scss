@@ -81,6 +81,57 @@
   }
 }
 
+.tick-group {
+  .tick-item {
+    @extend .ms-3;
+  }
+}
+
+.table-rounded {
+  // Known issue: don't use border with transparency enabled. Table outer border will be applied outside of 
+  // cell background color, hence, border on the inside will be different from the outside.
+
+  // Known issue: caption not supported.
+
+  @extend .mb-3, .border, .rounded, .overflow-hidden;
+
+  .table {
+    @extend .mb-0;
+
+    border-color: inherit;
+
+    :not(caption):nth-child(1) {
+      tr:nth-child(1) {
+        @extend .border-top-0;
+
+        th, td {
+          @extend .border-top-0;
+        }
+      }
+    }
+
+    :not(caption):last-child {
+      tr:last-child {
+        @extend .border-bottom-0;
+
+        th, td {
+          @extend .border-bottom-0;
+        }
+      }
+    }
+
+    tr {
+      th:nth-child(1), td:nth-child(1) {
+        @extend .border-start-0;
+      }
+
+      th:last-child, td:last-child {
+        @extend .border-end-0;
+      }
+    }
+  }
+}
+
 blockquote {
   @extend .blockquote;
 }

@@ -1,8 +1,9 @@
 import { now } from "@/utils/dates";
 import { User } from "firebase/auth";
-import { CollectionReference, Timestamp, WithFieldValue, collection, doc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
+import { CollectionReference, Timestamp, WithFieldValue, collection, deleteField, doc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
 import { nanoid } from "nanoid";
 import { UserSnapshot, UserSnapshotField } from "../users";
+import { BillingAddress, BillingAddressField } from "./billingAddress";
 import { Price } from "./price";
 import { ComputedProductMetadata, ProductMetadata, ProductMetadataField } from "./product";
 
@@ -12,6 +13,7 @@ export enum InvoiceField {
 	USER = "user",
 	CREATE_TIME = "create_time",
 	EXPIRE_TIME = "expire_time",
+	BILLING_ADDRESS = "billing_address",
 }
 
 export enum InvoiceSnapshotField {
@@ -19,6 +21,7 @@ export enum InvoiceSnapshotField {
 	CREATE_TIME = "create_time",
 	PRODUCTS = "products",
 	USER = "user",
+	BILLING_ADDRESS = "billing_address",
 }
 
 export enum InvoicePaymentObjField {
@@ -51,9 +54,27 @@ export async function createInvoice(user: User, options: InvoiceCreateOptions) {
 	return docRef;
 }
 
+export async function updateInvoice(invoiceId: string, options: InvoiceUpdateOptions) {
+	const data: WithFieldValue<InvoiceData> = {
+		[InvoiceField.BILLING_ADDRESS]: options.billing_address ? {
+			...options.billing_address,
+			[BillingAddressField.NAME]: options.billing_address[BillingAddressField.NAME] || deleteField(),
+			[BillingAddressField.EMAIL]: options.billing_address[BillingAddressField.EMAIL] || deleteField(),
+		} : deleteField(),
+	};
+
+	const docRef = doc(getInvoices(), invoiceId);
+	await setDoc(docRef, data, { merge: true });
+	return docRef;
+}
+
 export interface InvoiceCreateOptions {
 	products: Record<string, Required<Pick<ProductMetadata, ProductMetadataField.NAME>> 
 		& Pick<ProductMetadata, ProductMetadataField.DURATION>>,
+}
+
+export interface InvoiceUpdateOptions {
+	billing_address?: BillingAddress,
 }
 
 export interface InvoicePaymentObj extends Price {
@@ -68,6 +89,7 @@ export interface InvoiceData {
 	[InvoiceField.USER]?: UserSnapshot,
 	[InvoiceField.CREATE_TIME]?: Timestamp,
 	[InvoiceField.EXPIRE_TIME]?: Timestamp,
+	[InvoiceField.BILLING_ADDRESS]?: BillingAddress,
 }
 
 export interface ComputedInvoiceData {
@@ -76,9 +98,11 @@ export interface ComputedInvoiceData {
 	[InvoiceField.USER]?: UserSnapshot,
 	[InvoiceField.CREATE_TIME]?: Timestamp,
 	[InvoiceField.EXPIRE_TIME]?: Timestamp,
+	[InvoiceField.BILLING_ADDRESS]?: BillingAddress,
 }
 
 export interface InvoiceSnapshot {
 	[InvoiceSnapshotField.ID]?: string,
 	[InvoiceSnapshotField.PRODUCTS]?: Record<string, ProductMetadata>,
+	[InvoiceSnapshotField.BILLING_ADDRESS]?: BillingAddress,
 }
