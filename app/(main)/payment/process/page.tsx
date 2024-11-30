@@ -5,6 +5,7 @@ import { Conditional } from "@/components/Conditional";
 import { ExpandButton } from "@/components/ExpandButton";
 import { Loading } from "@/components/Loading";
 import { processPayment } from "@/models/billings/payment";
+import { PaymentMethod } from "@/models/billings/paymentMethod";
 import { contactEmail } from "@/utils/configs";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -35,7 +36,8 @@ const alertSource: AlertArraySource<Exclude<Status, "none" | "processing" | "suc
 
 export default function Page() {
 	const search = useSearchParams();
-	const paymentId = search?.get("paymentID");
+	const method = search?.get("method");
+	const paymentId = search?.get("paymentID") || search?.get("paymentId"); // get corresponding parameter for all gateways
 	const paymentStatus = search?.get("status");
 
 	const lock = useRef(false);
@@ -46,11 +48,12 @@ export default function Page() {
 		if (paymentStatus === "cancel") return setStatus("payment-canceled");
 		if (paymentStatus === "failure") return setStatus("payment-failed");
 
+		if (!method) return setStatus("precondition-failed");
 		if (!paymentId) return setStatus("precondition-failed");
 		setStatus("processing");
 
 		lock.current = true;
-		processPayment(paymentId).then(() => {
+		processPayment(paymentId, method as PaymentMethod).then(() => {
 			setStatus("success");
 		}).catch(error => {
 			console.error("Unable to process payment:", error);
@@ -58,7 +61,7 @@ export default function Page() {
 		}).finally(() => {
 			lock.current = false;
 		});
-	}, [paymentId, paymentStatus]);
+	}, [method, paymentId, paymentStatus]);
 
 	return <div>
 		<Conditional in={status === "success"}>

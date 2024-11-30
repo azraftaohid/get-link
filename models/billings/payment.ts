@@ -66,11 +66,11 @@ export function getPaymentViewUrl(paymentId: string) {
 	return `${DOMAIN}/payment/view/${paymentId}`;
 }
 
-export function processPayment(paymentId: string) {
+export function processPayment(paymentId: string, paymentMethod: PaymentMethod) {
 	if (!processPaymentFunc)
 		processPaymentFunc = httpsCallable(getFunctions(), "payment-process");
 
-	return processPaymentFunc({ paymentId });
+	return processPaymentFunc({ paymentId, paymentMethod });
 }
 
 interface GetPaymentUrlRequestData {
@@ -80,6 +80,7 @@ interface GetPaymentUrlRequestData {
 
 interface ProcessPaymentRequestData {
 	paymentId: string,
+	paymentMethod: PaymentMethod,
 }
 
 export interface GetPaymentUrlResponseData {
