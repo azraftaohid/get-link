@@ -38,5 +38,4 @@ export type PaymentOptionProps = {
 } | {
 	logo?: never,
 	icon: string,
-}
-)
+})

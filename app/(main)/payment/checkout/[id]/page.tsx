@@ -194,6 +194,19 @@ export default function Page({ params }: Readonly<{ params: { id: string } }>) {
 										caption="Secure payment with SSLCOMMERZ."
 									/>
 								</TickItem>
+								{process.env.NODE_ENV === "development" && <TickItem
+									id="payment-method-emulator"
+									className="mt-3"
+									type="radio"
+									name="method"
+									value={PaymentMethod.EMULATOR}
+								>
+									<PaymentOption
+										icon="code"
+										title="Emulator"
+										caption="Test payment with emulator."
+									/>
+								</TickItem>}
 							</TickField>
 						</div>
 					</div>
