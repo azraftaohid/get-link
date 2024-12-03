@@ -15,6 +15,7 @@ export const TierCard: React.FunctionComponent<TierCardProps> = ({
 	limits,
 	pricing,
 	isCurrent,
+	actionText,
 	onChose,
 	disabled,
 	children,
@@ -49,7 +50,7 @@ export const TierCard: React.FunctionComponent<TierCardProps> = ({
 						});
 					}}
 				>
-					{isCurrent ? "Current" : "Choose"}
+					{actionText || (isCurrent ? "Current" : "Switch")}
 				</Button>
 			</CardFooter>
 		</Card>
@@ -64,6 +65,7 @@ export interface TierCardProps {
 	pricing: React.ReactNode,
 	onChose?: (id: Tier) => unknown,
 	isCurrent?: boolean,
+	actionText?: React.ReactNode,
 	disabled?: boolean,
 	children?: React.ReactNode,
 }

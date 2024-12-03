@@ -11,6 +11,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 	
 	let paymentUrl: string;
 	try {
+		// TODO: accept payment method from query params
 		const res = await getPaymentUrl(invoiceId);
 		paymentUrl = res.data.paymentUrl;
 	} catch (error) {

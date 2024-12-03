@@ -3,16 +3,15 @@
 import { Conditional } from "@/components/Conditional";
 import Link from "@/components/Link";
 import { createInvoice } from "@/models/billings/invoice";
-import { getAppPaymentUrl } from "@/models/billings/payment";
+import { getCheckoutUrl } from "@/models/billings/payment";
 import { ProductMetadataField } from "@/models/billings/product";
-import { createSubscription } from "@/models/billings/subscription";
-import { quantityString } from "@/utils/quantityString";
-import { Tier, friendlyTier } from "@/utils/tiers";
+import { createSubscription, SubscriptionField } from "@/models/billings/subscription";
+import { friendlyTier, Tier } from "@/utils/tiers";
 import { useAppRouter } from "@/utils/useAppRouter";
 import { useSignInPrompt } from "@/utils/useSignInPrompt";
-import { useSubscriptions } from "@/utils/useSubscription";
 import { useToast } from "@/utils/useToast";
 import { useUser } from "@/utils/useUser";
+import { serverTimestamp, setDoc } from "firebase/firestore";
 import { useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import Badge from "react-bootstrap/Badge";
@@ -20,6 +19,7 @@ import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import { StorageSlider } from "./StorageSlider";
 import { TierCard, TierCardProps } from "./TierCard";
+import { useSubscriptions } from "./useSubscription";
 
 export default function Page() {
 	const router = useAppRouter();
@@ -42,6 +42,26 @@ export default function Page() {
 		}
 		
 		setStatus("processing");
+
+		if (id.startsWith("tier1")) {
+			const cancelPromises: Promise<unknown>[] = [];
+			for (const subDoc of subscriptions.docs) {
+				const data = subDoc.data();
+				
+				const products = data?.[SubscriptionField.PRODUCTS] || { };
+				for (const [id] of Object.entries(products)) {
+					if (!id.startsWith("bundle:tier")) continue;
+
+					cancelPromises.push(setDoc(subDoc.ref, {
+						[SubscriptionField.STATE]: "cancelled",
+						[SubscriptionField.CANCEL_TIME]: serverTimestamp(),
+					}, { merge: true }));
+					break;
+				}
+			}
+
+			return Promise.all(cancelPromises);
+		}
 
 		let additionalSpaceGb: number | undefined;
 		if (id.startsWith("tier2")) additionalSpaceGb = reservationGbT2 - 20;
@@ -70,7 +90,7 @@ export default function Page() {
 				}
 			});
 		}).then(ref => {
-			const url = getAppPaymentUrl(ref.id);
+			const url = getCheckoutUrl(ref.id);
 			router.push(url);
 		}).catch(error => {
 			console.error("Error getting payment URL:", error);
@@ -78,7 +98,7 @@ export default function Page() {
 		});
 	};
 
-	const isCurrent = (id: Tier) => subscriptions.productIds.includes(`bundle:${id}`);
+	const isCurrent = (id: Tier) => subscriptions.currentTiers.includes(id);
 
 	return <>
 		<h1>Feature tiers</h1>
@@ -135,13 +155,6 @@ export default function Page() {
 			</Row>
 		</fieldset>
 		<hr className="mt-4" />
-		<Conditional in={subscriptions.names.length > 0}>
-			<Alert className="mt-3" variant="info">
-				You&apos;re currently subscribed to: <i>{subscriptions.names.join(", ")}</i>.
-				You can extend {quantityString("its", "their", subscriptions.names.length)} expiration date in advance by 
-				purchasing again.
-			</Alert>
-		</Conditional>
 		<Alert variant="info" className="mt-3">
 			Supported payment methods: <Link href="https://bkash.com" newTab><Badge bg="secondary">bKash</Badge></Link>
 		</Alert>
