@@ -2,9 +2,10 @@ import { mergeNames } from "@/utils/mergeNames";
 import React, { PropsWithChildren } from "react";
 
 export const KvItem: React.FunctionComponent<KvItemProps> = ({ name, value }) => {
-	return <p className="mb-0">
-		<strong>{name}:</strong> {value}
-	</p>;
+	return <div>
+		<div className="float-start"><strong>{name}</strong></div>
+		<div className="float-end">{value}</div>
+	</div>;
 };
 
 export const Kv: React.FunctionComponent<KvProps> = ({ children, className, ...rest }) => {

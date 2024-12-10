@@ -22,7 +22,10 @@ import { FirebaseError } from "firebase/app";
 import { Formik } from "formik";
 import { notFound } from "next/navigation";
 import { useRef, useState } from "react";
-import { Form } from "react-bootstrap";
+import Alert from "react-bootstrap/Alert";
+import Col from "react-bootstrap/Col";
+import Form from "react-bootstrap/Form";
+import Row from "react-bootstrap/Row";
 import * as yup from "yup";
 import { Kv, KvItem } from "./Kv";
 import { PaymentOption } from "./PaymentOption";
@@ -104,137 +107,151 @@ export default function Page({ params }: Readonly<{ params: { id: string } }>) {
 	return <>
 		<h1>Checkout</h1>
 		<small>Review your orders before making payment.</small>
-		<Kv className="mt-3">
-			<KvItem name="Invoice ID" value={invoiceId} />
-			<KvItem name="Payment amount" value={strPrice(data[InvoiceField.PAYMENT])} />
-			<KvItem name="User account" value={isUserLoading
-				? "Please wait"
-				: user && user.uid === userAccount && user.email || userAccount || "N/A"} />
-		</Kv>
-		<Section className="mt-3" title="Invoice breakdown">
-			<div className="table-rounded border-secondary">
-				<InvoiceBreakdown snapshot={data} price={data[InvoiceField.PAYMENT]} totalText="Payable amount" />
-			</div>
-		</Section>
-		<Section className="mt-3" title="Billing details">
-			<Formik
-				validationSchema={schema}
-				initialValues={inputState.current}
-				initialErrors={initErrors.current}
-				onSubmit={async (values, actions) => {
-					actions.setSubmitting(true);
-
-					try {
-						await updateInvoice(invoiceId, {
-							billing_address: { [BillingAddressField.EMAIL]: values.email },
-						});
-					} catch (error) {
-						console.error("Unable to update invoice:", error);
-						
-						actions.setSubmitting(false);
-						actions.setStatus("error");
-
-						makeToast("Failed to update invoice. Please try again later.", "error");
-						return;
-					}
-
-					try {
-						const url = await getPaymentUrl(invoiceId, values.method);
-						window.open(url.data.paymentUrl, "_blank");
-					} catch (error) {
-						console.error("Unable to get payment URL for method " + values.method + ":", error);
-						actions.setSubmitting(false);
-						actions.setStatus("error");
-
-						makeToast("Failed to get payment URL. Please try again later.", "error");
-						return;
-					}
-
-					actions.setSubmitting(false);
-					actions.setStatus("submitted");
-				}}
-			>{({ handleSubmit, errors, isSubmitting, status, handleChange }) => <Form noValidate onSubmit={handleSubmit}>
-				<fieldset disabled={isSubmitting || status == "submitted"}>
-					<div className="card border-secondary">
-						<div className="card-body">
-							<TextField
-								name="email"
-								label="Billing email address"
-								placeholder="username@example.com"
-								helperText="Payment receipt will be sent to user email address and CC'd to this address."
-							/>
-							<TickField 
-								className="mt-3" 
-								label={<>Payment method <Required /></>}
-							>
-								<TickItem
-									id="payment-method-bKash"
-									className="mt-2"
-									type="radio"
-									name="method"
-									value={PaymentMethod.BKASH}
-								>
-									<PaymentOption
-										logo="bKash_bird"
-										title="bKash"
-										caption="Checkout with bKash."
-									/>
-								</TickItem>
-								<TickItem
-									id="payment-method-card"
-									className="mt-3"
-									type="radio"
-									name="method"
-									value={PaymentMethod.CARD}
-									disabled
-								>
-									<PaymentOption
-										icon="credit_card"
-										title="Credit / Debit card"
-										caption="Secure payment with SSLCOMMERZ."
-									/>
-								</TickItem>
-								{process.env.NODE_ENV === "development" && <TickItem
-									id="payment-method-emulator"
-									className="mt-3"
-									type="radio"
-									name="method"
-									value={PaymentMethod.EMULATOR}
-								>
-									<PaymentOption
-										icon="code"
-										title="Emulator"
-										caption="Test payment with emulator."
-									/>
-								</TickItem>}
-							</TickField>
-						</div>
+		<Row xs={1} lg={2}>
+			<Col>
+				<Kv className="mt-3">
+					<KvItem name="Invoice ID" value={invoiceId} />
+					<KvItem name="User account" value={isUserLoading
+						? "Please wait"
+						: user && user.uid === userAccount && user.email || userAccount || "N/A"} />
+				</Kv>
+				<Alert className="mt-3 d-flex flex-row" variant="info">
+					<div className="">
+						<p className="mb-n1"><strong>Payment amount</strong></p>
+						<small>Total amount to be paid today</small>
 					</div>
-					<ExpandButton
-						type="submit"
-						className="mt-4"
-						state={isSubmitting ? "loading" : "none"}
-						disabled={Object.values(errors).some(err => !!err)}
-					>
-						Make payment
-					</ExpandButton>
-					<TickItem
-						id="acceptance-checkbox"
-						className="w-fit mx-md-auto text-md-center mt-3" // text-center is used to center feedback
-						name="acceptance"
-						onChange={(evt) => {
-							console.log("User " + (evt.currentTarget.checked ? "accepted" : "declined") 
-								+ " the TOS at " + new Date().toISOString());
-							
-							handleChange(evt);
+					<div className="ms-auto my-auto">
+						<strong className="fs-4 fw-medium">{strPrice(data[InvoiceField.PAYMENT])}</strong>
+					</div>
+				</Alert>
+				<Section className="mt-3" title="Invoice breakdown">
+					<div className="table-rounded border-secondary">
+						<InvoiceBreakdown snapshot={data} price={data[InvoiceField.PAYMENT]} totalText="Payable amount" />
+					</div>
+				</Section>
+			</Col>
+			<Col>
+				<Section className="mt-3" title="Billing details">
+					<Formik
+						validationSchema={schema}
+						initialValues={inputState.current}
+						initialErrors={initErrors.current}
+						onSubmit={async (values, actions) => {
+							actions.setSubmitting(true);
+
+							try {
+								await updateInvoice(invoiceId, {
+									billing_address: { [BillingAddressField.EMAIL]: values.email },
+								});
+							} catch (error) {
+								console.error("Unable to update invoice:", error);
+
+								actions.setSubmitting(false);
+								actions.setStatus("error");
+
+								makeToast("Failed to update invoice. Please try again later.", "error");
+								return;
+							}
+
+							try {
+								const url = await getPaymentUrl(invoiceId, values.method);
+								window.open(url.data.paymentUrl, "_blank");
+							} catch (error) {
+								console.error("Unable to get payment URL for method " + values.method + ":", error);
+								actions.setSubmitting(false);
+								actions.setStatus("error");
+
+								makeToast("Failed to get payment URL. Please try again later.", "error");
+								return;
+							}
+
+							actions.setSubmitting(false);
+							actions.setStatus("submitted");
 						}}
-					>
-						I have read and agree to the <Link href="/policies#tos" newTab>Terms & Conditions</Link>,{" "}
-						<Link href="/policies#privacy-policy" newTab>Privacy Policy</Link>, and{" "}
-						<Link href="/policies#refund-policy" newTab>Refund Policy</Link>.
-					</TickItem>
-				</fieldset>
-			</Form>}</Formik>
-		</Section>
+					>{({ handleSubmit, errors, isSubmitting, status, handleChange }) => <Form noValidate onSubmit={handleSubmit}>
+						<fieldset disabled={isSubmitting || status == "submitted"}>
+							<div className="card border-secondary">
+								<div className="card-body">
+									<TextField
+										name="email"
+										label="Billing email address"
+										placeholder="username@example.com"
+										helperText="Payment receipt will be sent to user email address and CC'd to this address."
+									/>
+									<TickField
+										className="mt-3"
+										label={<>Payment method <Required /></>}
+									>
+										<TickItem
+											id="payment-method-bKash"
+											className="mt-2"
+											type="radio"
+											name="method"
+											value={PaymentMethod.BKASH}
+										>
+											<PaymentOption
+												logo="bKash_bird"
+												title="bKash"
+												caption="Checkout with bKash."
+											/>
+										</TickItem>
+										<TickItem
+											id="payment-method-card"
+											className="mt-3"
+											type="radio"
+											name="method"
+											value={PaymentMethod.CARD}
+											disabled
+										>
+											<PaymentOption
+												icon="credit_card"
+												title="Credit / Debit card"
+												caption="Secure payment with SSLCOMMERZ."
+											/>
+										</TickItem>
+										{process.env.NODE_ENV === "development" && <TickItem
+											id="payment-method-emulator"
+											className="mt-3"
+											type="radio"
+											name="method"
+											value={PaymentMethod.EMULATOR}
+										>
+											<PaymentOption
+												icon="code"
+												title="Emulator"
+												caption="Test payment with emulator."
+											/>
+										</TickItem>}
+									</TickField>
+								</div>
+							</div>
+							<ExpandButton
+								type="submit"
+								className="mt-4"
+								state={isSubmitting ? "loading" : "none"}
+								disabled={Object.values(errors).some(err => !!err)}
+							>
+								Make payment
+							</ExpandButton>
+							<TickItem
+								id="acceptance-checkbox"
+								className="w-fit mx-md-auto text-md-center mt-3" // text-center is used to center feedback
+								name="acceptance"
+								onChange={(evt) => {
+									console.log("User " + (evt.currentTarget.checked ? "accepted" : "declined")
+										+ " the TOS at " + new Date().toISOString());
+
+									handleChange(evt);
+								}}
+							>
+								I have read and agree to the <Link href="/policies#tos" newTab>Terms & Conditions</Link>,{" "}
+								<Link href="/policies#privacy-policy" newTab>Privacy Policy</Link>, and{" "}
+								<Link href="/policies#refund-policy" newTab>Refund Policy</Link>.
+							</TickItem>
+						</fieldset>
+					</Form>}</Formik>
+				</Section>
+			</Col>
+		</Row>
 	</>;
 }
