@@ -6,7 +6,7 @@ import { FieldPath, QueryDocumentSnapshot, limit, onSnapshot, query, where } fro
 import { useEffect, useState } from "react";
 
 const defaultSummery: SubscriptionSummery = {
-	currentTiers: ["tier1-cedf"],
+	currentTiers: ["tier1-000"],
 	ids: [],
 	names: [],
 	productNames: [],

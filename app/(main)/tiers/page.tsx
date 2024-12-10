@@ -6,7 +6,7 @@ import { createInvoice } from "@/models/billings/invoice";
 import { getCheckoutUrl } from "@/models/billings/payment";
 import { ProductMetadataField } from "@/models/billings/product";
 import { createSubscription, SubscriptionField } from "@/models/billings/subscription";
-import { friendlyTier, Tier } from "@/utils/tiers";
+import { friendlyTier, Tier, tierBasePricing, tierBaseStorageGb } from "@/utils/tiers";
 import { useAppRouter } from "@/utils/useAppRouter";
 import { useSignInPrompt } from "@/utils/useSignInPrompt";
 import { useToast } from "@/utils/useToast";
@@ -17,9 +17,24 @@ import Alert from "react-bootstrap/Alert";
 import Badge from "react-bootstrap/Badge";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
-import { StorageSlider } from "./StorageSlider";
 import { TierCard, TierCardProps } from "./TierCard";
 import { useSubscriptions } from "./useSubscription";
+import { VariantDescriptor, VariantSelect } from "./VariantSelect";
+
+let t2VariantDescriptors: Partial<Record<Tier, VariantDescriptor>>;
+
+function getT2VariantDescriptors() {
+	if (!t2VariantDescriptors) {
+		t2VariantDescriptors = { };
+		Object.entries(tierBaseStorageGb).forEach(([variant, storageGb]) => {
+			if (variant.startsWith("tier2")) {
+				t2VariantDescriptors[variant as Tier] = { storageGb };
+			}
+		});
+	}
+
+	return t2VariantDescriptors;
+}
 
 export default function Page() {
 	const router = useAppRouter();
@@ -28,11 +43,9 @@ export default function Page() {
 	const { showSignInPrompt } = useSignInPrompt();
 	const { isLoading: isSubscriptionLoading, subscriptions } = useSubscriptions(user?.uid, "active");
 
-	const [[addedCostT2, reservationGbT2], setAddedCostT2] = useState([0, 20]);
+	const [t2Variant, setT2Variant] = useState<Tier>("tier2-000");
 
 	const [status, setStatus] = useState<"none" | "processing" | "failed">("none");
-
-	const t2Pricing = 49 + addedCostT2;
 
 	const onChose: TierCardProps["onChose"] = (id) => {
 		if (!user || user.isAnonymous) {
@@ -63,21 +76,15 @@ export default function Page() {
 			return Promise.all(cancelPromises);
 		}
 
-		let additionalSpaceGb: number | undefined;
-		if (id.startsWith("tier2")) additionalSpaceGb = reservationGbT2 - 20;
-
 		const tierName = friendlyTier[id];
+		const tierStorage = tierBaseStorageGb[id];
+
 		return createSubscription(user, {
 			name: tierName,
 			products: {
 				[`bundle:${id}`]: {
-					[ProductMetadataField.NAME]: `${tierName} bundle`,
+					[ProductMetadataField.NAME]: `${tierName} (${tierStorage} GB)`,
 				},
-				...(additionalSpaceGb && {
-					[`addon:quota:storage:space:${additionalSpaceGb * Math.pow(2, 30)}`]: {
-						[ProductMetadataField.NAME]: `Reserved ${additionalSpaceGb} GB storage`,
-					}
-				}),
 			},
 			cycle: 2592000,
 		}).then(ref => {
@@ -85,7 +92,7 @@ export default function Page() {
 			return createInvoice(user, {
 				products: {
 					[`subscription:${sid}`]: {
-						[ProductMetadataField.NAME]: `${tierName} subscription`,
+						[ProductMetadataField.NAME]: `${tierName} (${tierStorage} GB)`,
 					}
 				}
 			});
@@ -114,7 +121,7 @@ export default function Page() {
 			<Row className="g-4" xs={1} md={2} lg={3}>
 				<Col>
 					<TierCard
-						id="tier1-cedf"
+						id="tier1-000"
 						subtitle="This is the first layer of features offered"
 						features={[
 							"Unlimited links",
@@ -129,27 +136,32 @@ export default function Page() {
 						]}
 						pricing="Free of cost"
 						onChose={onChose}
-						isCurrent={isCurrent("tier1-cedf")}
+						isCurrent={isCurrent("tier1-000")}
 						disabled={isAuthLoading || isSubscriptionLoading}
 					/>
 				</Col>
 				<Col>
 					<TierCard
-						id="tier2-fdab"
+						id={t2Variant}
 						subtitle="Experience more without limits"
 						features={[
 							<>Everything from <i>Tier 1</i></>,
 							"Unlimited files per link",
 							"Unlimited file size",
 							"Arbitrary link expiration time",
-							"Adjustable storage capacity",
+							"More storage capacity",
 						]}
-						pricing={<>{t2Pricing} BDT/month</>}
+						pricing={<>{tierBasePricing[t2Variant]} BDT/month</>}
 						onChose={onChose}
-						isCurrent={isCurrent("tier2-fdab")}
+						isCurrent={isCurrent(t2Variant)}
 						disabled={isAuthLoading || isSubscriptionLoading}
 					>
-						<StorageSlider className="mt-3" onSettled={setAddedCostT2} />
+						<VariantSelect
+							id="select-tier2-variants"
+							variants={getT2VariantDescriptors()}
+							value={t2Variant}
+							onChange={e => setT2Variant(e.target.value as Tier)}
+						/>
 					</TierCard>
 				</Col>
 			</Row>
