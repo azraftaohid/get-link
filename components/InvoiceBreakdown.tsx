@@ -1,6 +1,6 @@
 import { BillingInfoField } from "@/models/billings/billingInfo";
 import { InvoiceSnapshot, InvoiceSnapshotField } from "@/models/billings/invoice";
-import { Price, strPrice } from "@/models/billings/price";
+import { DiscountablePrice, DiscountablePriceField, Price, strPrice } from "@/models/billings/price";
 import { ProductMetadataField } from "@/models/billings/product";
 import { SubscriptionField } from "@/models/billings/subscription";
 import { mergeNames } from "@/utils/mergeNames";
@@ -38,6 +38,9 @@ export const InvoiceBreakdown: React.FunctionComponent<InvoiceBreakdownProps> = 
 	totalText = "Total",
 	...rest
 }) => {
+	const discount = price?.[DiscountablePriceField.DISCOUNT];
+	const subtotal = price[DiscountablePriceField.SUBTOTAL];
+
 	let sn = 1;
 	return <Table className={mergeNames(className)} bordered {...rest}>
 		<thead>
@@ -76,6 +79,14 @@ export const InvoiceBreakdown: React.FunctionComponent<InvoiceBreakdownProps> = 
 		</tbody>
 		<tfoot>
 			<tr>
+				<td scope="row" colSpan={3}>Subtotal</td>
+				<td scope="col">{(subtotal && strPrice(subtotal)) || "N/A"}</td>
+			</tr>
+			<tr>
+				<td scope="row" colSpan={3}>Discount</td>
+				<td scope="col">{(discount && strPrice(discount)) || "N/A"}</td>
+			</tr>
+			<tr>
 				<th scope="row" colSpan={3}>{totalText}</th>
 				<td scope="col">{strPrice(price) || "N/A"}</td>
 			</tr>
@@ -85,6 +96,6 @@ export const InvoiceBreakdown: React.FunctionComponent<InvoiceBreakdownProps> = 
 
 export interface InvoiceBreakdownProps extends TableProps, React.RefAttributes<HTMLTableElement> {
 	snapshot: InvoiceSnapshot,
-	price: Price,
+	price: DiscountablePrice,
 	totalText?: string,
 }

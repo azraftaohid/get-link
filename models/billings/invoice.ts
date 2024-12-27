@@ -4,11 +4,12 @@ import { CollectionReference, Timestamp, WithFieldValue, collection, deleteField
 import { nanoid } from "nanoid";
 import { UserSnapshot, UserSnapshotField } from "../users";
 import { BillingAddress, BillingAddressField } from "./billingAddress";
-import { Price } from "./price";
+import { DiscountablePrice, Price } from "./price";
 import { ComputedProductMetadata, ProductMetadata, ProductMetadataField } from "./product";
 
 export enum InvoiceField {
 	PRODUCTS = "products",
+	TRADE_INS = "trade_ins",
 	PAYMENT = "payment",
 	USER = "user",
 	CREATE_TIME = "create_time",
@@ -20,6 +21,7 @@ export enum InvoiceSnapshotField {
 	ID = "id",
 	CREATE_TIME = "create_time",
 	PRODUCTS = "products",
+	TRADE_INS = "trade_ins",
 	USER = "user",
 	BILLING_ADDRESS = "billing_address",
 }
@@ -42,6 +44,7 @@ export function createInvoiceId() {
 export async function createInvoice(user: User, options: InvoiceCreateOptions) {
 	const data: WithFieldValue<InvoiceData> = {
 		[InvoiceField.PRODUCTS]: options.products,
+		...(options.tradeIns && { [InvoiceField.TRADE_INS]: options.tradeIns }),
 		[InvoiceField.CREATE_TIME]: serverTimestamp(),
 		[InvoiceField.EXPIRE_TIME]: Timestamp.fromMillis(now() + 86400000), // 24 hours from now
 		[InvoiceField.USER]: {
@@ -71,13 +74,14 @@ export async function updateInvoice(invoiceId: string, options: InvoiceUpdateOpt
 export interface InvoiceCreateOptions {
 	products: Record<string, Required<Pick<ProductMetadata, ProductMetadataField.NAME>> 
 		& Pick<ProductMetadata, ProductMetadataField.DURATION>>,
+	tradeIns?: Record<string, Required<Pick<ProductMetadata, ProductMetadataField.NAME>>>,
 }
 
 export interface InvoiceUpdateOptions {
 	billing_address?: BillingAddress,
 }
 
-export interface InvoicePaymentObj extends Price {
+export interface InvoicePaymentObj extends DiscountablePrice {
 	[InvoicePaymentObjField.DUE_TIME]?: Timestamp,
 	[InvoicePaymentObjField.STATUS]?: "awaiting" | "paid" | "cancelled",
 }
@@ -85,6 +89,7 @@ export interface InvoicePaymentObj extends Price {
 export interface InvoiceData {
 	// product ids: quota:tier1-xyz, quota:scope:dim:limit, quota:storage:space:50, quota:filedocs:write:1
 	[InvoiceField.PRODUCTS]?: Record<string, ProductMetadata>,
+	[InvoiceField.TRADE_INS]?: Record<string, ProductMetadata>,
 	[InvoiceField.PAYMENT]?: InvoicePaymentObj,
 	[InvoiceField.USER]?: UserSnapshot,
 	[InvoiceField.CREATE_TIME]?: Timestamp,
@@ -94,6 +99,7 @@ export interface InvoiceData {
 
 export interface ComputedInvoiceData {
 	[InvoiceField.PRODUCTS]: Record<string, ComputedProductMetadata>,
+	[InvoiceField.TRADE_INS]?: Record<string, ProductMetadata>,
 	[InvoiceField.PAYMENT]: Required<Price> & InvoicePaymentObj,
 	[InvoiceField.USER]?: UserSnapshot,
 	[InvoiceField.CREATE_TIME]?: Timestamp,
@@ -104,5 +110,6 @@ export interface ComputedInvoiceData {
 export interface InvoiceSnapshot {
 	[InvoiceSnapshotField.ID]?: string,
 	[InvoiceSnapshotField.PRODUCTS]?: Record<string, ProductMetadata>,
+	[InvoiceSnapshotField.TRADE_INS]?: Record<string, ProductMetadata>,
 	[InvoiceSnapshotField.BILLING_ADDRESS]?: BillingAddress,
 }

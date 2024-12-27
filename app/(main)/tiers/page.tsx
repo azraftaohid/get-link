@@ -2,7 +2,7 @@
 
 import { Conditional } from "@/components/Conditional";
 import Link from "@/components/Link";
-import { createInvoice } from "@/models/billings/invoice";
+import { createInvoice, InvoiceCreateOptions } from "@/models/billings/invoice";
 import { getCheckoutUrl } from "@/models/billings/payment";
 import { ProductMetadataField } from "@/models/billings/product";
 import { createSubscription, SubscriptionField } from "@/models/billings/subscription";
@@ -89,12 +89,21 @@ export default function Page() {
 			cycle: 2592000,
 		}).then(ref => {
 			const sid = ref.id;
-			return createInvoice(user, {
-				products: {
-					[`subscription:${sid}`]: {
-						[ProductMetadataField.NAME]: `${tierName} (${tierStorage} GB)`,
-					}
+			const products = {
+				[`subscription:${sid}`]: {
+					[ProductMetadataField.NAME]: `${tierName} (${tierStorage} GB)`,
 				}
+			};
+
+			const tradeIns: InvoiceCreateOptions["tradeIns"] = { };
+			if (subscriptions.ids.length) {
+				// only one product is supported for trade-in
+				tradeIns[`subscription:${subscriptions.ids[0]}`] = { name: subscriptions.names[0] };
+			}
+
+			return createInvoice(user, {
+				products,
+				tradeIns,
 			});
 		}).then(ref => {
 			const url = getCheckoutUrl(ref.id);
@@ -161,12 +170,22 @@ export default function Page() {
 							variants={getT2VariantDescriptors()}
 							value={t2Variant}
 							onChange={e => setT2Variant(e.target.value as Tier)}
+							{...(subscriptions.ids.length && { 
+								helperText: subscriptions.ids.length === 1 
+									? "This will replace your existing active plan."
+									: "This will replace one of your existing active plan."
+							})}
 						/>
 					</TierCard>
 				</Col>
 			</Row>
 		</fieldset>
 		<hr className="mt-4" />
+		<Conditional in={subscriptions.ids.length > 0}>
+			<Alert variant="info" className="mt-3">
+				You have an active subscription. You may get a discount when switching plans.
+			</Alert>
+		</Conditional>
 		<Alert variant="info" className="mt-3">
 			Supported payment methods: <Link href="https://bkash.com" newTab><Badge bg="secondary">bKash</Badge></Link>
 		</Alert>

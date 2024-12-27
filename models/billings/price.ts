@@ -3,6 +3,11 @@ export enum PriceField {
 	AMOUNT_CENTS = "amount_cents",
 }
 
+export enum DiscountablePriceField {
+	SUBTOTAL = "subtotal",
+	DISCOUNT = "discount",
+}
+
 export function strPrice(price: Required<Price>): string;
 export function strPrice(price: Price): string | null;
 export function strPrice(price: Price): string | null {
@@ -15,4 +20,9 @@ export function strPrice(price: Price): string | null {
 export interface Price {
 	[PriceField.CURRENCY]?: "BDT",
 	[PriceField.AMOUNT_CENTS]?: number,
+}
+
+export interface DiscountablePrice extends Price {
+	[DiscountablePriceField.SUBTOTAL]?: Price,
+	[DiscountablePriceField.DISCOUNT]?: Price,
 }
