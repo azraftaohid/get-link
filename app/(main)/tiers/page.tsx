@@ -160,7 +160,7 @@ export default function Page() {
 							"Arbitrary link expiration time",
 							"More storage capacity",
 						]}
-						pricing={<>{tierBasePricing[t2Variant]} BDT/month</>}
+						pricing={<>{tierBasePricing[t2Variant]} BDT/30 days</>}
 						onChose={onChose}
 						isCurrent={isCurrent(t2Variant)}
 						disabled={isAuthLoading || isSubscriptionLoading}
