@@ -159,8 +159,8 @@ export default function Page() {
 			information no less than 90 days after they are deemed useless.
 		</Proposition>
 		<Proposition>
-			However, the files you upload may be deleted not less than 14 days after they are uploaded. This is
-			to prevent accidental leaks of sensitive files.
+			However, the files you upload may be deleted not less than 14 days after they are uploaded or before the expiration 
+			date you specify during upload.
 		</Proposition>
 		<Topic id="refund-policy">Refund Policy</Topic>
 		<Proposition>
