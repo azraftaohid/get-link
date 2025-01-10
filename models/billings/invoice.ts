@@ -19,11 +19,10 @@ export enum InvoiceField {
 
 export enum InvoiceSnapshotField {
 	ID = "id",
-	CREATE_TIME = "create_time",
 	PRODUCTS = "products",
 	TRADE_INS = "trade_ins",
-	USER = "user",
 	BILLING_ADDRESS = "billing_address",
+	PAYMENT = "payment",
 }
 
 export enum InvoicePaymentObjField {
@@ -112,4 +111,5 @@ export interface InvoiceSnapshot {
 	[InvoiceSnapshotField.PRODUCTS]?: Record<string, ProductMetadata>,
 	[InvoiceSnapshotField.TRADE_INS]?: Record<string, ProductMetadata>,
 	[InvoiceSnapshotField.BILLING_ADDRESS]?: BillingAddress,
+	[InvoiceSnapshotField.PAYMENT]?: InvoicePaymentObj,
 }

@@ -5,7 +5,7 @@ import { QueryEmptyView } from "@/components/QueryEmptyView";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { InvoiceSnapshotField } from "@/models/billings/invoice";
 import { PaymentField, getPayment } from "@/models/billings/payment";
-import { strPrice } from "@/models/billings/price";
+import { PriceField, strPrice } from "@/models/billings/price";
 import { UserSnapshotField } from "@/models/users";
 import { DOMAIN } from "@/utils/urls";
 import { useFirestoreDocument } from "@react-query-firebase/firestore";
@@ -72,7 +72,11 @@ export const ReceiptView: React.FunctionComponent<ReceiptViewProps> = ({
 			<ParaItem label="Paid amount" value={strPrice(data) || "N/A"} />
 		</div>
 		<ParaHead>Cost table</ParaHead>
-		<InvoiceBreakdown className="mt-2" snapshot={data[PaymentField.INVOICE] || {}} price={data} totalText="Total paid" />
+		<InvoiceBreakdown className="mt-2" snapshot={data[PaymentField.INVOICE] || {}} price={{
+			...(data[PaymentField.INVOICE]?.[InvoiceSnapshotField.PAYMENT] || { }),
+			[PriceField.AMOUNT_CENTS]: data[PriceField.AMOUNT_CENTS],
+			[PriceField.CURRENCY]: data[PriceField.CURRENCY],
+		}} totalText="Total paid" />
 	</div>;
 };
 
