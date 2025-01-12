@@ -16,7 +16,7 @@ ensureEnvVariablesDefined([
 	"API_KEY", "EDGE_CONFIG_ID", "EDGE_CONFIG_TOKEN", "NEXT_PUBLIC_APP_URL",
 	"NEXT_PUBLIC_FIREBASE_API_KEY",
 	"NEXT_PUBLIC_STORAGE_API_URL", "NEXT_PUBLIC_STORAGE_FILE_URL", "NEXT_PUBLIC_STORAGE_DEFAULT_BUCKET",
-	"NEXT_PUBLIC_OTP_LEN",
+	"NEXT_PUBLIC_OTP_LEN", "NEXT_PUBLIC_ENABLE_TIER_UPGRADE"
 ]);
 
 /**
@@ -60,38 +60,50 @@ const nextConfig = {
 			headers: securities,
 		},
 	],
-	redirects: () => [
-		{
-			source: "/profile",
-			destination: "/account/profile",
-			permanent: true,
-		},
-		{
-			source: "/account",
-			destination: "/account/profile",
-			permanent: false,
-		},
-		{
-			source: "/continue-signin",
-			destination: "/continue/signin",
-			permanent: true,
-		},
-		{
-			source: "/sign-in",
-			destination: "/account/profile",
-			permanent: false,
-		},
-		{
-			source: "/premium",
-			destination: "/tiers",
-			permanent: false,
-		},
-		{
-			source: "/upgrade",
-			destination: "/tiers",
-			permanent: false,
-		},
-	],
+	redirects: () => {
+		const list = [
+			{
+				source: "/profile",
+				destination: "/account/profile",
+				permanent: true,
+			},
+			{
+				source: "/account",
+				destination: "/account/profile",
+				permanent: false,
+			},
+			{
+				source: "/continue-signin",
+				destination: "/continue/signin",
+				permanent: true,
+			},
+			{
+				source: "/sign-in",
+				destination: "/account/profile",
+				permanent: false,
+			},
+			{
+				source: "/premium",
+				destination: "/tiers",
+				permanent: false,
+			},
+			{
+				source: "/upgrade",
+				destination: "/tiers",
+				permanent: false,
+			},
+		];
+
+		if (process.env.NEXT_PUBLIC_ENABLE_TIER_UPGRADE === "false") {
+			list.push({
+				source: "/tiers",
+				destination: "/feature-unavailable",
+				permanent: false,
+			});
+		}
+
+		return list;
+	},
 	images: {
 		remotePatterns: [
 			{

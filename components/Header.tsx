@@ -1,5 +1,6 @@
 "use client";
 
+import { enableUpgrade } from "@/utils/configs";
 import { Theme } from "@/utils/theme";
 import { getAuth } from "firebase/auth";
 import { usePathname } from "next/navigation";
@@ -21,7 +22,7 @@ import { Image } from "./Image";
 import Link from "./Link";
 import { SignInDialogContext } from "./SignInDialog";
 
-const navs: { title: string; pathname: string }[] = [
+const navs: NavPage[] = [
 	{
 		title: "Home",
 		pathname: "/",
@@ -30,10 +31,10 @@ const navs: { title: string; pathname: string }[] = [
 		title: "Dashboard",
 		pathname: "/dashboard",
 	},
-	{
+	...[enableUpgrade && {
 		title: "Upgrade",
 		pathname: "/tiers",
-	},
+	}].filter((v => !!v)) as NavPage[],
 	{
 		title: "About",
 		pathname: "/about",
@@ -122,3 +123,5 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 		</Navbar>
 	</>;
 };
+
+type NavPage = { title: string; pathname: string };

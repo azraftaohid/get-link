@@ -25,3 +25,5 @@ export const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_KEY_ID || "";
 export const appcheckDebugToken = process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN || "";
 
 export const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL_ADDRESS || "";
+
+export const enableUpgrade = process.env.NEXT_PUBLIC_ENABLE_TIER_UPGRADE === "true";
