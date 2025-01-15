@@ -7,3 +7,9 @@ env:
 
   - variable: EDGE_CONFIG_ID
     secret: EDGE_CONFIG_GETLINK_PRIVATE_ID
+
+  - variable: NEXT_PUBLIC_ENABLE_TIER_UPGRADE
+    value: "true"
+    availability:
+      - BUILD
+      - RUNTIME
