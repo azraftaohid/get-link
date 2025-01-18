@@ -21,7 +21,7 @@ export default function Page() {
 
 	return <>
 		<h1>Billing</h1>
-		<p>Manage your subscriptions, payments, and invoices hear.</p>
+		<p>Manage your subscriptions, payments, and invoices here.</p>
 		<hr />
 		<section className="mb-3">
 			<div className="clearfix">
