@@ -15,7 +15,7 @@ export default function Page() {
 		<small className="text-muted">
 			Last updated:{" "}
 			<time itemProp="published" dateTime="2024-12-28">
-				28 December, 2024
+				20 January, 2025
 			</time>
 		</small>
 		<Proposition>
@@ -99,6 +99,17 @@ export default function Page() {
 				</li>
 			</ol>
 			Note: sharers may extend permissions stated above for content shared by themself.
+		</Proposition>
+		<Lead id="feature-availability">Feature availability</Lead>
+		<Proposition>
+			You understand that certain features on our website may not be available to all users. Availability can depend on factors 
+			including but not limited to:
+			<ol>
+				<li>Your subscription plan.</li>
+				<li>Your device.</li>
+				<li>Regional restrictions or compliance requirements.</li>
+				<li>The domain through which the website is accessed.</li>
+			</ol>
 		</Proposition>
 		<Lead id="disclaimer">Disclaimer</Lead>
 		<Proposition className="text-uppercase">
