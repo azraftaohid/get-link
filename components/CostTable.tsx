@@ -1,6 +1,6 @@
 import { BillingInfoField } from "@/models/billings/billingInfo";
-import { InvoiceSnapshot, InvoiceSnapshotField } from "@/models/billings/invoice";
-import { DiscountablePrice, DiscountablePriceField, Price, strPrice } from "@/models/billings/price";
+import { InvoiceData, InvoiceField } from "@/models/billings/invoice";
+import { DiscountablePriceField, Price, strPrice } from "@/models/billings/price";
 import { ProductMetadataField } from "@/models/billings/product";
 import { SubscriptionField } from "@/models/billings/subscription";
 import { mergeNames } from "@/utils/mergeNames";
@@ -31,15 +31,15 @@ function ProductRow({
 	</tr>;
 }
 
-export const InvoiceBreakdown: React.FunctionComponent<InvoiceBreakdownProps> = ({
+export const CostTable: React.FunctionComponent<CostTableProps> = ({
 	className,
-	snapshot, 
-	price,
+	data, 
 	totalText = "Total",
 	...rest
 }) => {
-	const discount = price?.[DiscountablePriceField.DISCOUNT];
-	const subtotal = price[DiscountablePriceField.SUBTOTAL];
+	const payment = data[InvoiceField.PAYMENT] || { };
+	const discount = payment[DiscountablePriceField.DISCOUNT];
+	const subtotal = payment[DiscountablePriceField.SUBTOTAL];
 
 	let sn = 1;
 	return <Table className={mergeNames(className)} bordered {...rest}>
@@ -52,7 +52,7 @@ export const InvoiceBreakdown: React.FunctionComponent<InvoiceBreakdownProps> = 
 			</tr>
 		</thead>
 		<tbody>
-			{Object.entries(snapshot[InvoiceSnapshotField.PRODUCTS] || {}).map(([id, metadata]) => {
+			{Object.entries(data[InvoiceField.PRODUCTS] || {}).map(([id, metadata]) => {
 				if (id.startsWith("subscription")) {
 					const snapshot = metadata[ProductMetadataField.SNAPSHOT];
 					const billings = snapshot?.[SubscriptionField.BILLING];
@@ -88,14 +88,15 @@ export const InvoiceBreakdown: React.FunctionComponent<InvoiceBreakdownProps> = 
 			</tr>
 			<tr>
 				<th scope="row" colSpan={3}>{totalText}</th>
-				<td scope="col">{strPrice(price) || "N/A"}</td>
+				<td scope="col">{strPrice(payment) || "N/A"}</td>
 			</tr>
 		</tfoot>
 	</Table>;
 };
 
-export interface InvoiceBreakdownProps extends TableProps, React.RefAttributes<HTMLTableElement> {
-	snapshot: InvoiceSnapshot,
-	price: DiscountablePrice,
+export type CostableData = Pick<InvoiceData, InvoiceField.PRODUCTS | InvoiceField.TRADE_INS | InvoiceField.PAYMENT>;
+
+export interface CostTableProps extends TableProps, React.RefAttributes<HTMLTableElement> {
+	data: CostableData,
 	totalText?: string,
 }

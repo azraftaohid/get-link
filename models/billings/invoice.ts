@@ -19,10 +19,6 @@ export enum InvoiceField {
 
 export enum InvoiceSnapshotField {
 	ID = "id",
-	PRODUCTS = "products",
-	TRADE_INS = "trade_ins",
-	BILLING_ADDRESS = "billing_address",
-	PAYMENT = "payment",
 }
 
 export enum InvoicePaymentObjField {
@@ -36,6 +32,10 @@ export function getInvoices(): CollectionReference<InvoiceData> {
 	return collection(getFirestore(), COLLECTION_INVOICE);
 }
 
+export function getInvoice(invoiceId: string) {
+	return doc(getInvoices(), invoiceId);
+}
+
 export function createInvoiceId() {
 	return nanoid(21);
 }
@@ -44,6 +44,9 @@ export async function createInvoice(user: User, options: InvoiceCreateOptions) {
 	const data: WithFieldValue<InvoiceData> = {
 		[InvoiceField.PRODUCTS]: options.products,
 		...(options.tradeIns && { [InvoiceField.TRADE_INS]: options.tradeIns }),
+		[InvoiceField.PAYMENT]: {
+			[InvoicePaymentObjField.STATUS]: "pending",
+		},
 		[InvoiceField.CREATE_TIME]: serverTimestamp(),
 		[InvoiceField.EXPIRE_TIME]: Timestamp.fromMillis(now() + 86400000), // 24 hours from now
 		[InvoiceField.USER]: {
@@ -51,7 +54,7 @@ export async function createInvoice(user: User, options: InvoiceCreateOptions) {
 		}
 	};
 
-	const docRef = doc(getInvoices(), createInvoiceId());
+	const docRef = getInvoice(createInvoiceId());
 	await setDoc(docRef, data);
 	return docRef;
 }
@@ -82,7 +85,7 @@ export interface InvoiceUpdateOptions {
 
 export interface InvoicePaymentObj extends DiscountablePrice {
 	[InvoicePaymentObjField.DUE_TIME]?: Timestamp,
-	[InvoicePaymentObjField.STATUS]?: "awaiting" | "paid" | "cancelled",
+	[InvoicePaymentObjField.STATUS]?: "pending" | "paid" | "cancelled",
 }
 
 export interface InvoiceData {
@@ -108,8 +111,4 @@ export interface ComputedInvoiceData {
 
 export interface InvoiceSnapshot {
 	[InvoiceSnapshotField.ID]?: string,
-	[InvoiceSnapshotField.PRODUCTS]?: Record<string, ProductMetadata>,
-	[InvoiceSnapshotField.TRADE_INS]?: Record<string, ProductMetadata>,
-	[InvoiceSnapshotField.BILLING_ADDRESS]?: BillingAddress,
-	[InvoiceSnapshotField.PAYMENT]?: InvoicePaymentObj,
 }

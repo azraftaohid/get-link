@@ -1,15 +1,16 @@
 "use client";
 
+import { Conditional } from "@/components/Conditional";
+import { CostTable } from "@/components/CostTable";
 import { ExpandButton } from "@/components/ExpandButton";
 import TextField from "@/components/forms/TextField";
 import { TickField } from "@/components/forms/TickField";
 import { TickItem } from "@/components/forms/TickItem";
-import { InvoiceBreakdown } from "@/components/InvoiceBreakdown";
 import Link from "@/components/Link";
 import { Loading } from "@/components/Loading";
 import { Required } from "@/components/Required";
 import { BillingAddressField } from "@/models/billings/billingAddress";
-import { ComputedInvoiceData, InvoiceField, updateInvoice } from "@/models/billings/invoice";
+import { ComputedInvoiceData, InvoiceField, InvoicePaymentObjField, updateInvoice } from "@/models/billings/invoice";
 import { getPaymentUrl } from "@/models/billings/payment";
 import { PaymentMethod } from "@/models/billings/paymentMethod";
 import { strPrice } from "@/models/billings/price";
@@ -72,6 +73,7 @@ export default function Page({ params }: Readonly<{ params: { id: string } }>) {
 		isLoading: null,
 	});
 
+	// we won't use init values from database to protect user privacy
 	const inputState = useRef({
 		email: "",
 		method: PaymentMethod.BKASH,
@@ -103,6 +105,7 @@ export default function Page({ params }: Readonly<{ params: { id: string } }>) {
 	}
 
 	const userAccount = data[InvoiceField.USER]?.[UserSnapshotField.UID];
+	const status = data[InvoiceField.PAYMENT]?.[InvoicePaymentObjField.STATUS] || "pending";
 
 	return <>
 		<h1>Checkout</h1>
@@ -115,18 +118,25 @@ export default function Page({ params }: Readonly<{ params: { id: string } }>) {
 						? "Please wait"
 						: user && user.uid === userAccount && user.email || userAccount || "N/A"} />
 				</Kv>
-				<Alert className="mt-3 d-flex flex-row" variant="info">
-					<div className="">
-						<p className="mb-n1"><strong>Payment amount</strong></p>
-						<small>Total amount to be paid today</small>
-					</div>
-					<div className="ms-auto my-auto">
-						<strong className="fs-4 fw-medium">{strPrice(data[InvoiceField.PAYMENT])}</strong>
-					</div>
-				</Alert>
+				<Conditional in={status === "pending"}>
+					<Alert className="mt-3 d-flex flex-row" variant="info">
+						<div className="">
+							<p className="mb-n1"><strong>Payment amount</strong></p>
+							<small>Total amount to be paid today</small>
+						</div>
+						<div className="ms-auto my-auto">
+							<strong className="fs-4 fw-medium">{strPrice(data[InvoiceField.PAYMENT])}</strong>
+						</div>
+					</Alert>
+				</Conditional>
+				<Conditional in={status === "paid"}>
+					<Alert className="mt-3 text-center" variant="success">
+						<strong className="text-uppercase fs-5">Paid!</strong>
+					</Alert>
+				</Conditional>
 				<Section className="mt-3" title="Invoice breakdown">
 					<div className="table-rounded border-secondary">
-						<InvoiceBreakdown snapshot={data} price={data[InvoiceField.PAYMENT]} totalText="Payable amount" />
+						<CostTable data={data} totalText="Payable amount" />
 					</div>
 				</Section>
 			</Col>
@@ -168,8 +178,8 @@ export default function Page({ params }: Readonly<{ params: { id: string } }>) {
 							actions.setSubmitting(false);
 							actions.setStatus("submitted");
 						}}
-					>{({ handleSubmit, errors, isSubmitting, status, handleChange }) => <Form noValidate onSubmit={handleSubmit}>
-						<fieldset disabled={isSubmitting || status == "submitted"}>
+					>{({ handleSubmit, errors, isSubmitting, status: formStatus, handleChange }) => <Form noValidate onSubmit={handleSubmit}>
+						<fieldset disabled={isSubmitting || formStatus === "submitted" || status !== "pending"}>
 							<div className="card border-secondary">
 								<div className="card-body">
 									<TextField
