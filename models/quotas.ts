@@ -58,6 +58,7 @@ export function mergeQuotas(q1: Quotas, q2: Quotas) {
 
 export function interpretlimit(limit: number | undefined, formatter?: (n: number) => string) {
 	if (!limit) return "None";
+	if (limit === -1) return "No limits";
 	return formatter ? formatter(limit) : limit;
 }
 

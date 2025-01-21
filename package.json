@@ -30,7 +30,7 @@
     "@smithy/node-http-handler": "^2.2.2",
     "@smithy/protocol-http": "^3.0.12",
     "@smithy/types": "^2.8.0",
-    "@thegoodcompany/common-utils-js": "^1.4.3",
+    "@thegoodcompany/common-utils-js": "^2.0.0",
     "@transcend-io/conflux": "^4.1.0",
     "@vercel/edge-config": "^1.1.1",
     "bootstrap": "5.3.1",

@@ -69,8 +69,8 @@ export default function ProfileUpdateForm({
 			className={"mt-4"}
 			variant={"danger"}
 			primaryText={"Delete your account"}
-			subsidiaryText={"We will delete the files and links you have created as well as your profile."}
-			footerText={"The links you've shared will stop working."}
+			subsidiaryText={"We will cancel your active subscriptions, delete your files, links, and profile."}
+			footerText={"Shared links will stop working."}
 			submitText={"Delete"}
 			initialValues={{}}
 			state={isDeleting ? "loading" : "none"}
@@ -79,7 +79,7 @@ export default function ProfileUpdateForm({
 		/>
 		<AssurePrompt
 			title={"Delete your account"}
-			message={"Are you sure you want to permanently delete your account and all of its data?"}
+			message={"Are you sure you want to permanently delete your account and all its data?"}
 			fullscreen={"md-down"}
 			show={showDeletePrompt}
 			confirmProps={{

@@ -68,6 +68,13 @@ $utilities: map-merge(
           map-get($utilities, width),
           (
             responsive: true,
+            values:
+            map-merge(
+              map-get(map-get($utilities, width), values),
+              (
+                fit: fit-content,
+              )
+            )
           )
       ),
       "max-height":
@@ -131,8 +138,21 @@ $utilities: map-merge(
         values: map-merge(map-get(map-get($utilities, z-index), values), (
           10000: 10000,
         ))
-      ))
-    )
+      )),
+      "border-color": 
+      map-merge(
+        map-get($utilities, border-color),
+        (
+          values:
+          map-merge(
+              map-get(map-get($utilities, border-color), values),
+              (
+                translucent: var(--bs-border-color-translucent),
+              )
+          ),
+        )
+      ),
+    ),
 );
 
 // Configuration

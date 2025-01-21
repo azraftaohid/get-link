@@ -135,7 +135,7 @@ export interface SquareCardProps {
 	title: string,
 	thumbnail?: string | null,
 	createTime?: Timestamp,
-	expireTime?: Timestamp,
+	expireTime?: Timestamp | null,
 	href: string,
 	onThumbnailError?: ImageProps["onError"],
 }

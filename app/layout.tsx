@@ -1,8 +1,6 @@
 import FirebaseProvider from "@/components/FirebaseProvider";
-import { Footer } from "@/components/Footer";
-import { Header } from "@/components/Header";
-import { PageContainer } from "@/components/PageContainer";
 import RouteIndicatorProvider from "@/components/RouteIndicatorProvider";
+import { SignInDialogProvider } from "@/components/SignInDialog";
 import ToastProvider from "@/components/ToastProvider";
 import { init } from "@/utils/init";
 import { DOMAIN } from "@/utils/urls";
@@ -53,13 +51,9 @@ export default function RootLayout({ children }: Readonly<React.PropsWithChildre
 			<FirebaseProvider>
 				<RouteIndicatorProvider>
 					<ToastProvider>
-						<main>
-							<PageContainer>
-								<Header />
-								{children}
-								<Footer />
-							</PageContainer>
-						</main>
+						<SignInDialogProvider>
+							<main>{children}</main>
+						</SignInDialogProvider>
 					</ToastProvider>
 				</RouteIndicatorProvider>
 			</FirebaseProvider>

@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
 import { QueryDocumentSnapshot } from "firebase/firestore";
-import { LinkData, LinkField } from "../../models/links";
+import React, { useEffect, useState } from "react";
 import { getFileKey, getThumbnailKey } from "../../models/files";
-import { getDownloadURL, getMetadata, objectExists } from "../../utils/storage";
+import { LinkData, LinkField } from "../../models/links";
 import { findFileIcon, NON_PREVIEWABLE_IMAGE_TYPES } from "../../utils/files";
-import { SquareCard } from "./SquareCard";
+import { getDownloadURL, getMetadata, objectExists } from "../../utils/storage";
 import { createAbsoluteUrl, DOMAIN } from "../../utils/urls";
+import { SquareCard } from "./SquareCard";
 
 export const LinkSquareCard: React.FunctionComponent<LinkSquareCardProps> = ({
 	link,

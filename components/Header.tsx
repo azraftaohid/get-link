@@ -1,9 +1,10 @@
 "use client";
 
+import { enableUpgrade } from "@/utils/configs";
 import { Theme } from "@/utils/theme";
 import { getAuth } from "firebase/auth";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
@@ -19,9 +20,9 @@ import { Button } from "./Button";
 import { Icon } from "./Icon";
 import { Image } from "./Image";
 import Link from "./Link";
-import { SignInDialog } from "./SignInDialog";
+import { SignInDialogContext } from "./SignInDialog";
 
-const navs: { title: string; pathname: string }[] = [
+const navs: NavPage[] = [
 	{
 		title: "Home",
 		pathname: "/",
@@ -30,6 +31,10 @@ const navs: { title: string; pathname: string }[] = [
 		title: "Dashboard",
 		pathname: "/dashboard",
 	},
+	...[enableUpgrade && {
+		title: "Upgrade",
+		pathname: "/tiers",
+	}].filter((v => !!v)) as NavPage[],
 	{
 		title: "About",
 		pathname: "/about",
@@ -41,8 +46,8 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 
 	const { user } = useUser();
 	const { current: theme, setTheme } = useTheme();
+	const { showSignInPrompt } = useContext(SignInDialogContext);
 
-	const [showSignIn, setSignIn] = useState(false);
 	const [authReady, setAuthReady] = useState(false);
 
 	useEffect(() => {
@@ -111,11 +116,12 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 					variant="outline-secondary"
 					state={authReady ? "none" : "loading"}
 					left={<Icon size="md" name="login" />}
-					onClick={() => setSignIn(true)}
+					onClick={() => showSignInPrompt(true)}
 					disabled={!authReady}
 				/>}
 			</Container>
 		</Navbar>
-		<SignInDialog show={showSignIn} onHide={() => setSignIn(false)} />
 	</>;
 };
+
+type NavPage = { title: string; pathname: string };

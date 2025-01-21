@@ -1,7 +1,9 @@
+"use client";
+
 import { FirebaseError } from "firebase/app";
 import { getAdditionalUserInfo } from "firebase/auth";
 import { Formik } from "formik";
-import React, { useRef, useState } from "react";
+import React, { PropsWithChildren, createContext, useMemo, useRef, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Modal, { ModalProps } from "react-bootstrap/Modal";
 import ModalBody from "react-bootstrap/ModalBody";
@@ -16,15 +18,15 @@ import {
 	sendSignInLinkToEmail,
 	signInWithLink,
 } from "../utils/auths";
+import { makeContinueUrl } from "../utils/urls";
 import { useStatus } from "../utils/useStatus";
 import { useToast } from "../utils/useToast";
 import { useUser } from "../utils/useUser";
+import { AlertArray, AlertArraySource } from "./AlertArray";
 import { Button } from "./Button";
 import { Conditional } from "./Conditional";
-import TextField from "./forms/TextField";
 import { SendCodeButton } from "./SendCodeButton";
-import { makeContinueUrl } from "../utils/urls";
-import { AlertArray, AlertArraySource } from "./AlertArray";
+import TextField from "./forms/TextField";
 
 enum State {
 	NONE, CODE_REQUESTED, P1, SENT, SUBMITTED, P2, COMPLETED
@@ -78,7 +80,11 @@ const statusMssgMapping: AlertArraySource<StatusCode> = {
 	}
 };
 
-export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) => {
+export const SignInDialogContext = createContext<SignInDialogContextInterface>({
+	showSignInPrompt: () => { throw new Error("Method not implemented"); },
+});
+
+const SignInDialog: React.FunctionComponent<ModalProps> = (props) => {
 	const { user } = useUser();
 	const { makeToast } = useToast();
 
@@ -205,6 +211,26 @@ export const SignInDialog: React.FunctionComponent<SignInDialogProps> = (props) 
 	</Modal>;
 };
 
+export const SignInDialogProvider: React.FunctionComponent<PropsWithChildren<SignInDialogProps>> = ({
+	children,
+	...rest
+}) => {
+	const [display, setDisplay] = useState(false);
+
+	const provValue = useMemo<SignInDialogContextInterface>(() => ({
+		showSignInPrompt: setDisplay,
+	}), []);
+
+	return <SignInDialogContext.Provider value={provValue}>
+		{children}
+		<SignInDialog
+			show={display}
+			onHide={() => setDisplay(false)}
+			{...rest}
+		/>
+	</SignInDialogContext.Provider>;
+};
+
 type StatusCode = "err:send-otp-to-email" | 
 	"err:send-sign-in-link-to-email" |
 	"err:sign-in" | 
@@ -214,4 +240,8 @@ type StatusCode = "err:send-otp-to-email" |
 	"signed-in:new-user" |
 	"signed-in:user-linked";
 
-export type SignInDialogProps = ModalProps;
+export type SignInDialogProps = Omit<ModalProps, "show" | "onHide">
+
+export interface SignInDialogContextInterface {
+	showSignInPrompt: (b: boolean) => void,
+}

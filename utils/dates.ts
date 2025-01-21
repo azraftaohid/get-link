@@ -21,7 +21,7 @@ export function isIn(date: Date, ms: number) {
 	return Math.abs(diff) <= ms;
 }
 
-export function hasExpired(expireTime?: ReturnType<Timestamp["toJSON"]>, createTime?: ReturnType<Timestamp["toJSON"]>) {
+export function hasExpired(expireTime?: ReturnType<Timestamp["toJSON"]> | null, createTime?: ReturnType<Timestamp["toJSON"]>) {
 	const expireSeconds = expireTime?.seconds || ((createTime?.seconds || 0) + new Days(EXPIRE_DAYS).toSeconds().value);
 	return now() / 1000 > expireSeconds;
 }

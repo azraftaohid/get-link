@@ -14,8 +14,8 @@ export default function Page() {
 		<Heading>Policies</Heading>
 		<small className="text-muted">
 			Last updated:{" "}
-			<time itemProp="published" dateTime="2022-03-23">
-				23 March, 2022
+			<time itemProp="published" dateTime="2024-12-28">
+				20 January, 2025
 			</time>
 		</small>
 		<Proposition>
@@ -48,9 +48,17 @@ export default function Page() {
 			</Link>{" "}
 			without obtaining the copyright holder&apos;s permission. <br />
 			And we will only collect personal information that you provide us with. We will not share any
-			information without your consent with third parties that may be used to uniquely identify you.
+			information without your consent with third parties that may be used to uniquely identify you.<br />
+			We offer paid services, but do not guarantee refunds. However, when you switch plans, we may offer discounts.
 		</Proposition>
 		<hr />
+		<Topic id="introduction">Introduction</Topic>
+		<Proposition>
+			Throughout this policy, URLs like <Link variant="reset" href="/upgrade">/upgrade</Link> are relative URLs, 
+			meaning they should be accessed by appending them to the base URL <Link variant="reset" href={DOMAIN}>
+			{DOMAIN}</Link>. For example, the full URL for <Link variant="reset" href="/upgrade">/upgrade</Link> is{" "}
+			<Link variant="reset" href={"/upgrade"}>{DOMAIN + "/upgrade"}</Link>.
+		</Proposition>
 		<Topic id="tos">Terms of Service</Topic>
 		<Proposition>
 			Before using this website (the Service) provided by Get Link (Us), be sure to read and understand
@@ -91,6 +99,17 @@ export default function Page() {
 				</li>
 			</ol>
 			Note: sharers may extend permissions stated above for content shared by themself.
+		</Proposition>
+		<Lead id="feature-availability">Feature availability</Lead>
+		<Proposition>
+			You understand that certain features on our website may not be available to all users. Availability can depend on factors 
+			including but not limited to:
+			<ol>
+				<li>Your subscription plan.</li>
+				<li>Your device.</li>
+				<li>Regional restrictions or compliance requirements.</li>
+				<li>The domain through which the website is accessed.</li>
+			</ol>
 		</Proposition>
 		<Lead id="disclaimer">Disclaimer</Lead>
 		<Proposition className="text-uppercase">
@@ -151,8 +170,39 @@ export default function Page() {
 			information no less than 90 days after they are deemed useless.
 		</Proposition>
 		<Proposition>
-			However, the files you upload may be deleted not less than 14 days after they are uploaded. This is
-			to prevent accidental leaks of sensitive files.
+			However, the files you upload may be deleted not less than 14 days after they are uploaded or before the expiration 
+			date you specify during upload.
 		</Proposition>
+		<Topic id="refund-policy">Refund Policy</Topic>
+		<Proposition>
+			Get Link offers paid subscription-based services. Please read this policy carefully to understand our refund terms.
+		</Proposition>
+		<Lead id="no-refunds">No Refunds</Lead>
+		<Proposition>
+			We do not guarantee refunds for any payments made on our platform. All purchases are considered final.
+		</Proposition>
+		<Lead id="switching-plans">Switching plans</Lead>
+		<Proposition>
+			If you switch between subscription plans using the Upgrade page (<Link href="/upgrade" newTab>/upgrade</Link>), any 
+			active subscription may be <em>traded in</em> automatically to adjust the cost of the new plan. Here&apos;s how it works:
+			<ul>
+				<li>
+					<strong>Trade-in:</strong> An active subscription is traded in when switching plans. If multiple active 
+					subscriptions exist, one may be selected at our discretion for trade-in.
+				</li>
+				<li>
+					<strong>No active subscriptions:</strong> If you have no active subscriptions, no trade-in will occur, 
+					and the full price of the new plan will apply. You can manage or disable subscriptions via the <i>Billing</i>{" "}
+					section at account settings (<Link href="/account/billing" newTab>/account/billing</Link>).
+				</li>
+				<li>
+					<strong>Discounts:</strong> Any discounts resulting from a trade-in will be applied automatically at checkout.
+				</li>
+			</ul>
+		</Proposition>
+		<Alert className="mt-4" variant="info">
+			<b>Please note:</b> switching plans is different from purchasing a new subscription and may involve trading in an 
+			existing active subscription. Ensure you review your plan details before making changes.
+		</Alert>
 	</>;
 }

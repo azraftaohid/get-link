@@ -1,3 +1,6 @@
+import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
+import { PageContainer } from "@/components/PageContainer";
 import { PageContent } from "@/components/PageContent";
 import { Metadata } from "next";
 import Alert from "react-bootstrap/Alert";
@@ -14,10 +17,14 @@ export const metadata: Metadata = {
 };
 
 export default function NotFound() {
-	return <PageContent>
-		<Alert variant="warning">
-			Looks like the page you are looking for doesn&apos;t exist. Please check URL for mistakes and try
-			again.
-		</Alert>
-	</PageContent>;
+	return <PageContainer>
+		<Header />
+		<PageContent>
+			<Alert variant="warning">
+				Looks like the page you are looking for doesn&apos;t exist. Please check URL for mistakes and try
+				again.
+			</Alert>
+		</PageContent>
+		<Footer />
+	</PageContainer>;
 }
