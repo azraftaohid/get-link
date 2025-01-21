@@ -41,6 +41,8 @@ export const COLLECTION_LINKS = "links_v3";
 
 export const MAX_LEN_LINK_TITLE = 255;
 
+export const DEFAULT_LINK_VALIDITY_MS = 1209600000; // 14 days
+
 export function getLinks(): CollectionReference<LinkData>;
 export function getLinks(uid: string): Query<LinkData>;
 export function getLinks(uid?: string) {

@@ -1,3 +1,6 @@
+import { DEFAULT_LINK_VALIDITY_MS } from "@/models/links";
+import { quantityString } from "@/utils/quantityString";
+import { Millis } from "@thegoodcompany/common-utils-js";
 import React from "react";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { Quotas, interpretlimit } from "../models/quotas";
@@ -17,7 +20,11 @@ export const QuotaOverview: React.FunctionComponent<QuotaOverviewProps> = ({
 		<hr />
 		<p className="fs-5 fw-bold">Limits</p>
 		<p className="mb-0">File size: {interpretlimit(quotas.storage?.filesize?.limit, n => `${formatSize(n)} per file`)}</p>
-		<p>File limit: {quotas.filedocs?.write?.limit ? "no limits" : interpretlimit(quotas.links?.inlinefids?.limit, n => `${n} files per link`)}</p>
+		<p className="mb-0">File limit: {quotas.filedocs?.write?.limit ? "No limits" : interpretlimit(quotas.links?.inlinefids?.limit, n => `${n} files per link`)}</p>
+		<p>Link validity: {interpretlimit(quotas.links?.validity?.limit || DEFAULT_LINK_VALIDITY_MS, (n => {
+			const days = new Millis(n).toDays().value;
+			return `${days} ${quantityString("day", "days", days)}`;
+		}))}</p>
 	</div>;
 };
 

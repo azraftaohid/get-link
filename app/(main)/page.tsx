@@ -12,7 +12,7 @@ import { DropZone } from "@/components/batch_upload/DropZone";
 import { UploadArray } from "@/components/batch_upload/UploadArray";
 import TextField from "@/components/forms/TextField";
 import { createFileDoc } from "@/models/files";
-import { Link as LinkObject, MAX_LEN_LINK_TITLE } from "@/models/links";
+import { DEFAULT_LINK_VALIDITY_MS, Link as LinkObject, MAX_LEN_LINK_TITLE } from "@/models/links";
 import { OrderField } from "@/models/order";
 import { now } from "@/utils/dates";
 import { createViewLink } from "@/utils/files";
@@ -20,7 +20,7 @@ import { mergeNames } from "@/utils/mergeNames";
 import { quantityString } from "@/utils/quantityString";
 import { useAppRouter } from "@/utils/useAppRouter";
 import { useFeatures } from "@/utils/useFeatures";
-import { Millis } from "@thegoodcompany/common-utils-js";
+import { Millis, Seconds } from "@thegoodcompany/common-utils-js";
 import { Timestamp, getFirestore, runTransaction } from "firebase/firestore";
 import { Formik, FormikProps } from "formik";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -40,6 +40,15 @@ function extractTitle(file: File) {
 	return file.name.substring(0, MAX_LEN_LINK_TITLE);
 }
 
+function computeExpireTime(expireTime: string) {
+	const cDate = new Date();
+
+	const expireDate = new Date(expireTime);
+	expireDate.setHours(cDate.getHours(), cDate.getMinutes(), cDate.getSeconds());
+
+	return Timestamp.fromMillis(expireDate.getTime());
+}
+
 export default function Page() {
 	const router = useAppRouter();
 	const features = useFeatures();
@@ -55,7 +64,7 @@ export default function Page() {
 		let expiresSpec = Yup.date();
 
 		const currentTime = now();
-		const maxValidity = features.quotas.links?.validity?.limit || 1209600000; // ? 14days
+		const maxValidity = features.quotas.links?.validity?.limit || DEFAULT_LINK_VALIDITY_MS;
 		const minValidity = 86400000; // 24hrs
 
 		let maxExpireTimeStr: string | undefined;
@@ -128,11 +137,7 @@ export default function Page() {
 						
 						const expires = values.expires;
 						if (expires) {
-							const cDate = new Date();
-							const timeOffset = ((cDate.getHours() * 60 + cDate.getMinutes()) * 60 + cDate.getSeconds()) * 1000;
-
-							const expireDate = new Date(expires);
-							link.current.setExpireTime(Timestamp.fromMillis(expireDate.getTime() + timeOffset));
+							link.current.setExpireTime(computeExpireTime(expires));
 						}
 
 						try {
@@ -158,7 +163,7 @@ export default function Page() {
 							setState("none");
 						}
 					}}
-				>{({ handleSubmit, errors }) => <Form noValidate onSubmit={handleSubmit}>
+				>{({ handleSubmit, values, errors }) => <Form noValidate onSubmit={handleSubmit}>
 					<BatchUploadAlert />
 					<Row className="g-3" xs={1} lg={3}>
 						<Col lg={7}>
@@ -207,7 +212,11 @@ export default function Page() {
 						<Col md={ctx.files.length === 0 && 12}>
 							<DropZone
 								className={mergeNames(ctx.files.length > 0 && "mt-3 mt-md-0 h-25 h-md-100 mh-md-unset")}
-								subtext={"Links expire after validity period"}
+								subtext={(() => {
+									if (!values.expires) return "Link will never expire.";
+									const days = new Seconds(computeExpireTime(values.expires).seconds - Timestamp.now().seconds).toDays().value | 0;
+									return `Link will expire in ${days} ${quantityString("day", "days", days)}.`;
+								})()}
 								continous
 							/>
 						</Col>
