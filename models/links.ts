@@ -20,7 +20,6 @@ import {
 	WithFieldValue,
 } from "firebase/firestore";
 import { v4 as uuidV4 } from "uuid";
-import { now } from "../utils/dates";
 import { ensureProperty } from "../utils/objects";
 import { createCFID, FileData, FileField } from "./files";
 import { LinkCover } from "./linkCover";
@@ -76,7 +75,7 @@ export function createLink(title: string, ref: DocumentReference<LinkData> = get
 		[LinkField.USER]: { [UserSnapshotField.UID]: uid },
 		[LinkField.CREATE_TIME]: serverTimestamp(),
 		...((!data?.[LinkField.EXPIRE_TIME] || (data[LinkField.EXPIRE_TIME] instanceof FieldValue)) && {
-			[LinkField.EXPIRE_TIME]: Timestamp.fromMillis(now() + 1209600000)
+			[LinkField.EXPIRE_TIME]: null,
 		}),
 	};
 
@@ -235,5 +234,5 @@ export interface LinkData {
 	[LinkField.FILES]?: Record<string, InlineFileData>;
 	[LinkField.DOWNLOAD_SIZE]?: number,
 	[LinkField.CREATE_TIME]?: Timestamp;
-	[LinkField.EXPIRE_TIME]?: Timestamp;
+	[LinkField.EXPIRE_TIME]?: Timestamp | null;
 }

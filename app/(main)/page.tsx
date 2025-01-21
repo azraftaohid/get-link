@@ -51,27 +51,37 @@ export default function Page() {
 	const [state, setState] = useState<"none" | "uploading" | "processing" | "submitted">("none");
 
 	const [schema, minExpireTimeStr, maxExpireTimeStr] = useMemo(() => {
+		let titleSpec = Yup.string();
+		let expiresSpec = Yup.date();
+
 		const currentTime = now();
 		const maxValidity = features.quotas.links?.validity?.limit || 1209600000; // ? 14days
 		const minValidity = 86400000; // 24hrs
-		const maxExpireTimeStr = new Date(currentTime + maxValidity).toISOString().split("T")[0];
-		const minExpireTimeStr = new Date(currentTime + minValidity).toISOString().split("T")[0];
 
-		const maxValidityDays = new Millis(maxValidity).toDays().value;
+		let maxExpireTimeStr: string | undefined;
+		if (maxValidity === -1) {
+			expiresSpec = expiresSpec.optional();
+		} else {
+			maxExpireTimeStr = new Date(currentTime + maxValidity).toISOString().split("T")[0];
+			const maxValidityDays = new Millis(maxValidity).toDays().value;
+
+			expiresSpec = expiresSpec.required("Expiration time is required.")
+				.max(maxExpireTimeStr, `Your current feature tier allows maximum validity of ${maxValidityDays} 
+					${quantityString("day", "days", maxValidityDays)}.`);
+		}
+
+		const minExpireTimeStr = new Date(currentTime + minValidity).toISOString().split("T")[0];
 		const minValidityDays = new Millis(minValidity).toDays().value;
-		return [Yup.object({
-			title: Yup.string()
-				.optional()
-				.max(MAX_LEN_LINK_TITLE, `Link title can't be more than ${MAX_LEN_LINK_TITLE} characters long.`)
-				.min(1, "Title must be greater than 1 character long.")
-				.trim(),
-			expires: Yup.date()
-				.required("Expiration time is required.")
-				.max(maxExpireTimeStr, 
-					`Your current feature tier allows maximum validity of ${maxValidityDays} ${quantityString("day", "days", maxValidityDays)}.`)
-				.min(minExpireTimeStr, 
-					`Must have at least ${minValidityDays} ${quantityString("day", "days", minValidityDays)} validity.`)
-		}), minExpireTimeStr, maxExpireTimeStr];
+
+		expiresSpec = expiresSpec.min(minExpireTimeStr, `Must have at least ${minValidityDays} 
+			${quantityString("day", "days", minValidityDays)} validity.`);
+
+		titleSpec = titleSpec.optional()
+			.max(MAX_LEN_LINK_TITLE, `Link title can't be more than ${MAX_LEN_LINK_TITLE} characters long.`)
+			.min(1, "Title must be greater than 1 character long.")
+			.trim();
+
+		return [Yup.object({ title: titleSpec, expires: expiresSpec }), minExpireTimeStr, maxExpireTimeStr];
 	}, [features.quotas.links?.validity?.limit]);
 
 	// todo: use local cache to set default expire time to infinity for users with such quota available.
@@ -115,12 +125,15 @@ export default function Page() {
 
 							actions.setFieldValue("title", title, false);
 						}
-
-						const cDate = new Date();
-						const timeOffset = ((cDate.getHours() * 60 + cDate.getMinutes()) * 60 + cDate.getSeconds()) * 1000;
 						
-						const expireDate = new Date(values.expires);
-						link.current.setExpireTime(Timestamp.fromMillis(expireDate.getTime() + timeOffset));
+						const expires = values.expires;
+						if (expires) {
+							const cDate = new Date();
+							const timeOffset = ((cDate.getHours() * 60 + cDate.getMinutes()) * 60 + cDate.getSeconds()) * 1000;
+
+							const expireDate = new Date(expires);
+							link.current.setExpireTime(Timestamp.fromMillis(expireDate.getTime() + timeOffset));
+						}
 
 						try {
 							const value = await runTransaction(getFirestore(), async transaction => {
