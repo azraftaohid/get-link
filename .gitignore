@@ -47,3 +47,5 @@ yarn-error.log*
 /firebase-debug.log
 
 .vscode
+
+/.VSCodeCounter/
