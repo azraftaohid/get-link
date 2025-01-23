@@ -25,6 +25,8 @@ import { connectFunctionsEmulator, getFunctions } from "./functions";
 
 export const FIREBASE_APP_NAME = "[DEFAULT]";
 
+export const emulatorHost = process.env.NEXT_PUBLIC_FIREBASE_EMULATOR_HOST || "localhost";
+
 let appCheck: AppCheck;
 
 export function requireAppCheck() {
@@ -52,9 +54,9 @@ export function initFirebase() {
 	if (process.env.NODE_ENV === "development") {
 		if (hasWindow) self.FIREBASE_APPCHECK_DEBUG_TOKEN = appcheckDebugToken;
 		
-		connectFirestoreEmulator(firestore, "localhost", 8080);
-		connectFunctionsEmulator(functions, "localhost", 5001);
-		connectAuthEmulator(auth, "http://localhost:9099", {
+		connectFirestoreEmulator(firestore, emulatorHost, 8080);
+		connectFunctionsEmulator(functions, emulatorHost, 5001);
+		connectAuthEmulator(auth, `http://${emulatorHost}:9099`, {
 			disableWarnings: true,
 		});
 	}

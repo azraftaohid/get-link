@@ -106,7 +106,8 @@ export class Upload extends EventEmitter {
 		try {
 			sha1Hash = await this.createSha1Hash(dataPart.data);
 		} catch (error) {
-			throw new StorageError("storage:create-sha1-hash-error", "Unable to create SHA-1 hash of body", error);
+			if (process.env.NODE_ENV === "development") sha1Hash = "do_not_verify";
+			else throw new StorageError("storage:create-sha1-hash-error", "Unable to create SHA-1 hash of body", error);
 		}
 		if (this.getState() !== "running") return;
 
@@ -199,7 +200,8 @@ export class Upload extends EventEmitter {
 		try {
 			sha1Hash = await this.createSha1Hash(dataPart.data);
 		} catch (error) {
-			throw new StorageError("storage:create-sha1-hash-error", "Unable to create SHA-1 hash of part " + dataPart.partNumber, error);
+			if (process.env.NODE_ENV === "development") sha1Hash = "do_not_verify";
+			else throw new StorageError("storage:create-sha1-hash-error", "Unable to create SHA-1 hash of part " + dataPart.partNumber, error);
 		}
 		if (this.getState() !== "running") return;
 
