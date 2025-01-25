@@ -1,5 +1,5 @@
 export enum PaymentMethod {
-	BKASH = "bKash_checkout",
+	BKASH = "bkash_checkout",
 	CARD = "sslcommerz",
 	EMULATOR = "emulator",
 }
