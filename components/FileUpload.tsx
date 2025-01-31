@@ -121,14 +121,17 @@ export const FileUpload: React.FunctionComponent<FileUploadProps> = ({
 	// attempts to upload file, whenever uid or file reference has changed
 	useEffect(() => {
 		console.debug("Checking file...");
-		if (!file || !uid || pendingCancel.current) return;
+		if (!file || !uid || pendingCancel.current) {
+			console.debug(`Not suitable for upload [file: ${file?.name}; uid: ${uid}; pending cancel: ${pendingCancel.current}].`);
+			return;
+		}
 
 		console.debug("Preparing file for upload: " + file.name);
 		const handler = async () => {
 			attempt.current++;
 			
 			const [mime, ext] = await getFileType(file); // respect user specified extension
-			console.debug(`File loaded for upload [mime-type: ${mime}; ext: ${ext}]`);
+			console.debug(`File loaded for upload [mime-type: ${mime}; ext: ${ext}; attempt: ${attempt.current}].`);
 
 			const prefix = createFileNamePrefix();
 			const fid = createFID(prefix + ext, uid);

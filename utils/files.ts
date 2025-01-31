@@ -178,7 +178,10 @@ export function prependExt(fullName: string, text: string) {
 }
 
 export function shallowHash(file: File) {
-	return `${file.name};${file.type};${file.size};${file.lastModified}`;
+	// we are using a combination of file properties to create a ~unique identifier for the file
+	// we will not be using file.lastModified because it is replaced with current time when not known which
+	// can lead to unintended behaviors
+	return `${file.name};${file.type};${file.size}`;
 }
 
 export type FilesStatus =
