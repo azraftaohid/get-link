@@ -10,11 +10,17 @@ import {
 	UserCredential,
 } from "firebase/auth";
 import { HttpsCallable, httpsCallable } from "firebase/functions";
+import { now } from "./dates";
 import { AppError } from "./errors/AppError";
 import { getFunctions } from "./functions";
 
 export const KEY_SIGN_IN_EMAIL = "passwordless_sign_in.last_email";
 export const KEY_EMAIL_TO_UPDATE = "email_update.last_email";
+
+const KEY_SIGN_IN_ATTEMPT_COUNT = "sign_in.attempt_count";
+const KEY_LAST_SIGN_IN_ATTEMPT_TIME = "sign_in.last_attempt_time";
+
+export const signInMethods = ["emailLink", "emailOtp"] as const;
 
 export const AUTH_SIGN_IN_OTP_LENGTH = +(process.env.NEXT_PUBLIC_SIGN_IN_OTP_LEN || process.env.NEXT_PUBLIC_OTP_LEN || 15);
 export const AUTH_REAUTH_OTP_LEN = +(process.env.NEXT_PUBLIC_REAUTH_OTP_LEN || AUTH_SIGN_IN_OTP_LENGTH);
@@ -154,6 +160,44 @@ export async function signInWithLink(email: string, signInLink: string, currentU
 	else return await attemptAsNewSignIn();
 }
 
+export function registerAuthAttempt(authType: "login" | "reauth" | "updateEmail" | "recoverEmail", method: typeof signInMethods[number]) {
+	const cTime = now();
+	const lastAttemptTime = +(localStorage.getItem(authType + "." + KEY_LAST_SIGN_IN_ATTEMPT_TIME) || "0");
+	const timeDiff = cTime - lastAttemptTime;
+
+	const attempts: Omit<SignInAttempts, "accumulated"> = {
+		emailLink: 0,
+		emailOtp: 0,
+	};
+
+	let accumulated = 0;
+	for (const m of signInMethods) {
+		const scopedKey = authType + "." + KEY_SIGN_IN_ATTEMPT_COUNT + "." + m;
+		let scopedAttempt = 0;
+
+		if (timeDiff < 86400000) scopedAttempt = +(localStorage.getItem(scopedKey) || "0");
+		if (m === method) scopedAttempt++;
+
+		attempts[method] = scopedAttempt;
+		accumulated += scopedAttempt;
+		localStorage.setItem(scopedKey, scopedAttempt.toString());
+	}
+
+	localStorage.setItem(authType + "." + KEY_LAST_SIGN_IN_ATTEMPT_TIME, cTime.toString());
+
+	return {
+		accumulated,
+		...attempts,
+	};
+}
+
+export function clearAuthAttempt(authType: "login" | "reauth" | "updateEmail" | "recoverEmail") {
+	localStorage.removeItem(authType + "." + KEY_LAST_SIGN_IN_ATTEMPT_TIME);
+	for (const m of signInMethods) {
+		localStorage.removeItem(authType + "." + KEY_SIGN_IN_ATTEMPT_COUNT + "." + m);
+	}
+}
+
 export type AuthStatus = "auth:sign-in-error" |
 	"auth:signing-in";
 
@@ -215,3 +259,5 @@ interface EmailOTPSignInRequestData {
 	otp: string,
 	linkCurrentUser?: boolean,
 }
+
+export type SignInAttempts = Record<typeof signInMethods[number] | "accumulated", number>;

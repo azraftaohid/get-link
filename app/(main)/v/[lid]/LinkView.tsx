@@ -13,7 +13,7 @@ import { ViewHeader } from "@/components/ViewHeader";
 import { FileCard } from "@/components/cards/FileCard";
 import { FileData, FileField, createCFID } from "@/models/files";
 import { Warning, releaseLink } from "@/models/links";
-import { ClickEventContext, logClick } from "@/utils/analytics";
+import { ClickEventContext, logClick, logShare } from "@/utils/analytics";
 import { THRESHOLD_DIRECT_DOWNLOAD, shouldStepOutDownload } from "@/utils/downloads";
 import { createViewLink } from "@/utils/files";
 import { initModernizr } from "@/utils/modernizr";
@@ -162,19 +162,21 @@ export default function LinkView({
 						} catch (error) {
 							console.error("Copy to clipboard failed:", error);
 							makeToast("Here is your shortlink: " + shortlink);
+							logShare("shortlink", "display", "link");
 							return;
 						} finally {
 							setShortlinkState("none");
 						}
 
 						makeToast("Shortlink copied to clipboard.");
+						logShare("shortlink", "clipboard", "link");
 					}
 				}}>
 					<CopyButton
 						variant="outline-vivid"
 						content={createViewLink(lid, true)}
 						left={<Icon name="link" size="sm" />}
-						onClick={() => logClick("share")}
+						onClick={() => logShare("uuid", "clipboard", "link")}
 					>
 						<span className="d-none d-md-inline">Share</span>
 					</CopyButton>

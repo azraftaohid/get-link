@@ -1,23 +1,24 @@
-import React, { useRef, useState } from "react";
-import Modal, { ModalProps } from "react-bootstrap/Modal";
-import ModalHeader from "react-bootstrap/ModalHeader";
-import ModalTitle from "react-bootstrap/ModalTitle";
+import { LoginFailureReason, logReauth, logReauthFailure } from "@/utils/analytics";
+import { FirebaseError } from "firebase/app";
 import { User } from "firebase/auth";
 import { Formik } from "formik";
+import React, { useRef, useState } from "react";
 import Form from "react-bootstrap/Form";
+import Modal, { ModalProps } from "react-bootstrap/Modal";
 import ModalBody from "react-bootstrap/ModalBody";
 import ModalFooter from "react-bootstrap/ModalFooter";
+import ModalHeader from "react-bootstrap/ModalHeader";
+import ModalTitle from "react-bootstrap/ModalTitle";
+import * as yup from "yup";
+import { AUTH_REAUTH_OTP_LEN, clearAuthAttempt, obtainReauthLink, reauthWithLink, registerAuthAttempt, sendReauthLink } from "../utils/auths";
+import { makeContinueUrl } from "../utils/urls";
+import { useStatus } from "../utils/useStatus";
+import { useToast } from "../utils/useToast";
+import { AlertArray, AlertArraySource } from "./AlertArray";
 import { Button } from "./Button";
 import { Conditional } from "./Conditional";
 import TextField from "./forms/TextField";
-import * as yup from "yup";
-import { AUTH_REAUTH_OTP_LEN, obtainReauthLink, reauthWithLink, sendReauthLink } from "../utils/auths";
-import { useToast } from "../utils/useToast";
-import { useStatus } from "../utils/useStatus";
-import { FirebaseError } from "firebase/app";
 import { SendCodeButton } from "./SendCodeButton";
-import { makeContinueUrl } from "../utils/urls";
-import { AlertArray, AlertArraySource } from "./AlertArray";
 
 enum State {
 	NONE, CODE_SENT, VERIFYING, COMPLETED
@@ -89,17 +90,30 @@ export const ReauthDialog: React.FunctionComponent<ReauthDialogProps> = ({
 				initValues.current = values;
 				initErrors.current = { email: "", code: "" };
 
+				const attempts = registerAuthAttempt("reauth", "emailOtp");
+
 				let reauthLink: string;
 				try {
 					reauthLink = (await obtainReauthLink(user.uid, values.code)).data;
 				} catch (error) {
 					console.error("Failed to obtain reauth link from OTP: ", error);
+
+					let failureReason: LoginFailureReason;
 					switch ((error as FirebaseError)?.code) {
-						case "functions/invalid-argument": appendStatus("error:invalid-code"); break;
-						case "functions/deadline-exceeded": appendStatus("error:code-expired"); break;
-						default: appendStatus("error:reauth");
+						case "functions/invalid-argument": 
+							appendStatus("error:invalid-code");
+							failureReason = "invalid_otp";
+							break;
+						case "functions/deadline-exceeded": 
+							appendStatus("error:code-expired");
+							failureReason = "otp_expired";
+							break;
+						default: 
+							appendStatus("error:reauth");
+							failureReason = "undetermined";
 					}
 
+					logReauthFailure("email_otp", attempts, failureReason);
 					return setState(State.CODE_SENT);
 				}
 
@@ -108,6 +122,8 @@ export const ReauthDialog: React.FunctionComponent<ReauthDialogProps> = ({
 				} catch (error) {
 					console.error("Reauth with link failed: ", error);
 					appendStatus("error:reauth");
+
+					logReauthFailure("email_otp", attempts, "unexpected");
 					return setState(State.CODE_SENT);
 				}
 
@@ -115,6 +131,10 @@ export const ReauthDialog: React.FunctionComponent<ReauthDialogProps> = ({
 				appendStatus("success:reauth");
 
 				makeToast("You are successfully re-authenticated!", "info");
+
+				logReauth("email_otp", attempts);
+				clearAuthAttempt("reauth");
+
 				onComplete?.();
 			}}
 			onReset={() => {

@@ -3,7 +3,8 @@
 import { Conditional } from "@/components/Conditional";
 import { Loading } from "@/components/Loading";
 import { UserWithEmail } from "@/components/ReauthDialog";
-import { KEY_EMAIL_TO_UPDATE, KEY_SIGN_IN_EMAIL, reauthWithLink, recoverEmail, signInWithLink, updateEmail } from "@/utils/auths";
+import { EmailRecoverFailureReason, EmailUpdateFailureReason, logEmailRecover, logEmailRecoverFailed, LoginType, logLogin, logLoginFailure, logReauth, logReauthFailure, logUpdateEmail, logUpdateEmailFailure } from "@/utils/analytics";
+import { clearAuthAttempt, KEY_EMAIL_TO_UPDATE, KEY_SIGN_IN_EMAIL, reauthWithLink, recoverEmail, registerAuthAttempt, signInWithLink, updateEmail } from "@/utils/auths";
 import { makeContinueUrl } from "@/utils/urls";
 import { useAppRouter } from "@/utils/useAppRouter";
 import { useToast } from "@/utils/useToast";
@@ -74,8 +75,16 @@ export default function Page({ params }: Readonly<{ params: { mode: string } }>)
 
 			switch (mode) {
 				case "signin": {
+					const attempts = registerAuthAttempt("login", "emailLink");
+
 					const email = localStorage.getItem(KEY_SIGN_IN_EMAIL) || window.prompt("Please re-enter your email address.");
-					if (!email) return setState("failed");
+					if (!email) {
+						logLoginFailure("email_link", attempts, "no_email");
+						return setState("failed");
+					}
+
+					let loginType: LoginType;
+					let userLinked = false;
 
 					console.debug("Signing in with email link");
 					signInWithLink(email, window.location.href, user).then(cred => {
@@ -83,45 +92,78 @@ export default function Page({ params }: Readonly<{ params: { mode: string } }>)
 
 						makeToast(`You are signed in as ${email}`, "info");
 
-						if (cred.operationType === "link") setState("user-linked");
-						else if (getAdditionalUserInfo(cred)?.isNewUser) setState("new-user");
-						else setState("existing-user");
+						if (cred.operationType === "link") {
+							setState("user-linked");
+							loginType = "sign_up";
+							userLinked = true;
+						} else if (getAdditionalUserInfo(cred)?.isNewUser) {
+							setState("new-user");
+							loginType = "sign_up";
+						} else {
+							setState("existing-user");
+							loginType = "sign_in";
+						}
 
+						logLogin("email_link", loginType, userLinked, attempts);
+						clearAuthAttempt("login");
 						router.push(redirPath);
 					}).catch(error => {
 						console.error("Sign in with link failed: ", error);
 						setState("failed");
+
+						logLoginFailure("email_link", attempts, "undetermined");
 					});
 					break;
 				}
 				case "reauth": {
-					if (!user) return setState("require-signed-in");
+					const attempts = registerAuthAttempt("reauth", "emailLink");
+					
+					if (!user) {
+						logReauthFailure("email_link", attempts, "no_user");
+						return setState("require-signed-in");
+					}
 
 					const email = user.email;
-					if (!email) return setState("failed");
+					if (!email) {
+						logReauthFailure("email_link", attempts, "no_email");
+						return setState("failed");
+					}
 
 					reauthWithLink(user as UserWithEmail, window.location.href).then(() => {
 						makeToast("You're successfully verified as " + email, "info");
-
 						setState("reauthenticated");
+
+						logReauth("email_link", attempts);
+						clearAuthAttempt("reauth");
 						router.push(redirPath);
 					}).catch(error => {
 						console.error("Reauth with link failed: ", error);
 						setState("failed");
+
+						logReauthFailure("email_link", attempts, "undetermined");
 					});
 					break;
 				}
 				case "update-email": {
-					if (!user) return setState("require-signed-in");
+					const attempts = registerAuthAttempt("updateEmail", "emailLink");
+
+					if (!user) {
+						logUpdateEmailFailure("email_link", attempts, "no_user");
+						return setState("require-signed-in");
+					}
 
 					const email = localStorage.getItem(KEY_EMAIL_TO_UPDATE) || window.prompt("Please re-enter your new email address.");
-					if (!email) return setState("failed");
+					if (!email) {
+						logUpdateEmailFailure("email_link", attempts, "no_new_email");
+						return setState("failed");
+					}
 
 					const url = new URL(window.location.href);
 					const otp = url.searchParams.get("otp");
 
 					if (!otp) {
 						console.error("URL can not be decoded.");
+						logUpdateEmailFailure("email_link", attempts, "no_otp");
 						return setState("failed");
 					}
 
@@ -136,23 +178,35 @@ export default function Page({ params }: Readonly<{ params: { mode: string } }>)
 						}
 
 						setState("email-updated");
+
+						logUpdateEmail("email_link", attempts);
+						clearAuthAttempt("updateEmail");
 						router.push(redirPath);
 					}).catch((error) => {
 						console.error("Email update with link failed: ", error);
+
+						let failureReason: EmailUpdateFailureReason;
 						if ((error as FirebaseError)?.code === "functions/already-exists") {
 							setState("email-already-exists");
+							failureReason = "email_already_exists";
 						} else {
 							setState("failed");
+							failureReason = "undetermined";
 						}
+
+						logUpdateEmailFailure("email_link", attempts, failureReason);
 					});
 					break;
 				}
 				case "recover-email": {
+					const attempts = registerAuthAttempt("recoverEmail", "emailLink");
+
 					const url = new URL(window.location.href);
 					const oobCode = url.searchParams.get("oobCode");
 
 					if (!oobCode) {
 						console.error("URL can not be decoded.");
+						logEmailRecoverFailed("email_link", attempts, "no_oob_code");
 						return setState("failed");
 					}
 
@@ -172,14 +226,23 @@ export default function Page({ params }: Readonly<{ params: { mode: string } }>)
 						}
 
 						setState("email-recovered");
+
+						logEmailRecover("email_link", attempts);
+						clearAuthAttempt("recoverEmail");
 						router.push(redirPath);
 					}).catch(error => {
 						console.error("Email recovery with link failed: ", error);
+
+						let failureReason: EmailRecoverFailureReason;
 						if ((error as FirebaseError)?.code === "functions/already-exists") {
 							setState("email-already-exists");
+							failureReason = "email_already_exists";
 						} else {
 							setState("failed");
+							failureReason = "undetermined";
 						}
+
+						logEmailRecoverFailed("email_link", attempts, failureReason);
 					});
 					break;
 				}

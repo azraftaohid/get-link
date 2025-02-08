@@ -12,7 +12,7 @@ import NavbarBrand from "react-bootstrap/NavbarBrand";
 import NavbarCollapse from "react-bootstrap/NavbarCollapse";
 import NavbarToggle from "react-bootstrap/NavbarToggle";
 import styles from "../styles/header.module.scss";
-import { logClick } from "../utils/analytics";
+import { logThemeSwitch } from "../utils/analytics";
 import { mergeNames } from "../utils/mergeNames";
 import { useTheme } from "../utils/useTheme";
 import { useUser } from "../utils/useUser";
@@ -97,7 +97,7 @@ export const Header: React.FunctionComponent<React.PropsWithChildren<unknown>> =
 						const newTheme = theme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT;
 
 						setTheme(newTheme);
-						logClick("toggle_theme", { to: newTheme });
+						logThemeSwitch(newTheme);
 					}}
 				/>
 				{user && !user.isAnonymous && <Link

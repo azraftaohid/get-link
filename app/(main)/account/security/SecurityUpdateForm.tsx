@@ -4,7 +4,8 @@ import { Conditional } from "@/components/Conditional";
 import { SendCodeButton } from "@/components/SendCodeButton";
 import { CardicForm } from "@/components/forms/CardicForm";
 import TextField from "@/components/forms/TextField";
-import { AUTH_EMAIL_CONFIRM_OTP_LEN, AUTH_SIGN_IN_OTP_LENGTH, KEY_EMAIL_TO_UPDATE, sendEmailConfirmationLink, signInWithLink, updateEmail } from "@/utils/auths";
+import { EmailUpdateFailureReason, logUpdateEmail, logUpdateEmailFailure } from "@/utils/analytics";
+import { AUTH_EMAIL_CONFIRM_OTP_LEN, AUTH_SIGN_IN_OTP_LENGTH, KEY_EMAIL_TO_UPDATE, registerAuthAttempt, sendEmailConfirmationLink, signInWithLink, updateEmail } from "@/utils/auths";
 import { makeContinueUrl } from "@/utils/urls";
 import { useStatus } from "@/utils/useStatus";
 import { useToast } from "@/utils/useToast";
@@ -90,6 +91,9 @@ export default function SecurityUpdateForm({
 				emailValues.current = values;
 				emailErrors.current = { email: "", code: "" };
 
+				const attempts = registerAuthAttempt("updateEmail", "emailOtp");
+				let failureReason: EmailUpdateFailureReason;
+
 				let signInLink: string | null | undefined;
 				try {
 					const res = await updateEmail(user.uid, values.email || "", values.code, makeContinueUrl("recover-email", "/"));
@@ -97,15 +101,28 @@ export default function SecurityUpdateForm({
 				} catch (error) {
 					console.error("Unable to update user email: ", error);
 					switch ((error as FirebaseError)?.code) {
-						case "functions/invalid-argument": appendStatus("email:invalid-code"); break;
-						case "functions/deadline-exceeded": appendStatus("email:code-expired"); break;
-						case "functions/already-exists": appendStatus("email:already-exists"); break;
-						default: appendStatus("email:error");
+						case "functions/invalid-argument": 
+							appendStatus("email:invalid-code");
+							failureReason = "invalid_otp";
+							break;
+						case "functions/deadline-exceeded": 
+							appendStatus("email:code-expired");
+							failureReason = "otp_expired";
+							break;
+						case "functions/already-exists": 
+							appendStatus("email:already-exists"); 
+							failureReason = "email_already_exists";
+							break;
+						default: 
+							appendStatus("email:error");
+							failureReason = "undetermined";
 					}
 
+					logUpdateEmailFailure("email_otp", attempts, failureReason);
 					return setEmailState(EmailUpdateState.CODE_SENT);
 				}
 
+				// todo: recheck the following logic for handling reauth
 				if (signInLink) {
 					await signInWithLink(values.email || "", signInLink);
 				} else {
@@ -114,6 +131,8 @@ export default function SecurityUpdateForm({
 
 				appendStatus("email:updated");
 				setEmailState(EmailUpdateState.UPDATED);
+
+				logUpdateEmail("email_otp", attempts);
 			}}
 			onReset={(_, { setFieldValue }) => {
 				setEmailState(EmailUpdateState.NONE);

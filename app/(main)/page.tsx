@@ -14,6 +14,7 @@ import TextField from "@/components/forms/TextField";
 import { createFileDoc } from "@/models/files";
 import { DEFAULT_LINK_VALIDITY_MS, Link as LinkObject, MAX_LEN_LINK_TITLE } from "@/models/links";
 import { OrderField } from "@/models/order";
+import { logAccordion } from "@/utils/analytics";
 import { now } from "@/utils/dates";
 import { createViewLink } from "@/utils/files";
 import { mergeNames } from "@/utils/mergeNames";
@@ -224,7 +225,10 @@ export default function Page() {
 				</Form>}</Formik>}
 			</BatchUploadContext.Consumer>
 		</BatchUpload>
-		<Accordion className="mt-3">
+		<Accordion className="mt-3" onSelect={(evtKey) => {
+			if (evtKey === "quota") logAccordion("expand", "usage_quota");
+			else logAccordion("collapse", "usage_quota");
+		}}>
 			<AccordionItem eventKey="quota">
 				<AccordionHeader>View usage quota</AccordionHeader>
 				<AccordionBody>

@@ -9,7 +9,7 @@ import { FileCard } from "@/components/cards/FileCard";
 import { Backlinks } from "@/components/list/Backlinks";
 import { RecentListPlaceholder } from "@/components/list/RecentListPlaceholder";
 import { FileKeyComponents, deleteFile } from "@/models/files";
-import { ClickEventContext, logClick } from "@/utils/analytics";
+import { ClickEventContext, logClick, logShare } from "@/utils/analytics";
 import { shouldStepOutDownload } from "@/utils/downloads";
 import { ProcessedFileData } from "@/utils/processedFiles";
 import { makeShortlink } from "@/utils/shortlinks";
@@ -86,19 +86,21 @@ export default function FileView({
 						} catch (error) {
 							console.error("Copy to clipboard failed:", error);
 							makeToast("Here is your shortlink: " + shortlink);
+							logShare("shortlink", "display", "file");
 							return;
 						} finally {
 							setShortlinkState("none");
 						}
 
 						makeToast("Shortlink copied to clipboard.");
+						logShare("shortlink", "clipboard", "file");
 					}
 				}}>
 					<CopyButton
 						variant="outline-vivid"
 						content={createAbsoluteUrl(DOMAIN, "f", cfk)}
 						left={<Icon name="link" size="sm" />}
-						onClick={() => logClick("share")}
+						onClick={() => logShare("uuid", "clipboard", "file")}
 					>
 						Share
 					</CopyButton>

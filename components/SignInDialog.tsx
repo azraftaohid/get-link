@@ -1,9 +1,10 @@
 "use client";
 
+import { LoginFailureReason, LoginType, logLogin, logLoginFailure } from "@/utils/analytics";
 import { FirebaseError } from "firebase/app";
 import { getAdditionalUserInfo } from "firebase/auth";
 import { Formik } from "formik";
-import React, { PropsWithChildren, createContext, useMemo, useRef, useState } from "react";
+import React, { createContext, PropsWithChildren, useMemo, useRef, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Modal, { ModalProps } from "react-bootstrap/Modal";
 import ModalBody from "react-bootstrap/ModalBody";
@@ -13,8 +14,10 @@ import ModalTitle from "react-bootstrap/ModalTitle";
 import * as yup from "yup";
 import {
 	AUTH_SIGN_IN_OTP_LENGTH,
+	clearAuthAttempt,
 	KEY_SIGN_IN_EMAIL,
 	obtainSignInLink,
+	registerAuthAttempt,
 	sendSignInLinkToEmail,
 	signInWithLink,
 } from "../utils/auths";
@@ -119,25 +122,48 @@ const SignInDialog: React.FunctionComponent<ModalProps> = (props) => {
 				setState(State.P2);
 				initValues.current = values;
 
+				const attempts = registerAuthAttempt("login", "emailOtp");
+				let failureReason: LoginFailureReason;
+
 				let signInLink: string;
 				try {
 					signInLink = (await obtainSignInLink(values.email, values.code)).data;
 				} catch (error) {
 					console.error(`failed to obtain sign in link from otp [cause: ${error}]`);
 					switch ((error as FirebaseError)?.code) {
-						case "functions/invalid-argument": appendStatus("err:invalid-otp"); break;
-						case "functions/deadline-exceeded": appendStatus("err:otp-expired"); break;
-						default: appendStatus("err:sign-in");
+						case "functions/invalid-argument":
+							appendStatus("err:invalid-otp");
+							failureReason = "invalid_otp";
+							break;
+						case "functions/deadline-exceeded": 
+							appendStatus("err:otp-expired"); 
+							failureReason = "otp_expired";
+							break;
+						default: 
+							appendStatus("err:sign-in");
+							failureReason = "undetermined";
 					}
 					
+					logLoginFailure("email_otp", attempts, failureReason);
 					return setState(State.SENT);
 				}
 
+				let loginType: LoginType;
+				let userLinked = false;
+
 				try {
 					const cred = await signInWithLink(values.email, signInLink, user);
-					if (cred.operationType === "link") appendStatus("signed-in:user-linked");
-					else if (getAdditionalUserInfo(cred)?.isNewUser) appendStatus("signed-in:new-user");
-					else appendStatus("signed-in:existing-user");
+					if (cred.operationType === "link") {
+						appendStatus("signed-in:user-linked");
+						loginType = "sign_up";
+						userLinked = true;
+					} else if (getAdditionalUserInfo(cred)?.isNewUser) {
+						appendStatus("signed-in:new-user");
+						loginType = "sign_up";
+					} else {
+						appendStatus("signed-in:existing-user");
+						loginType = "sign_in";
+					}
 
 					removeStatus("err:sign-in");
 					setState(State.COMPLETED);
@@ -147,7 +173,13 @@ const SignInDialog: React.FunctionComponent<ModalProps> = (props) => {
 					console.error(`Sign in with link failed [cause: ${error}]`);
 					appendStatus("err:sign-in");
 					setState(State.SENT);
+
+					logLoginFailure("email_otp", attempts, "unexpected");
+					return;
 				}
+
+				logLogin("email_otp", loginType, userLinked, attempts);
+				clearAuthAttempt("login");
 			}}
 			onReset={() => {
 				setState(State.NONE);
