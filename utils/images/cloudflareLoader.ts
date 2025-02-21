@@ -1,7 +1,7 @@
 import { ImageLoader } from "next/image";
 import { DOMAIN } from "../urls";
 
-const CF_IMAGE_ZONE = process.env.CF_IMAGE_ZONE || DOMAIN.replace("https://", "");
+const CF_IMAGE_ZONE = process.env.NEXT_PUBLIC_CF_IMAGE_ZONE || DOMAIN.replace("https://", "");
 
 const normalizeSrc = (src: string) => {
     return src.startsWith("/") ? DOMAIN + src : src;
