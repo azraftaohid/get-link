@@ -1,4 +1,7 @@
 env:
+  - variable: NEXT_PUBLIC_APP_URL
+    value: "https://getlink.foo"
+    
   - variable: API_KEY
     secret: GETLINK_WEB_APP_API_KEY
   
