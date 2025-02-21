@@ -55,6 +55,10 @@ export interface ProcessedFileData {
 	pos?: number;
 	width?: number | null;
 	height?: number | null;
+	/**
+	 * @deprecated
+	 * Thumbnails are generated on the fly; and for non-image files, see {@link /models/files#getThumbnailKey}
+	 */
 	smThumbnailUrl?: string;
 	warnings?: Warning[] | null;
 	uploadTimestamp?: number;

@@ -1,3 +1,4 @@
+import cloudflareLoader from "@/utils/images/cloudflareLoader";
 import { formatDate } from "@thegoodcompany/common-utils-js";
 import { Timestamp } from "firebase/firestore";
 import Image, { ImageProps } from "next/legacy/image";
@@ -100,6 +101,7 @@ export const SquareCard: React.FunctionComponent<SquareCardProps> = ({
 						layout="fill"
 						sizes="(max-width: 576px) 100vw, (max-width: 768px) 50vw, (max-width: 992px) 33vw, 25vw"
 						quality={50}
+						loader={cloudflareLoader}
 						blurDataURL={getSolidStallImage()}
 						onError={onThumbnailError}
 					/>
