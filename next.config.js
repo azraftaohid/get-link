@@ -105,18 +105,9 @@ const nextConfig = {
 		return list;
 	},
 	images: {
-		remotePatterns: [
-			{
-				protocol: "http",
-				hostname: "localhost",
-				pathname: "/**"
-			},
-			{
-				protocol: "https",
-				hostname: "storage.getlinksoft.workers.dev",
-				pathname: "/file/**"
-			},
-		]
+		loader: "custom",
+		loaderFile: "utils/images/cloudflareLoader.ts",
+		deviceSizes: [640, 1366, 1920, 2560, 3840],
 	},
 	logging: {
 		fetches: {
