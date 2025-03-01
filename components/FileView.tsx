@@ -55,6 +55,7 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 }) => {
 	const [imageLoaded, setImageLoaded] = useState(false);
 	const [useFallback, setUseFallback] = useState(false);
+	const [useNativePdfViewer, setUseNativePdfViewer] = useState<boolean | null>(null);
 
 	const [placeholderDataUrl, setPlaceholderDataUrl] = useState<string>();
 
@@ -81,6 +82,10 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 			reader.readAsDataURL(blob);
 		});
 	}, [placeholderUrl]);
+
+	useEffect(() => {
+		setUseNativePdfViewer(window.navigator.pdfViewerEnabled);
+	}, []);
 
 	return (
 		<div
@@ -128,7 +133,19 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 							src={src}
 						/>
 					)) || (type === "application/pdf" && (
-						<Pdf file={src} width={width} height={height} size={size} />
+						// render empty component initially to prevent flicker as well as to avoid hydration errors
+						useNativePdfViewer === null ? <div /> : useNativePdfViewer
+							? <iframe 
+								title={name || "Embedded PDF"} 
+								src={src} 
+								width={width}
+								height={height}
+								allowFullScreen /> 
+							: <Pdf 
+								file={src} 
+								width={width} 
+								height={height} 
+								size={size} />
 					)))) || <NoPreview src={src} name={name} type={type} />}
 		</div>
 	);
