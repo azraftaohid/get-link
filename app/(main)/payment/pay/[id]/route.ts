@@ -5,10 +5,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const revalidate = 10;
 
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
 	initFirebase();
-	const invoiceId = params.id;
 	
+	const params = await props.params;
+	const invoiceId = params.id;
+
 	let paymentUrl: string;
 	try {
 		// TODO: accept payment method from query params
@@ -19,7 +21,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 			return NextResponse.json({ code: "not_found", message: "Invoice doesn't exist!" }, { status: 404 });
 
 		console.error("Error occurred while getting payment URL:", error);
-		return NextResponse.json({ code: "internal_error", message: "Something went wrong internally! Please try again." }, 
+		return NextResponse.json({ code: "internal_error", message: "Something went wrong internally! Please try again." },
 			{ status: 500 });
 	}
 

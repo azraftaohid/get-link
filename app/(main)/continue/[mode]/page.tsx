@@ -11,7 +11,7 @@ import { useToast } from "@/utils/useToast";
 import { FirebaseError } from "firebase/app";
 import { getAdditionalUserInfo, getAuth, onAuthStateChanged } from "firebase/auth";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { Alert } from "react-bootstrap";
 
 const completeMessage: Partial<Record<State, { variant?: string, body: React.ReactNode }>> = {
@@ -51,7 +51,8 @@ const completeMessage: Partial<Record<State, { variant?: string, body: React.Rea
 	}
 };
 
-export default function Page({ params }: Readonly<{ params: { mode: string } }>) {
+export default function Page(props: Readonly<{ params: Promise<{ mode: string }> }>) {
+	const params = use(props.params);
 	const router = useAppRouter();
 	const search = useSearchParams();
 	const { makeToast } = useToast();
@@ -117,7 +118,7 @@ export default function Page({ params }: Readonly<{ params: { mode: string } }>)
 				}
 				case "reauth": {
 					const attempts = registerAuthAttempt("reauth", "emailLink");
-					
+
 					if (!user) {
 						logReauthFailure("email_link", attempts, "no_user");
 						return setState("require-signed-in");

@@ -18,9 +18,10 @@ const getData = unstable_cache(async (id: string) => {
 	return target;
 });
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, props: { params: Promise<{ id: string }> }) {
 	initFirebase();
 
+	const params = await props.params;
 	const id = params.id;
 	const target = await getData(id);
 

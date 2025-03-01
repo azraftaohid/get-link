@@ -13,6 +13,6 @@ export const Loading: React.FunctionComponent<React.PropsWithChildren<LoadingPro
 
 export interface LoadingProps extends StackProps {
 	loadingText?: string;
-	loadingTextProps?: JSX.IntrinsicElements["p"];
+	loadingTextProps?: React.JSX.IntrinsicElements["p"];
 	spinnerProps?: SpinnerProps;
 }

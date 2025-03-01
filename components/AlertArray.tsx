@@ -1,8 +1,8 @@
 import React from "react";
-import { Conditional } from "./Conditional";
 import Alert, { AlertProps } from "react-bootstrap/Alert";
+import { Conditional } from "./Conditional";
 
-export const AlertArray: <KEY extends string> (props: AlertArrayProps<KEY>) => JSX.Element = ({
+export const AlertArray: <KEY extends string> (props: AlertArrayProps<KEY>) => React.JSX.Element = ({
 	source,
 	present,
 	onDismiss,

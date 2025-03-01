@@ -22,7 +22,7 @@ import { useUser } from "@/utils/useUser";
 import { FirebaseError } from "firebase/app";
 import { Formik } from "formik";
 import { notFound } from "next/navigation";
-import { useRef, useState } from "react";
+import { use, useRef, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
@@ -61,7 +61,8 @@ const getInvoiceData = async (invoiceId: string) => {
 	return invoiceData;
 };
 
-export default function Page({ params }: Readonly<{ params: { id: string } }>) {
+export default function Page(props: Readonly<{ params: Promise<{ id: string }> }>) {
+	const params = use(props.params);
 	const { makeToast } = useToast();
 	const { isLoading: isUserLoading, user } = useUser();
 
