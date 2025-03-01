@@ -25,7 +25,7 @@ export const Button: BsPrefixRefForwardingComponent<"button", ButtonProps> = (pr
 	);
 };
 
-export interface ButtonProps extends BSButtonProps {
+export interface ButtonProps extends Omit<BSButtonProps, "as"> {
 	left?: React.ReactNode;
 	right?: React.ReactNode;
 	download?: string | boolean;

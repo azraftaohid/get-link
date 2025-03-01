@@ -147,7 +147,8 @@ const getData = cache(async (lid: string): Promise<Data> => {
 	};
 });
 
-export async function generateMetadata({ params }: { params: { lid: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ lid: string }> }): Promise<Metadata> {
+	const params = await props.params;
 	const data = await getData(params.lid);
 	const { thumbnail, cover } = data;
 
@@ -166,7 +167,8 @@ export async function generateMetadata({ params }: { params: { lid: string } }):
 	};
 }
 
-export default async function Page({ params }: Readonly<{ params: { lid: string } }>) {
+export default async function Page(props: Readonly<{ params: Promise<{ lid: string }> }>) {
+	const params = await props.params;
 	const lid = params.lid;
 
 	const data = await getData(lid);

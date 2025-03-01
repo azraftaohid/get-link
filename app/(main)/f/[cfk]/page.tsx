@@ -51,10 +51,11 @@ const getData = cache(async (cfk: string) => {
 	};
 });
 
-export async function generateMetadata({ params }: { params: { cfk: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ cfk: string }> }): Promise<Metadata> {
+	const params = await props.params;
 	const { name, fileKey, thumbnail, directLink, type } = await getData(decodeURIComponent(params.cfk));
 
-	const image = whenTruthy(thumbnail || (type.startsWith("image/") && directLink), compressImage) || 
+	const image = whenTruthy(thumbnail || (type.startsWith("image/") && directLink), compressImage) ||
 		findFileIcon(type);
 
 	return {
@@ -68,7 +69,8 @@ export async function generateMetadata({ params }: { params: { cfk: string } }):
 	};
 }
 
-export default async function Page({ params }: Readonly<{ params: { cfk: string } }>) {
+export default async function Page(props: Readonly<{ params: Promise<{ cfk: string }> }>) {
+	const params = await props.params;
 	const cfk = decodeURIComponent(params.cfk);
 	const data = await getData(cfk);
 
