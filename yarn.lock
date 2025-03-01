@@ -1050,6 +1050,13 @@
     core-js-pure "^3.30.2"
     regenerator-runtime "^0.14.0"
 
+"@babel/runtime@^7.0.0":
+  version "7.26.9"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.26.9.tgz#aa4c6facc65b9cb3f87d75125ffd47781b475433"
+  integrity sha512-aA63XwOkcl4xxQa3HjPMqOP6LiK0ZDv3mUPYEFXkpHbaFjtGggE1A61FjFzJnB+p7/oy2gA8E+rcBNl/zC1tMg==
+  dependencies:
+    regenerator-runtime "^0.14.0"
+
 "@babel/runtime@^7.12.5", "@babel/runtime@^7.15.4", "@babel/runtime@^7.21.0", "@babel/runtime@^7.22.5", "@babel/runtime@^7.23.2", "@babel/runtime@^7.23.8", "@babel/runtime@^7.5.5", "@babel/runtime@^7.6.2", "@babel/runtime@^7.6.3", "@babel/runtime@^7.7.2", "@babel/runtime@^7.8.4", "@babel/runtime@^7.8.7", "@babel/runtime@^7.9.2":
   version "7.24.4"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.24.4.tgz#de795accd698007a66ba44add6cc86542aff1edd"
@@ -2412,6 +2419,14 @@
   dependencies:
     "@types/react" "*"
 
+"@types/react-pdf@6.2.0":
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/@types/react-pdf/-/react-pdf-6.2.0.tgz#e99d498f8f76704d15e4553197c89e254cc17278"
+  integrity sha512-OSCYmrfaJvpXkM5V4seUMAhUDOAOqbGQf9kwv14INyTf7AjDs2ukfkkQrLWRQ8OjWrDklbXYWh5l7pT7l0N76g==
+  dependencies:
+    "@types/react" "*"
+    pdfjs-dist "^2.16.105"
+
 "@types/react-transition-group@^4.4.6":
   version "4.4.10"
   resolved "https://registry.yarnpkg.com/@types/react-transition-group/-/react-transition-group-4.4.10.tgz#6ee71127bdab1f18f11ad8fb3322c6da27c327ac"
@@ -3647,10 +3662,10 @@ clone@^1.0.2:
   resolved "https://registry.yarnpkg.com/clone/-/clone-1.0.4.tgz#da309cc263df15994c688ca902179ca3c7cd7c7e"
   integrity sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg==
 
-clsx@^2.0.0:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/clsx/-/clsx-2.1.1.tgz#eed397c9fd8bd882bfb18deab7102049a2f32999"
-  integrity sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==
+clsx@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/clsx/-/clsx-1.2.1.tgz#0ddc4a20a549b59c93a4116bb26f5294ca17dc12"
+  integrity sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==
 
 co@^4.6.0:
   version "4.6.0"
@@ -6701,7 +6716,7 @@ lz-string@^1.5.0:
   resolved "https://registry.yarnpkg.com/lz-string/-/lz-string-1.5.0.tgz#c1ab50f77887b712621201ba9fd4e3a6ed099941"
   integrity sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==
 
-make-cancellable-promise@^1.3.1:
+make-cancellable-promise@^1.0.0:
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/make-cancellable-promise/-/make-cancellable-promise-1.3.2.tgz#993c8c8b79cff13c74fa93de0bd8a17fe66685c1"
   integrity sha512-GCXh3bq/WuMbS+Ky4JBPW1hYTOU+znU+Q5m9Pu+pI8EoUqIHk9+tviOKC6/qhHh8C4/As3tzJ69IF32kdz85ww==
@@ -6733,7 +6748,7 @@ make-error@^1.1.1:
   resolved "https://registry.yarnpkg.com/make-error/-/make-error-1.3.6.tgz#2eb2e37ea9b67c4891f684a1394799af484cf7a2"
   integrity sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==
 
-make-event-props@^1.6.0:
+make-event-props@^1.1.0:
   version "1.6.2"
   resolved "https://registry.yarnpkg.com/make-event-props/-/make-event-props-1.6.2.tgz#c8e0e48eb28b9b808730de38359f6341de7ec5a2"
   integrity sha512-iDwf7mA03WPiR8QxvcVHmVWEPfMY1RZXerDVNCRYW7dUr2ppH3J58Rwb39/WG39yTZdRSxr3x+2v22tvI0VEvA==
@@ -6765,7 +6780,7 @@ match-sorter@^6.0.2:
     "@babel/runtime" "^7.23.8"
     remove-accents "0.5.0"
 
-merge-refs@^1.3.0:
+merge-refs@^1.0.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/merge-refs/-/merge-refs-1.3.0.tgz#65d7f8c5058917b9d1fc204ae4b9a727614d0119"
   integrity sha512-nqXPXbso+1dcKDpPCXvwZyJILz+vSLqGGOnDrYHQYE+B8n9JTCekVLC65AfCpR4ggVyA/45Y0iR9LDyS2iI+zA==
@@ -7455,7 +7470,7 @@ path-type@^4.0.0:
   resolved "https://registry.yarnpkg.com/path-type/-/path-type-4.0.0.tgz#84ed01c0a7ba380afe09d90a8c180dcd9d03043b"
   integrity sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==
 
-pdfjs-dist@2.16.105, pdfjs-dist@3.11.174:
+pdfjs-dist@2.16.105, pdfjs-dist@^2.16.105:
   version "2.16.105"
   resolved "https://registry.yarnpkg.com/pdfjs-dist/-/pdfjs-dist-2.16.105.tgz#937b9c4a918f03f3979c88209d84c1ce90122c2a"
   integrity sha512-J4dn41spsAwUxCpEoVf6GVoz908IAA3mYiLmNxg8J9kfRXc2jxpbUepcP0ocp0alVNLFthTAM8DZ1RaHh8sU0A==
@@ -7739,19 +7754,20 @@ react-masonry-css@^1.0.16:
   resolved "https://registry.yarnpkg.com/react-masonry-css/-/react-masonry-css-1.0.16.tgz#72b28b4ae3484e250534700860597553a10f1a2c"
   integrity sha512-KSW0hR2VQmltt/qAa3eXOctQDyOu7+ZBevtKgpNDSzT7k5LA/0XntNa9z9HKCdz3QlxmJHglTZ18e4sX4V8zZQ==
 
-react-pdf@8.0.2:
-  version "8.0.2"
-  resolved "https://registry.yarnpkg.com/react-pdf/-/react-pdf-8.0.2.tgz#ff4a0e9260c47f1a261b878a2cc0408080eecc06"
-  integrity sha512-C0PFC+j9vmEIZ82Iq0c85xUWkgsZTUS05syqOk8NC+7PAanyWlVi/ImYkGQe27zYAlBA6IidRYEt1DAAXKq1Ow==
+react-pdf@6.2.2:
+  version "6.2.2"
+  resolved "https://registry.yarnpkg.com/react-pdf/-/react-pdf-6.2.2.tgz#61dbf1cd32b49bb452c8dd26e7ee7b2f987e4904"
+  integrity sha512-huNWhzzTAb3t1mWA6WOR9yQRCbcZ6uXCGC46cEAgEhGqvXTB6RcHm+1DS2r9OdPNUZ9SZTuR6jZ1BNOJIiEing==
   dependencies:
-    clsx "^2.0.0"
-    dequal "^2.0.3"
-    make-cancellable-promise "^1.3.1"
-    make-event-props "^1.6.0"
-    merge-refs "^1.3.0"
-    pdfjs-dist "3.11.174"
+    "@babel/runtime" "^7.0.0"
+    clsx "^1.2.1"
+    make-cancellable-promise "^1.0.0"
+    make-event-props "^1.1.0"
+    merge-refs "^1.0.0"
+    pdfjs-dist "2.16.105"
+    prop-types "^15.6.2"
     tiny-invariant "^1.0.0"
-    warning "^4.0.0"
+    tiny-warning "^1.0.0"
 
 react-query@^3.34.14:
   version "3.39.3"
@@ -8711,7 +8727,7 @@ tiny-invariant@^1.0.0:
   resolved "https://registry.yarnpkg.com/tiny-invariant/-/tiny-invariant-1.3.3.tgz#46680b7a873a0d5d10005995eb90a70d74d60127"
   integrity sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==
 
-tiny-warning@^1.0.2:
+tiny-warning@^1.0.0, tiny-warning@^1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/tiny-warning/-/tiny-warning-1.0.3.tgz#94a30db453df4c643d0fd566060d60a875d84754"
   integrity sha512-lBN9zLN/oAf68o3zNXYrdCt1kP8WsiGW8Oo2ka41b2IM5JL/S1CTyX1rW0mb/zSuJun0ZUrDxx4sqvYS2FWzPA==
