@@ -49,3 +49,6 @@ yarn-error.log*
 .vscode
 
 /.VSCodeCounter/
+
+.open-next/
+.dev.vars

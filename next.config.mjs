@@ -1,8 +1,13 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const CopyPlugin = require("copy-webpack-plugin");
-const path = require("path");
+import NextBundleAnalyzer from "@next/bundle-analyzer";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+import CopyPlugin from "copy-webpack-plugin";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const withBundleAnalyzer = require("@next/bundle-analyzer")({
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const withBundleAnalyzer = NextBundleAnalyzer({
 	enabled: process.env.ANALYZE === "true",
 });
 
@@ -18,6 +23,8 @@ ensureEnvVariablesDefined([
 	"NEXT_PUBLIC_STORAGE_API_URL", "NEXT_PUBLIC_STORAGE_FILE_URL", "NEXT_PUBLIC_STORAGE_DEFAULT_BUCKET",
 	"NEXT_PUBLIC_OTP_LEN", "NEXT_PUBLIC_ENABLE_TIER_UPGRADE"
 ]);
+
+initOpenNextCloudflareForDev();
 
 /**
  * @type {import('next/dist/lib/load-custom-routes').Header["headers"]}
@@ -50,9 +57,9 @@ const nextConfig = {
 	distDir: "./.next",
 	reactStrictMode: true,
 	compiler: {
-		removeConsole: process.env.NODE_ENV === "production" && {
-			exclude: ["error", "warn", "info"],
-		},
+		// removeConsole: process.env.NODE_ENV === "production" && {
+		// 	exclude: ["error", "warn", "info"],
+		// },
 	},
 	headers: async () => [
 		{
@@ -124,7 +131,7 @@ const nextConfig = {
 			new CopyPlugin({
 				patterns: [
 					{
-						from: path.join(__dirname, "node_modules/pdfjs-dist/build/pdf.worker.min.js"),
+						from: path.join(__dirname, "node_modules/pdfjs-dist/build/pdf.worker.min.mjs"),
 						to: path.join(__dirname, "public"),
 					},
 				],
@@ -138,4 +145,4 @@ const nextConfig = {
 	},
 };
 
-module.exports = withBundleAnalyzer(nextConfig);
+export default withBundleAnalyzer(nextConfig);

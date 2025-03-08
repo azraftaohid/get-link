@@ -8,6 +8,13 @@
     "build": "next build",
     "build:sitemap": "next-sitemap --config next-sitemap.config.js",
     "start": "next start",
+    "build:worker": "opennextjs-cloudflare",
+    "dev:worker": "wrangler dev --port 8771",
+    "preview:worker": "npm run build:worker && npm run dev:worker",
+    "deploy:worker": "npm run build:worker && wrangler deploy",
+    "postdeploy:worker": "init-cache:d1",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "init-cache:d1": "wrangler d1 execute NEXT_CACHE_D1 --file .open-next/cloudflare/cache-assets-manifest.sql",
     "lint": "next lint",
     "test": "jest --watch",
     "cypress": "cypress open",
@@ -16,7 +23,7 @@
   },
   "resolutions": {
     "@types/react": "19.0.10",
-    "pdfjs-dist": "3.11.174",
+    "pdfjs-dist": "4.8.69",
     "minimist": "^1.2.6",
     "protobufjs": "^6.11.3",
     "@types/react-dom": "19.0.4"
@@ -45,7 +52,7 @@
     "react-dom": "18.3.1",
     "react-dropzone": "^12.0.4",
     "react-masonry-css": "^1.0.16",
-    "react-pdf": "6.2.2",
+    "react-pdf": "9.2.1",
     "react-query": "^3.34.14",
     "sharp": "^0.30.5",
     "streamsaver": "^2.0.6",
@@ -54,6 +61,7 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^0.5.7",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^15.0.2",
     "@types/masonry-layout": "^4.2.5",
@@ -61,7 +69,6 @@
     "@types/node": "17.0.14",
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
-    "@types/react-pdf": "5.7.1",
     "@types/streamsaver": "^2.0.4",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "6.11.0",
@@ -79,7 +86,8 @@
     "sass": "^1.49.7",
     "types-react-codemod": "^1.1.0",
     "typescript": "5.2.2",
-    "vercel": "latest"
+    "vercel": "latest",
+    "wrangler": "3.114.0"
   },
   "browser": {
     "./utils/runtimeConfig": "./utils/runtimeConfig.browser",

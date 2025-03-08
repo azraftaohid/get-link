@@ -6,7 +6,7 @@ export function canInitPdfWorker() {
 }
 
 function initPdfWorker0(pdfjs: PdfJs) {
-	pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+	pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 }
 
 export function initPdfWorker<T extends PdfJs | undefined>(
