@@ -1,16 +1,16 @@
-import { Formik, FormikConfig, FormikProps, FormikValues } from "formik";
 import React from "react";
 import Card from "react-bootstrap/Card";
 import CardBody from "react-bootstrap/CardBody";
 import CardFooter from "react-bootstrap/CardFooter";
-import CardHeader from "react-bootstrap/CardHeader";
 import CardTitle from "react-bootstrap/CardTitle";
+import { Button } from "../Button";
+import { Formik, FormikConfig, FormikProps, FormikValues } from "formik";
 import Form from "react-bootstrap/Form";
 import { Variant } from "react-bootstrap/types";
 import { mergeNames } from "../../utils/mergeNames";
-import { Button } from "../Button";
+import CardHeader from "react-bootstrap/CardHeader";
 
-export const CardicForm: <T extends FormikValues> (props: FormikConfig<T> & CardicFormProps<T>) => React.JSX.Element = ({
+export const CardicForm: <T extends FormikValues> (props: FormikConfig<T> & CardicFormProps<T>) => JSX.Element = ({
 	className,
 	state,
 	headerText,
