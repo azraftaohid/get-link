@@ -1,13 +1,13 @@
 import {
-	EmailAuthProvider,
-	fetchSignInMethodsForEmail,
-	getAuth,
-	isSignInWithEmailLink,
-	linkWithCredential,
-	reauthenticateWithCredential,
-	signInWithEmailLink,
-	User,
-	UserCredential,
+    EmailAuthProvider,
+    fetchSignInMethodsForEmail,
+    getAuth,
+    isSignInWithEmailLink,
+    linkWithCredential,
+    reauthenticateWithCredential,
+    signInWithEmailLink,
+    User,
+    UserCredential,
 } from "firebase/auth";
 import { HttpsCallable, httpsCallable } from "firebase/functions";
 import { now } from "./dates";

@@ -1,22 +1,23 @@
+import { FirebaseError } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import {
-	collection,
-	CollectionReference,
-	deleteDoc,
-	deleteField,
-	doc,
-	DocumentReference,
-	FieldPath,
-	getDocs,
-	getFirestore,
-	limit,
-	orderBy,
-	Query,
-	query,
-	setDoc,
-	Transaction,
-	where,
-	WithFieldValue,
+    collection,
+    CollectionReference,
+    deleteDoc,
+    deleteField,
+    doc,
+    DocumentReference,
+    FieldPath,
+    getDocs,
+    getFirestore,
+    limit,
+    orderBy,
+    Query,
+    query,
+    setDoc,
+    Transaction,
+    where,
+    WithFieldValue,
 } from "firebase/firestore";
 import { v5 as uuidV5 } from "uuid";
 import { FileCustomMetadata } from "../utils/files";
@@ -25,7 +26,6 @@ import { compartFid, extractDisplayName, extractExtension } from "../utils/strin
 import { Warning } from "./links";
 import { OrderData } from "./order";
 import { UserSnapshot, UserSnapshotField } from "./users";
-import { FirebaseError } from "firebase/app";
 
 /**
  * Database structure:

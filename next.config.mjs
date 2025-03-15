@@ -1,11 +1,5 @@
 import NextBundleAnalyzer from "@next/bundle-analyzer";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
-import CopyPlugin from "copy-webpack-plugin";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const withBundleAnalyzer = NextBundleAnalyzer({
 	enabled: process.env.ANALYZE === "true",
@@ -17,14 +11,14 @@ function ensureEnvVariablesDefined(names) {
 	}
 }
 
+initOpenNextCloudflareForDev();
+
 ensureEnvVariablesDefined([
 	"API_KEY", "EDGE_CONFIG_ID", "EDGE_CONFIG_TOKEN", "NEXT_PUBLIC_APP_URL",
 	"NEXT_PUBLIC_FIREBASE_API_KEY",
 	"NEXT_PUBLIC_STORAGE_API_URL", "NEXT_PUBLIC_STORAGE_FILE_URL", "NEXT_PUBLIC_STORAGE_DEFAULT_BUCKET",
 	"NEXT_PUBLIC_OTP_LEN", "NEXT_PUBLIC_ENABLE_TIER_UPGRADE"
 ]);
-
-initOpenNextCloudflareForDev();
 
 /**
  * @type {import('next/dist/lib/load-custom-routes').Header["headers"]}
@@ -57,9 +51,9 @@ const nextConfig = {
 	distDir: "./.next",
 	reactStrictMode: true,
 	compiler: {
-		// removeConsole: process.env.NODE_ENV === "production" && {
-		// 	exclude: ["error", "warn", "info"],
-		// },
+		removeConsole: process.env.NODE_ENV === "production" && {
+			exclude: ["error", "warn", "info"],
+		},
 	},
 	headers: async () => [
 		{
@@ -121,22 +115,39 @@ const nextConfig = {
 			fullUrl: true,
 		}
 	},
-	webpack: (config) => {
+	serverExternalPackages: ["tr46", "pdfjs-dist"],
+	webpack: (config, { isServer }) => {
+		if (isServer) {
+			config.optimization.splitChunks = {
+				...config.optimization.splitChunks,
+				cacheGroups: {
+					...config.optimization.splitChunks.cacheGroups,
+					sharedFirebaseFirestore: {
+						test: /[\\/]node_modules[\\/]@?firebase[\\/]firestore[\\/]/,
+						name: "firebase_firestore",
+						chunks: "all",
+						enforce: true,
+					},
+					sharedFirebaseAuth: {
+						test: /[\\/]node_modules[\\/]@?firebase[\\/]auth[\\/]/,
+						name: "firebase_auth",
+						chunks: "all",
+						enforce: true,
+					},
+					sharedGrpc: {
+						test: /[\\/]node_modules[\\/]@grpc[\\/]grpc-js[\\/]/,
+						name: "grpc-js",
+						chunks: "all",
+						enforce: true,
+					},
+				},
+			};
+		}
+
 		config.devServer = {
 			...config.devServer,
 			historyApiFallback: true,
 		};
-
-		config.plugins.push(
-			new CopyPlugin({
-				patterns: [
-					{
-						from: path.join(__dirname, "node_modules/pdfjs-dist/build/pdf.worker.min.mjs"),
-						to: path.join(__dirname, "public"),
-					},
-				],
-			})
-		);
 
 		// required by react-pdf on nextjs
 		config.resolve.alias.canvas = false;

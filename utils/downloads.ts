@@ -1,4 +1,3 @@
-import { Writer } from "@transcend-io/conflux";
 import { FetchError } from "./errors/FetchError";
 import { getDownloadURL } from "./storage";
 
@@ -68,6 +67,25 @@ export async function getBlob(downloadUrl: string, onProgress?: OnProgress): Pro
 }
 
 export async function downloadAsZip(params: DownloadAsZipParams): Promise<DownloadAsZipResult> {
+	const getZipWriter = new Promise<typeof window.conflux.Writer>((res, rej) => {
+		const { conflux } = window;
+		if (conflux?.Writer) return res(conflux.Writer);
+
+		const script = document.createElement("script");
+		script.src = "https://cdn.jsdelivr.net/npm/@transcend-io/conflux@4.1.0";
+		script.type = "module";
+		script.onload = () => {
+			console.debug("@transcend-io/conflux loaded successfully.");
+			res(window.conflux.Writer);
+		};
+		script.onerror = (error) => {
+			console.error(error);
+			rej(new Error("Can't load @transcend-io/conflux from CDN. Check logs."));
+		}
+
+		document.body.appendChild(script);
+	});
+
 	// let processed = 0;
 	const skipped: Record<string, string> = { };
 
@@ -113,7 +131,8 @@ export async function downloadAsZip(params: DownloadAsZipParams): Promise<Downlo
 		}
 	});
 
-	return files.pipeThrough(new Writer()).pipeTo(saver).then(() => ({ skipped }));
+	const writer = new (await getZipWriter)();
+	return files.pipeThrough(writer).pipeTo(saver).then(() => ({ skipped }));
 }
 
 export type OnProgress = (received: number, total: number) => unknown;

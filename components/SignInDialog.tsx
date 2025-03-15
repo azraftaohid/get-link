@@ -13,13 +13,13 @@ import ModalHeader from "react-bootstrap/ModalHeader";
 import ModalTitle from "react-bootstrap/ModalTitle";
 import * as yup from "yup";
 import {
-	AUTH_SIGN_IN_OTP_LENGTH,
-	clearAuthAttempt,
-	KEY_SIGN_IN_EMAIL,
-	obtainSignInLink,
-	registerAuthAttempt,
-	sendSignInLinkToEmail,
-	signInWithLink,
+    AUTH_SIGN_IN_OTP_LENGTH,
+    clearAuthAttempt,
+    KEY_SIGN_IN_EMAIL,
+    obtainSignInLink,
+    registerAuthAttempt,
+    sendSignInLinkToEmail,
+    signInWithLink,
 } from "../utils/auths";
 import { makeContinueUrl } from "../utils/urls";
 import { useStatus } from "../utils/useStatus";

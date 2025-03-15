@@ -1,5 +1,5 @@
-import React from "react";
 import { User } from "firebase/auth";
+import React from "react";
 import { useUser } from "../../utils/useUser";
 import { Loading } from "../Loading";
 import { NotSignedIn } from "./NotSignedIn";

@@ -1,21 +1,21 @@
 import {
-	initializeAnalytics,
-	isSupported as isAnalyticsSupported,
-	setAnalyticsCollectionEnabled,
-	setUserId,
+    initializeAnalytics,
+    isSupported as isAnalyticsSupported,
+    setAnalyticsCollectionEnabled,
+    setUserId,
 } from "firebase/analytics";
 import { getApps, initializeApp } from "firebase/app";
 import { AppCheck, CustomProvider, ReCaptchaEnterpriseProvider, initializeAppCheck } from "firebase/app-check";
 import {
-	browserLocalPersistence,
-	browserSessionPersistence,
-	connectAuthEmulator,
-	indexedDBLocalPersistence,
-	initializeAuth,
+    browserLocalPersistence,
+    browserSessionPersistence,
+    connectAuthEmulator,
+    indexedDBLocalPersistence,
+    initializeAuth,
 } from "firebase/auth";
 import {
-	connectFirestoreEmulator,
-	getFirestore,
+    connectFirestoreEmulator,
+    getFirestore,
 } from "firebase/firestore";
 import { acquireExperienceOptions } from "./analytics";
 import { AppCheckFromEdgeConfigProvider } from "./appcheck/AppCheckFromEdgeConfigProvider";

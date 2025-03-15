@@ -1,23 +1,23 @@
-import React, { useMemo } from "react";
+import { useFirestoreInfiniteQuery } from "@react-query-firebase/firestore";
 import {
-	collection,
-	FieldPath,
-	getFirestore,
-	limit,
-	orderBy,
-	query,
-	Query,
-	QueryDocumentSnapshot,
-	startAfter,
-	where,
+    collection,
+    FieldPath,
+    getFirestore,
+    limit,
+    orderBy,
+    query,
+    Query,
+    QueryDocumentSnapshot,
+    startAfter,
+    where,
 } from "firebase/firestore";
+import React, { useMemo } from "react";
+import Col from "react-bootstrap/Col";
+import Row from "react-bootstrap/Row";
 import { COLLECTION_LINKS, LinkData, LinkField } from "../../models/links";
 import { UserSnapshotField } from "../../models/users";
-import { useFirestoreInfiniteQuery } from "@react-query-firebase/firestore";
-import Row from "react-bootstrap/Row";
-import { ExpandButton } from "../ExpandButton";
-import Col from "react-bootstrap/Col";
 import { LinkSquareCard } from "../cards/LinkSquareCard";
+import { ExpandButton } from "../ExpandButton";
 import { RecentListPlaceholder } from "./RecentListPlaceholder";
 
 const LINK_FETCH_LIMIT = 12;

@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import styles from "../styles/file-view.module.scss";
@@ -12,8 +11,6 @@ import { Icon } from "./Icon";
 import { Link } from "./Link";
 import { RawText } from "./RawText";
 import { Video } from "./Video";
-
-const Pdf = dynamic(() => import("./PdfView"), { ssr: false });
 
 const NoPreview: React.FunctionComponent<React.PropsWithChildren<{ src: string; name?: string | null, type?: string | null }>> = ({
 	type,
@@ -141,12 +138,13 @@ export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewP
 								width={width}
 								height={height}
 								allowFullScreen /> 
-							: <Pdf 
-								file={src} 
+							: <embed 
+								src={`https://drive.google.com/viewerng/viewer?embedded=true&url=${src}`} 
 								width={width} 
-								height={height} 
-								size={size} />
-					)))) || <NoPreview src={src} name={name} type={type} />}
+								height={height} />
+					))
+				)
+			) || <NoPreview src={src} name={name} type={type} />}
 		</div>
 	);
 };
