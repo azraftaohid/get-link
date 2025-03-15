@@ -115,7 +115,7 @@ const nextConfig = {
 			fullUrl: true,
 		}
 	},
-	serverExternalPackages: ["tr46", "pdfjs-dist"],
+	serverExternalPackages: ["pdfjs-dist"],
 	webpack: (config, { isServer }) => {
 		if (isServer) {
 			config.optimization.splitChunks = {

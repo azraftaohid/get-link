@@ -24,5 +24,10 @@
 			"database_id": "0fc38179-35a8-48f6-9d90-9eac8bbbf304",
 			"database_name": "getlink-web-next_cache"
 		}
-	]
+	],
+	"observability": {
+		"logs": {
+			"enabled": true
+		}
+	}
 }
