@@ -1,12 +1,15 @@
 import { getPaymentUrl } from "@/models/billings/payment";
 import { initFirebase } from "@/utils/firebase";
+import { initFunctions } from "@/utils/functions";
 import { FirebaseError } from "firebase/app";
 import { NextRequest, NextResponse } from "next/server";
 
 export const revalidate = 10;
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
-	initFirebase();
+	const firebase = initFirebase();
+	initFunctions(firebase);
+
 	const invoiceId = params.id;
 	
 	let paymentUrl: string;

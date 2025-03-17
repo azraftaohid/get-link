@@ -1,17 +1,24 @@
+import { FirebaseApp } from "firebase/app";
 import {
-    EmailAuthProvider,
-    fetchSignInMethodsForEmail,
-    getAuth,
-    isSignInWithEmailLink,
-    linkWithCredential,
-    reauthenticateWithCredential,
-    signInWithEmailLink,
-    User,
-    UserCredential,
+	browserLocalPersistence,
+	browserSessionPersistence,
+	connectAuthEmulator,
+	EmailAuthProvider,
+	fetchSignInMethodsForEmail,
+	getAuth,
+	indexedDBLocalPersistence,
+	initializeAuth,
+	isSignInWithEmailLink,
+	linkWithCredential,
+	reauthenticateWithCredential,
+	signInWithEmailLink,
+	User,
+	UserCredential,
 } from "firebase/auth";
 import { HttpsCallable, httpsCallable } from "firebase/functions";
 import { now } from "./dates";
 import { AppError } from "./errors/AppError";
+import { emulatorHost } from "./firebase";
 import { getFunctions } from "./functions";
 
 export const KEY_SIGN_IN_EMAIL = "passwordless_sign_in.last_email";
@@ -35,6 +42,25 @@ let authObtainReauthLinkFunc: HttpsCallable<ObtainReauthLinkRequestData, string>
 let authEmailConfirmationLinkFunc: HttpsCallable<EmailConfirmationLinkRequestData, void>;
 let authUpdateEmailFunc: HttpsCallable<UpdateEmailRequestData, UpdateEmailResponseData>;
 let authRecoverEmailFunc: HttpsCallable<EmailRecoveryRequestData, EmailRecoveryResponseData>;
+
+let hasInit = false;
+
+export function initAuth(app: FirebaseApp) {
+	if (hasInit) return getAuth(app);
+	hasInit = true;
+	
+	const auth = initializeAuth(app, {
+		persistence: [browserLocalPersistence, browserSessionPersistence, indexedDBLocalPersistence],
+	});
+
+	if (process.env.NODE_ENV === "development") {
+		connectAuthEmulator(auth, `http://${emulatorHost}:9099`, {
+			disableWarnings: true,
+		});
+	}
+
+	return auth;
+}
 
 export async function sendEmailConfirmationLink(uid: string, newEmail: string, redirectUrl: string) {
 	if (!authEmailConfirmationLinkFunc)

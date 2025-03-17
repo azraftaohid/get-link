@@ -115,35 +115,7 @@ const nextConfig = {
 			fullUrl: true,
 		}
 	},
-	serverExternalPackages: ["pdfjs-dist"],
-	webpack: (config, { isServer }) => {
-		if (isServer) {
-			config.optimization.splitChunks = {
-				...config.optimization.splitChunks,
-				cacheGroups: {
-					...config.optimization.splitChunks.cacheGroups,
-					sharedFirebaseFirestore: {
-						test: /[\\/]node_modules[\\/]@?firebase[\\/]firestore[\\/]/,
-						name: "firebase_firestore",
-						chunks: "all",
-						enforce: true,
-					},
-					sharedFirebaseAuth: {
-						test: /[\\/]node_modules[\\/]@?firebase[\\/]auth[\\/]/,
-						name: "firebase_auth",
-						chunks: "all",
-						enforce: true,
-					},
-					sharedGrpc: {
-						test: /[\\/]node_modules[\\/]@grpc[\\/]grpc-js[\\/]/,
-						name: "grpc-js",
-						chunks: "all",
-						enforce: true,
-					},
-				},
-			};
-		}
-
+	webpack: (config) => {
 		config.devServer = {
 			...config.devServer,
 			historyApiFallback: true,

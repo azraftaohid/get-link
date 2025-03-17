@@ -29,5 +29,11 @@
 		"logs": {
 			"enabled": true
 		}
-	}
+	},
+	"services": [
+		{
+			"binding": "NEXT_CACHE_REVALIDATION_WORKER",
+      		"service": "getlink-web"
+		}
+	]
 }

@@ -41,7 +41,6 @@ const NoPreview: React.FunctionComponent<React.PropsWithChildren<{ src: string; 
 export const FileView: React.FunctionComponent<React.PropsWithChildren<FileViewProps>> = ({
 	className,
 	src,
-	size,
 	name,
 	type,
 	width: _width,

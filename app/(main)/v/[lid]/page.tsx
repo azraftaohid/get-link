@@ -1,17 +1,18 @@
 import { FileData, FileField, getFileKey, getThumbnailKey } from "@/models/files";
-import { LinkData, LinkField, getLinkRef } from "@/models/links";
+import { COLLECTION_LINKS, LinkData, LinkField } from "@/models/links";
 import { OrderField } from "@/models/order";
 import { UserSnapshotField } from "@/models/users";
 import { hasExpired } from "@/utils/dates";
 import { NotFound } from "@/utils/errors/NotFound";
 import { findFileIcon } from "@/utils/files";
 import { initFirebase } from "@/utils/firebase";
+import { initFirestoreLite } from "@/utils/firestore_lite";
 import { compressImage } from "@/utils/images";
 import { whenTruthy } from "@/utils/objects";
 import { ProcessedFileData, makeProcessedFile } from "@/utils/processedFiles";
 import { getDownloadURL, getMetadata, requireObject } from "@/utils/storage";
 import { formatDate } from "@thegoodcompany/common-utils-js";
-import { getCountFromServer, getDoc, getDocs, limit, query } from "firebase/firestore";
+import { collection, doc, getCount, getDoc, getDocs, limit, query } from "firebase/firestore/lite";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
@@ -35,10 +36,13 @@ function suppressError(error: any, lid: string, subject: string) {
 const getData = cache(async (lid: string): Promise<Data> => {
 	console.log(`Generating static props for LID: ${lid}`);
 
-	initFirebase();
+	const firebase = initFirebase();
+	const db = initFirestoreLite(firebase);
+
 	const tasks: Promise<unknown>[] = [];
 
-	const linkRef = getLinkRef(lid);
+	const links = collection(db, COLLECTION_LINKS);
+	const linkRef = doc(links, lid);
 	const snapshot = await getDoc(linkRef);
 
 	const data = snapshot.data();
@@ -100,7 +104,7 @@ const getData = cache(async (lid: string): Promise<Data> => {
 		isDynamic = true;
 
 		const filesQuery = makeFilesQuery(lid);
-		tasks.push(getCountFromServer(filesQuery).then(value => {
+		tasks.push(getCount(filesQuery).then(value => {
 			fileCount = value.data().count;
 		}).catch(err => {
 			console.error(`error getting file doc count [lid: ${lid}; cause: ${err}]`);

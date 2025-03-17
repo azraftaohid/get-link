@@ -1,20 +1,18 @@
-import { StatSyncFn, lstatSync } from "fs";
-
-import { NodeHttpHandler } from "@smithy/node-http-handler";
+import { XhrHttpHandler } from "@aws-sdk/xhr-http-handler";
+import { FetchHttpHandler } from "@smithy/fetch-http-handler";
 import { HttpHandler } from "@smithy/protocol-http";
+import { StatSyncFn } from "fs";
 import { getSharedRuntimeConfig } from "./runtimeConfig.shared";
 
 let config: RuntimeConfig | undefined;
 
 export function getRuntimeConfig(): RuntimeConfig {
 	if (!config) {
-		const requestHandler = new NodeHttpHandler();
 		config = {
 			...getSharedRuntimeConfig(),
-			runtime: "node",
-			lstatSync,
-			httpPutRequestHandler: requestHandler,
-			httpRequestHandler: requestHandler,
+			runtime: "nodejs_compat",
+			httpRequestHandler: new FetchHttpHandler(),
+			httpPutRequestHandler: new XhrHttpHandler(),
 		};
 	}
 	
@@ -22,7 +20,7 @@ export function getRuntimeConfig(): RuntimeConfig {
 }
 
 export interface RuntimeConfig {
-	runtime: "node" | "browser",
+	runtime: "node" | "browser" | "nodejs_compat",
 	lstatSync: StatSyncFn,
 	httpPutRequestHandler: HttpHandler,
 	httpRequestHandler: HttpHandler,

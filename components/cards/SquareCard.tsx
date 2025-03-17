@@ -1,6 +1,6 @@
 import cloudflareLoader from "@/utils/images/cloudflareLoader";
-import { Timestamp } from "@firebase/firestore";
 import { formatDate } from "@thegoodcompany/common-utils-js";
+import { Timestamp } from "firebase/firestore";
 import Image, { ImageProps } from "next/legacy/image";
 import React from "react";
 import Card from "react-bootstrap/Card";

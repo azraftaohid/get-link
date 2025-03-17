@@ -1,27 +1,15 @@
 import {
-    initializeAnalytics,
-    isSupported as isAnalyticsSupported,
-    setAnalyticsCollectionEnabled,
-    setUserId,
+	initializeAnalytics,
+	isSupported as isAnalyticsSupported,
+	setAnalyticsCollectionEnabled,
+	setUserId,
 } from "firebase/analytics";
 import { getApps, initializeApp } from "firebase/app";
 import { AppCheck, CustomProvider, ReCaptchaEnterpriseProvider, initializeAppCheck } from "firebase/app-check";
-import {
-    browserLocalPersistence,
-    browserSessionPersistence,
-    connectAuthEmulator,
-    indexedDBLocalPersistence,
-    initializeAuth,
-} from "firebase/auth";
-import {
-    connectFirestoreEmulator,
-    getFirestore,
-} from "firebase/firestore";
 import { acquireExperienceOptions } from "./analytics";
 import { AppCheckFromEdgeConfigProvider } from "./appcheck/AppCheckFromEdgeConfigProvider";
 import { hasWindow } from "./common";
 import { appcheckDebugToken, firebaseConfig, siteKey } from "./configs";
-import { connectFunctionsEmulator, getFunctions } from "./functions";
 
 export const FIREBASE_APP_NAME = "[DEFAULT]";
 
@@ -45,20 +33,8 @@ export function initFirebase() {
 	console.debug("Initializing Firebase app.");
 	const app = initializeApp(firebaseConfig);
 
-	const firestore = getFirestore(app);
-	const functions = getFunctions(app);
-	const auth = initializeAuth(app, {
-		persistence: [browserLocalPersistence, browserSessionPersistence, indexedDBLocalPersistence],
-	});
-
 	if (process.env.NODE_ENV === "development") {
 		if (hasWindow) self.FIREBASE_APPCHECK_DEBUG_TOKEN = appcheckDebugToken;
-		
-		connectFirestoreEmulator(firestore, emulatorHost, 8080);
-		connectFunctionsEmulator(functions, emulatorHost, 5001);
-		connectAuthEmulator(auth, `http://${emulatorHost}:9099`, {
-			disableWarnings: true,
-		});
 	}
 
 	let appCheckProvider: ReCaptchaEnterpriseProvider | CustomProvider;

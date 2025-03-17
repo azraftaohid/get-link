@@ -81,7 +81,7 @@ export async function downloadAsZip(params: DownloadAsZipParams): Promise<Downlo
 		script.onerror = (error) => {
 			console.error(error);
 			rej(new Error("Can't load @transcend-io/conflux from CDN. Check logs."));
-		}
+		};
 
 		document.body.appendChild(script);
 	});

@@ -22,6 +22,7 @@ function suppressError(error: unknown, cfk: string, subject: string) {
 
 const getData = cache(async (cfk: string) => {
 	initFirebase();
+	
 	const tasks: Promise<unknown>[] = [];
 	const components = compartCFK(cfk);
 	const fileKey = createFID(components.displayName + components.ext, components.uid);

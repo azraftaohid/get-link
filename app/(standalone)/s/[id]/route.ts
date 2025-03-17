@@ -1,8 +1,9 @@
-import { ShortlinkField, ShortlinkTargetField, getShortlink } from "@/models/shortlinks";
+import { COLLECTION_SHORTLINK, ShortlinkField, ShortlinkTargetField } from "@/models/shortlinks";
 import { initFirebase } from "@/utils/firebase";
-import { getDoc } from "firebase/firestore";
+import { initFirestoreLite } from "@/utils/firestore_lite";
+import { collection, doc, getDoc, getFirestore } from "firebase/firestore/lite";
 import { unstable_cache } from "next/cache";
-import { RedirectType, notFound, redirect } from "next/navigation";
+import { notFound, redirect, RedirectType } from "next/navigation";
 
 export const dynamic = "force-static";
 export const dynamicParams = true;
@@ -10,7 +11,9 @@ export const dynamicParams = true;
 const getData = unstable_cache(async (id: string) => {
 	console.info("Fetching shortlink from origin");
 
-	const ref = getShortlink(id);
+	const shortlinks = collection(getFirestore(), COLLECTION_SHORTLINK);
+	const ref = doc(shortlinks, id);
+	
 	const snapshot = await getDoc(ref);
 	const data = snapshot.data();
 	const target = data?.[ShortlinkField.TARGET]?.[ShortlinkTargetField.PATH];
@@ -19,7 +22,8 @@ const getData = unstable_cache(async (id: string) => {
 });
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
-	initFirebase();
+	const firebase = initFirebase();
+	initFirestoreLite(firebase);
 
 	const id = params.id;
 	const target = await getData(id);

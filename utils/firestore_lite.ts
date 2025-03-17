@@ -1,10 +1,10 @@
 import { FirebaseApp } from "firebase/app";
-import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore/lite";
 import { emulatorHost } from "./firebase";
 
 let hasInitFirestore = false;
 
-export function initFirestore(app: FirebaseApp) {
+export function initFirestoreLite(app: FirebaseApp) {
 	const firestore = getFirestore(app);
 
 	if (!hasInitFirestore) {
