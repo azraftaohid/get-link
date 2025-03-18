@@ -4,7 +4,8 @@
 	"name": "getlink-web",
 	"compatibility_date": "2025-02-24",
 	"compatibility_flags": [
-		"nodejs_compat"
+		"nodejs_compat",
+		"nodejs_compat_populate_process_env"
 	],
 	"assets": {
 		"directory": ".open-next/assets",
