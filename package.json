@@ -57,7 +57,7 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "^0.5.11",
+    "@opennextjs/cloudflare": "0.5.12",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^15.0.2",
     "@types/masonry-layout": "^4.2.5",
@@ -83,7 +83,7 @@
     "types-react-codemod": "^1.1.0",
     "typescript": "5.2.2",
     "vercel": "latest",
-    "wrangler": "3.114.0"
+    "wrangler": "3.114.2"
   },
   "browser": {
     "./utils/runtimeConfig": "./utils/runtimeConfig.browser",
