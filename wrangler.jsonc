@@ -7,6 +7,9 @@
 		"nodejs_compat",
 		"nodejs_compat_populate_process_env"
 	],
+	"vars": {
+		"NEXT_PUBLIC_ENABLE_TIER_UPGRADE": "true"
+	},
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
