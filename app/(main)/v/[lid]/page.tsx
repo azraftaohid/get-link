@@ -47,11 +47,10 @@ const getData = cache(async (lid: string): Promise<Data> => {
 	const {
 		[LinkField.COVER]: cover,
 		[LinkField.FILES]: files,
-		[LinkField.CREATE_TIME]: createTime,
 		[LinkField.EXPIRE_TIME]: expireTime,
 	} = data;
 
-	if (hasExpired(expireTime, createTime)) notFound();
+	if (hasExpired(expireTime)) notFound();
 
 	let isDynamic = false;
 	let fileCount = 0;

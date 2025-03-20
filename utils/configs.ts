@@ -1,8 +1,6 @@
 import { FirebaseOptions } from "firebase/app";
 import { StorageConfig } from "./storage";
 
-export const EXPIRE_DAYS = 14;
-
 export const FLAG_OFFLINE = true;
 
 export const firebaseConfig: FirebaseOptions = {

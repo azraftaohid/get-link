@@ -1,5 +1,4 @@
-import { Days, Hours, Minutes } from "@thegoodcompany/common-utils-js";
-import { EXPIRE_DAYS } from "../utils/configs";
+import { Days, Hours } from "@thegoodcompany/common-utils-js";
 import { hasExpired, isWithin, wasWithin } from "../utils/dates";
 
 test("date utils are valid", () => {
@@ -21,11 +20,8 @@ test("date utils are valid", () => {
 });
 
 test("has expired is valid", () => {
-	const ago1 = new Date().getTime() - new Days(3).toMillis().value;
-	const ago2 = new Date().getTime() - (new Days(EXPIRE_DAYS).toMillis().value - new Minutes(1).toMillis().value);
-	const ago3 = new Date().getTime() - (new Days(EXPIRE_DAYS).toMillis().value + new Minutes(1).toMillis().value);
+	const cSeconds = new Date().getTime() / 1000 | 0;
 
-	expect(hasExpired(undefined, { seconds: (ago1 / 1000) | 0, nanoseconds: 0 })).toBe(false);
-	expect(hasExpired(undefined, { seconds: (ago2 / 1000) | 0, nanoseconds: 0 })).toBe(false);
-	expect(hasExpired(undefined, { seconds: (ago3 / 1000) | 0, nanoseconds: 0 })).toBe(true);
+	expect(hasExpired({ seconds: cSeconds - 100, nanoseconds: 0  })).toBe(true);
+	expect(hasExpired({ seconds: cSeconds + 100, nanoseconds: 0 })).toBe(false);
 });
