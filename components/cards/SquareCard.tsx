@@ -112,7 +112,7 @@ export const SquareCard: React.FunctionComponent<SquareCardProps> = ({
 			<Card.Footer className="d-flex flex-row align-items-center">
 				<span className="d-block text-muted text-truncate">
 					{createTime && formatDate(createTime.toDate(), "short", "year", "month", "day")}
-					{hasExpired(expireTime, createTime) && (
+					{hasExpired(expireTime) && (
 						<>
 							{" "}
 							(<em>expired</em>)

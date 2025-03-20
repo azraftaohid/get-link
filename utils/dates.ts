@@ -1,6 +1,4 @@
-import { Days } from "@thegoodcompany/common-utils-js";
 import { Timestamp } from "firebase/firestore";
-import { EXPIRE_DAYS } from "./configs";
 
 export function now() {
 	return new Date().getTime();
@@ -21,7 +19,6 @@ export function isIn(date: Date, ms: number) {
 	return Math.abs(diff) <= ms;
 }
 
-export function hasExpired(expireTime?: ReturnType<Timestamp["toJSON"]> | null, createTime?: ReturnType<Timestamp["toJSON"]>) {
-	const expireSeconds = expireTime?.seconds || ((createTime?.seconds || 0) + new Days(EXPIRE_DAYS).toSeconds().value);
-	return now() / 1000 > expireSeconds;
+export function hasExpired(expireTime?: ReturnType<Timestamp["toJSON"]> | null) {
+	return expireTime && now() / 1000 > expireTime.seconds;
 }
