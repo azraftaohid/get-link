@@ -1,8 +1,8 @@
 import { COLLECTION_FILES, FileField } from "@/models/files";
 import { OrderField } from "@/models/order";
-import { FieldPath, collection, documentId, getFirestore, orderBy, query, startAfter } from "firebase/firestore/lite";
+import { FieldPath, collection, documentId, getFirestore, orderBy, query, startAfter } from "firebase/firestore";
 
-export const FETCH_LIMIT = 12;
+// TODO: Investigate why server hangs when "firebase/firestore" is imported for this route
 
 export function makeFilesQuery(lid: string, afterPos?: number, afterDocId?: string) {
 	const db = getFirestore();

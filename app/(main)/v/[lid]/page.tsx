@@ -17,7 +17,8 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import LinkView from "./LinkView";
-import { FETCH_LIMIT, makeFilesQuery } from "./helpers";
+import { FETCH_LIMIT } from "./helpers.common";
+import { makeFilesQuery } from "./helpers.server";
 
 export const dynamic = "force-static";
 export const dynamicParams = true;

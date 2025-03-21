@@ -36,7 +36,8 @@ import DropdownMenu from "react-bootstrap/DropdownMenu";
 import DropdownToggle from "react-bootstrap/DropdownToggle";
 import Spinner from "react-bootstrap/Spinner";
 import Masonry, { MasonryProps } from "react-masonry-css";
-import { FETCH_LIMIT, makeFilesQuery } from "./helpers";
+import { makeFilesQuery } from "./helpers.client";
+import { FETCH_LIMIT } from "./helpers.common";
 
 // changes to this must be reflected on FileView image sizes
 const msnryBreakpoints: MasonryProps["breakpointCols"] = {
