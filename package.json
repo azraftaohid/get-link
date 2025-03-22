@@ -10,7 +10,7 @@
     "start": "next start",
     "dev:netlify": "netlify dev",
     "build:netlify": "netlify build",
-    "deploy:netlify": "yarn build:netlify && netlify deploy",
+    "deploy:netlify": "netlify deploy --build",
     "lint": "next lint",
     "test": "jest --watch",
     "cypress": "cypress open",
