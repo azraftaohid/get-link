@@ -1,6 +1,5 @@
 [build]
   command = "yarn run build"
-  functions = "netlify/functions"
   publish = ".next"
 
 [dev]
