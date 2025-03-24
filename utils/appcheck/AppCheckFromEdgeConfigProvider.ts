@@ -38,7 +38,7 @@ export class AppCheckFromEdgeConfigProvider extends CustomProvider {
 					const startTime = now();
 					
 					const config = getEdgeConfig();
-					const options: AppCheckOptions | undefined = await config.get("appCheck");
+					const options: AppCheckOptions | undefined = await config.get("appCheck", { revalidate: 60 });
 					console.info("App check token fetch took " + (now() - startTime) + "ms");
 					
 					if (!options || typeof options !== "object" || Array.isArray(options)) 
