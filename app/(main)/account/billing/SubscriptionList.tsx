@@ -4,7 +4,7 @@ import { Loading } from "@/components/Loading";
 import { QueryEmptyView } from "@/components/QueryEmptyView";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { BillingInfoField } from "@/models/billings/billingInfo";
-import { getAppPaymentUrl } from "@/models/billings/payment";
+import { getCheckoutUrl } from "@/models/billings/payment";
 import { PriceField } from "@/models/billings/price";
 import { ProductMetadataField } from "@/models/billings/product";
 import { Subscription, SubscriptionField, SubscriptionState, friendlySubscriptionState, getSubscriptions } from "@/models/billings/subscription";
@@ -78,12 +78,12 @@ const SubscriptionCard: React.FunctionComponent<SubscriptionCardProps> = ({
 						className="me-2"
 						variant="outline-primary"
 						state={renewBtnState}
-						href={enabledRenewBtn ? getAppPaymentUrl(nextInvoice) : "#"}
+						href={enabledRenewBtn ? getCheckoutUrl(nextInvoice) : "#"}
 						disabled={!enabledRenewBtn}
 						onClick={(evt) => {
 							evt.preventDefault();
 							setRenewBtnState("loading");
-							router.push(getAppPaymentUrl(nextInvoice));
+							router.push(getCheckoutUrl(nextInvoice));
 						}}
 					>
 						Renew
