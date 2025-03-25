@@ -40,7 +40,7 @@
     "file-type": "16.5.4",
     "firebase": "10.4.0",
     "formik": "^2.2.9",
-    "nanoid": "^3.3.1",
+    "nanoid": "^3.3.8",
     "next": "14.2.25",
     "react": "18.2.0",
     "react-bootstrap": "2.10.2",
