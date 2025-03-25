@@ -1,7 +1,7 @@
 import { ImageLoader } from "next/image";
 import { DOMAIN } from "../urls";
 
-const CF_IMAGE_ZONE = process.env.NEXT_PUBLIC_CF_IMAGE_ZONE || DOMAIN.replace("https://", "");
+const CF_IMAGE_HOST = process.env.NEXT_PUBLIC_CF_IMAGE_HOST || DOMAIN.replace("https://", "");
 
 const normalizeSrc = (src: string) => {
     return src.startsWith("/") ? DOMAIN + src : src;
@@ -20,7 +20,7 @@ const cloudflareLoader: ImageLoader = ({ src, width, quality }) => {
 
 		return url.toString();
 	}
-	return `https://${CF_IMAGE_ZONE}/cdn-cgi/image/${optionsSeg}/${srcSeg}`;
+	return `https://${CF_IMAGE_HOST}/cdn-cgi/image/${optionsSeg}/${srcSeg}`;
 };
 
 export default cloudflareLoader;
